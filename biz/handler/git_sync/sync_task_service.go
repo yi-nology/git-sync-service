@@ -8,8 +8,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	sync_task "github.com/yi-nology/git-sync-service/biz/model/sync_task"
-	synccore "github.com/yi-nology/git-sync-service/internal/sync"
-	syncmodel "github.com/yi-nology/git-sync-service/internal/sync/model"
+	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
 
 func toTaskModel(t *syncmodel.SyncTask) *sync_task.SyncTaskInfo {
@@ -161,13 +160,13 @@ func UpdateTask(ctx context.Context, c *app.RequestContext) {
 	}
 
 	svcReq := &syncmodel.UpdateTaskRequest{
-		Key:         req.Key,
-		Name:        req.Name,
+		Key:          req.Key,
+		Name:         req.Name,
 		SourceBranch: req.SourceBranch,
 		TargetBranch: req.TargetBranch,
-		SyncMode:    req.SyncMode,
-		Cron:        req.Cron,
-		Enabled:     req.Enabled,
+		SyncMode:     req.SyncMode,
+		Cron:         req.Cron,
+		Enabled:      req.Enabled,
 		GitTags:      req.GitTags,
 		GitForce:     req.GitForce,
 		GitPrune:     req.GitPrune,
@@ -242,7 +241,7 @@ func PreviewSync(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	svcReq := &synccore.PreviewSyncRequest{
+	svcReq := &syncmodel.PreviewSyncRequest{
 		SourceRepoKey: req.SourceRepoKey,
 		SourceBranch:  req.SourceBranch,
 		TargetRepoKey: req.TargetRepoKey,

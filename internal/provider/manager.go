@@ -1,4 +1,4 @@
-package sync
+package provider
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/yi-nology/git-sync-service/internal/sync/model"
+	"github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
 

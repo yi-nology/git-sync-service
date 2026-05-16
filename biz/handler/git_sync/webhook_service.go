@@ -8,7 +8,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	webhook "github.com/yi-nology/git-sync-service/biz/model/webhook"
-	syncmodel "github.com/yi-nology/git-sync-service/internal/sync/model"
+	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
 
 func toRuleModel(r *syncmodel.WebhookRule) *webhook.WebhookRuleInfo {
@@ -16,17 +16,17 @@ func toRuleModel(r *syncmodel.WebhookRule) *webhook.WebhookRuleInfo {
 		return nil
 	}
 	return &webhook.WebhookRuleInfo{
-		ID:             int64(r.ID),
-		Name:           r.Name,
-		RepoKey:        r.RepoKey,
-		EventType:      r.EventType,
-		BranchPattern:  r.BranchPattern,
-		Action:         r.Action,
-		SyncTaskKeys:   r.SyncTaskKeys,
-		MinInterval:    int32(r.MinInterval),
-		Enabled:        r.Enabled,
-		Description:    r.Description,
-		CreatedAt:      r.CreatedAt.Format("2006-01-02 15:04:05"),
+		ID:            int64(r.ID),
+		Name:          r.Name,
+		RepoKey:       r.RepoKey,
+		EventType:     r.EventType,
+		BranchPattern: r.BranchPattern,
+		Action:        r.Action,
+		SyncTaskKeys:  r.SyncTaskKeys,
+		MinInterval:   int32(r.MinInterval),
+		Enabled:       r.Enabled,
+		Description:   r.Description,
+		CreatedAt:     r.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 }
 
@@ -39,18 +39,18 @@ func toEventModel(e *syncmodel.WebhookEvent) *webhook.WebhookEventInfo {
 		processedAt = e.ProcessedAt.Format("2006-01-02 15:04:05")
 	}
 	return &webhook.WebhookEventInfo{
-		ID:            int64(e.ID),
-		EventID:       e.EventID,
-		RepoKey:       e.RepoKey,
-		EventType:     e.EventType,
-		Source:        e.Source,
-		ActorName:     e.ActorName,
-		Branch:        e.Branch,
-		CommitSha:     e.CommitSHA,
-		Status:        e.Status,
-		ErrorMessage:  e.ErrorMessage,
-		ProcessedAt:   processedAt,
-		CreatedAt:     e.CreatedAt.Format("2006-01-02 15:04:05"),
+		ID:           int64(e.ID),
+		EventID:      e.EventID,
+		RepoKey:      e.RepoKey,
+		EventType:    e.EventType,
+		Source:       e.Source,
+		ActorName:    e.ActorName,
+		Branch:       e.Branch,
+		CommitSha:    e.CommitSHA,
+		Status:       e.Status,
+		ErrorMessage: e.ErrorMessage,
+		ProcessedAt:  processedAt,
+		CreatedAt:    e.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 }
 

@@ -1,33 +1,39 @@
-package sync
+package service
 
 import (
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yi-nology/git-sync-service/internal/sync/model"
+	"github.com/yi-nology/git-sync-service/internal/dao"
+	"github.com/yi-nology/git-sync-service/internal/executor"
+	"github.com/yi-nology/git-sync-service/internal/lock"
+	"github.com/yi-nology/git-sync-service/internal/provider"
+	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
+type Config = model.Config
+
 type Service struct {
 	config       *Config
 	db           *gorm.DB
-	repoDAO      *RepoDAO
-	taskDAO      *SyncTaskDAO
-	runDAO       *SyncRunDAO
-	ruleDAO      *WebhookRuleDAO
-	eventDAO     *WebhookEventDAO
-	providerMgr  *ProviderManager
+	repoDAO      *dao.RepoDAO
+	taskDAO      *dao.SyncTaskDAO
+	runDAO       *dao.SyncRunDAO
+	ruleDAO      *dao.WebhookRuleDAO
+	eventDAO     *dao.WebhookEventDAO
+	providerMgr  *provider.ProviderManager
 	cron         *cron.Cron
 	cronEntryIDs map[string]cron.EntryID
-	lock         DistLock
-	semaphore    *Semaphore
+	lock         lock.DistLock
+	semaphore    *lock.Semaphore
 	semaphoreID  string
+	executor     *executor.Executor
 }
 
 func NewService(cfg *Config) (*Service, error) {
@@ -47,36 +53,40 @@ func NewService(cfg *Config) (*Service, error) {
 		return nil, fmt.Errorf("create temp dir failed: %w", err)
 	}
 
-	var lock DistLock
-	var sem *Semaphore
+	var distLock lock.DistLock
+	var sem *lock.Semaphore
 
 	if cfg.Redis.Addr != "" {
-		lock = NewRedisLock(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB)
-		redisClient := lock.(*RedisLock).client
+		distLock = lock.NewRedisLock(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB)
+		redisClient := distLock.(*lock.RedisLock).Client()
 		maxConcurrent := cfg.Sync.MaxConcurrent
 		if maxConcurrent <= 0 {
 			maxConcurrent = 5
 		}
-		sem = NewSemaphore(redisClient, "sync-tasks", maxConcurrent)
+		sem = lock.NewSemaphore(redisClient, "sync-tasks", maxConcurrent)
 	} else {
-		lock = &LocalLock{}
+		distLock = &lock.LocalLock{}
 	}
 
-	return &Service{
+	svc := &Service{
 		config:       cfg,
 		db:           db,
-		repoDAO:      NewRepoDAO(db),
-		taskDAO:      NewSyncTaskDAO(db),
-		runDAO:       NewSyncRunDAO(db),
-		ruleDAO:      NewWebhookRuleDAO(db),
-		eventDAO:     NewWebhookEventDAO(db),
-		providerMgr:  NewProviderManager(),
+		repoDAO:      dao.NewRepoDAO(db),
+		taskDAO:      dao.NewSyncTaskDAO(db),
+		runDAO:       dao.NewSyncRunDAO(db),
+		ruleDAO:      dao.NewWebhookRuleDAO(db),
+		eventDAO:     dao.NewWebhookEventDAO(db),
+		providerMgr:  provider.NewProviderManager(),
 		cron:         cron.New(cron.WithSeconds()),
 		cronEntryIDs: make(map[string]cron.EntryID),
-		lock:         lock,
+		lock:         distLock,
 		semaphore:    sem,
 		semaphoreID:  uuid.New().String(),
-	}, nil
+	}
+
+	svc.executor = executor.NewExecutor(svc)
+
+	return svc, nil
 }
 
 func (s *Service) Start() error {
@@ -121,11 +131,15 @@ func (s *Service) addCronJob(task *model.SyncTask) error {
 	return nil
 }
 
-func (s *Service) getTempDir(taskKey string) string {
+func (s *Service) GetTempDir(taskKey string) string {
 	return filepath.Join(s.config.Git.TempDir, taskKey)
 }
 
-func (s *Service) tryAcquireTaskLock(ctx context.Context, taskKey string) (bool, error) {
+func (s *Service) GetConfig() *model.Config {
+	return s.config
+}
+
+func (s *Service) TryAcquireTaskLock(ctx context.Context, taskKey string) (bool, error) {
 	lockKey := fmt.Sprintf("task:%s", taskKey)
 	ttl := time.Duration(s.config.Sync.DefaultTimeout) * time.Second
 	if ttl <= 0 {
@@ -134,54 +148,39 @@ func (s *Service) tryAcquireTaskLock(ctx context.Context, taskKey string) (bool,
 	return s.lock.TryLockWithTTL(ctx, lockKey, ttl)
 }
 
-func (s *Service) releaseTaskLock(ctx context.Context, taskKey string) error {
+func (s *Service) ReleaseTaskLock(ctx context.Context, taskKey string) error {
 	lockKey := fmt.Sprintf("task:%s", taskKey)
 	return s.lock.Unlock(ctx, lockKey)
 }
 
-func (s *Service) acquireSemaphore(ctx context.Context, taskKey string) (bool, error) {
+func (s *Service) AcquireSemaphore(ctx context.Context, taskKey string) (bool, error) {
 	if s.semaphore == nil {
 		return true, nil
 	}
 	return s.semaphore.Acquire(ctx, s.semaphoreID+":"+taskKey)
 }
 
-func (s *Service) releaseSemaphore(ctx context.Context, taskKey string) {
+func (s *Service) ReleaseSemaphore(ctx context.Context, taskKey string) {
 	if s.semaphore != nil {
 		s.semaphore.Release(ctx, s.semaphoreID+":"+taskKey)
 	}
 }
 
-type LocalLock struct {
-	mu sync.Map
+func (s *Service) RunDAO() interface {
+	Create(run *model.SyncRun) error
+	Update(run *model.SyncRun) error
+} {
+	return s.runDAO
 }
 
-func (l *LocalLock) TryLock(ctx context.Context, key string) (bool, error) {
-	return l.TryLockWithTTL(ctx, key, defaultLockTTL)
+func (s *Service) TaskDAO() interface {
+	Update(task *model.SyncTask) error
+} {
+	return s.taskDAO
 }
 
-func (l *LocalLock) TryLockWithTTL(ctx context.Context, key string, ttl time.Duration) (bool, error) {
-	_, loaded := l.mu.LoadOrStore(key, time.Now().Add(ttl))
-	return !loaded, nil
+func (s *Service) RepoDAO() interface {
+	FindByKey(key string) (*model.Repo, error)
+} {
+	return s.repoDAO
 }
-
-func (l *LocalLock) Lock(ctx context.Context, key string) error {
-	for {
-		ok, _ := l.TryLock(ctx, key)
-		if ok {
-			return nil
-		}
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(100 * time.Millisecond):
-		}
-	}
-}
-
-func (l *LocalLock) Unlock(ctx context.Context, key string) error {
-	l.mu.Delete(key)
-	return nil
-}
-
-var _ DistLock = (*LocalLock)(nil)

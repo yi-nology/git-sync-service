@@ -1,4 +1,4 @@
-package sync
+package service
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yi-nology/git-sync-service/internal/sync/model"
+	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
 func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
@@ -18,16 +18,16 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return fmt.Errorf("repo not found")
 	}
 
-	provider, err := s.providerMgr.GetProvider(repo)
+	prov, err := s.providerMgr.GetProvider(repo)
 	if err != nil {
 		return err
 	}
 
-	if err := provider.ValidateWebhookSignature(req, repo.WebhookSecret); err != nil {
+	if err := prov.ValidateWebhookSignature(req, repo.WebhookSecret); err != nil {
 		return fmt.Errorf("invalid webhook signature: %w", err)
 	}
 
-	event, err := provider.ParseWebhookEvent(req, repo.WebhookSecret)
+	event, err := prov.ParseWebhookEvent(req, repo.WebhookSecret)
 	if err != nil {
 		return fmt.Errorf("parse webhook event failed: %w", err)
 	}

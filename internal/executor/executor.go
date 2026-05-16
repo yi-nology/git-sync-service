@@ -1,4 +1,4 @@
-package sync
+package executor
 
 import (
 	"context"
@@ -10,49 +10,40 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yi-nology/git-sync-service/internal/sync/model"
+	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
-type Executor struct {
-	service *Service
+type Service interface {
+	GetTempDir(taskKey string) string
+	GetConfig() *model.Config
+	RunDAO() interface {
+		Create(run *model.SyncRun) error
+		Update(run *model.SyncRun) error
+	}
+	TaskDAO() interface {
+		Update(task *model.SyncTask) error
+	}
+	RepoDAO() interface {
+		FindByKey(key string) (*model.Repo, error)
+	}
 }
 
-func NewExecutor(svc *Service) *Executor {
+type Executor struct {
+	service Service
+}
+
+func NewExecutor(svc Service) *Executor {
 	return &Executor{service: svc}
 }
 
 func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger string) (*model.SyncRun, error) {
-	lockCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	locked, err := e.service.tryAcquireTaskLock(lockCtx, task.Key)
-	if err != nil {
-		return nil, fmt.Errorf("acquire lock failed: %w", err)
-	}
-	if !locked {
-		return nil, fmt.Errorf("task is already running")
-	}
-	defer e.service.releaseTaskLock(ctx, task.Key)
-
-	semCtx, cancelSem := context.WithTimeout(ctx, 30*time.Second)
-	defer cancelSem()
-
-	semAcquired, err := e.service.acquireSemaphore(semCtx, task.Key)
-	if err != nil {
-		return nil, fmt.Errorf("acquire semaphore failed: %w", err)
-	}
-	if !semAcquired {
-		return nil, fmt.Errorf("too many concurrent tasks")
-	}
-	defer e.service.releaseSemaphore(ctx, task.Key)
-
 	run := &model.SyncRun{
 		TaskKey:       task.Key,
 		TriggerSource: trigger,
 		Status:        "running",
 		StartTime:     time.Now(),
 	}
-	if err := e.service.runDAO.Create(run); err != nil {
+	if err := e.service.RunDAO().Create(run); err != nil {
 		return nil, err
 	}
 
@@ -64,28 +55,28 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	defer func() {
 		run.EndTime = timePtr(time.Now())
 		run.Details = details.String()
-		_ = e.service.runDAO.Update(run)
+		_ = e.service.RunDAO().Update(run)
 
 		task.LastRunAt = run.EndTime
 		task.LastStatus = run.Status
-		_ = e.service.taskDAO.Update(task)
+		_ = e.service.TaskDAO().Update(task)
 	}()
 
-	sourceRepo, err := e.service.repoDAO.FindByKey(task.SourceRepoKey)
+	sourceRepo, err := e.service.RepoDAO().FindByKey(task.SourceRepoKey)
 	if err != nil {
 		run.Status = "failed"
 		run.ErrorMessage = fmt.Sprintf("source repo not found: %v", err)
 		return run, err
 	}
 
-	targetRepo, err := e.service.repoDAO.FindByKey(task.TargetRepoKey)
+	targetRepo, err := e.service.RepoDAO().FindByKey(task.TargetRepoKey)
 	if err != nil {
 		run.Status = "failed"
 		run.ErrorMessage = fmt.Sprintf("target repo not found: %v", err)
 		return run, err
 	}
 
-	workDir := e.service.getTempDir(task.Key)
+	workDir := e.service.GetTempDir(task.Key)
 	if err := os.MkdirAll(workDir, 0755); err != nil {
 		run.Status = "failed"
 		run.ErrorMessage = fmt.Sprintf("create work dir failed: %w", err)
@@ -95,7 +86,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	repoDir := filepath.Join(workDir, "repo")
 
-	timeout := e.service.config.Sync.DefaultTimeout
+	timeout := e.service.GetConfig().Sync.DefaultTimeout
 	if timeout <= 0 {
 		timeout = 300
 	}
@@ -126,7 +117,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	}
 
 	details.WriteString("\nStep 3: Push to target...\n")
-	maxRetries := e.service.config.Sync.RetryCount
+	maxRetries := e.service.GetConfig().Sync.RetryCount
 	if maxRetries <= 0 {
 		maxRetries = 3
 	}
@@ -290,8 +281,8 @@ type SyncPreview struct {
 	CanSync       bool
 	SourceExists  bool
 	TargetExists  bool
-	CommitsBehind  int
-	CommitsAhead int
+	CommitsBehind int
+	CommitsAhead  int
 	LatestCommit  string
 	Message       string
 }
@@ -299,7 +290,7 @@ type SyncPreview struct {
 func (e *Executor) Preview(ctx context.Context, task *model.SyncTask) (*SyncPreview, error) {
 	preview := &SyncPreview{}
 
-	sourceRepo, err := e.service.repoDAO.FindByKey(task.SourceRepoKey)
+	sourceRepo, err := e.service.RepoDAO().FindByKey(task.SourceRepoKey)
 	if err != nil {
 		preview.Message = fmt.Sprintf("source repo error: %v", err)
 		return preview, nil
@@ -310,7 +301,7 @@ func (e *Executor) Preview(ctx context.Context, task *model.SyncTask) (*SyncPrev
 		return preview, nil
 	}
 
-	targetRepo, err := e.service.repoDAO.FindByKey(task.TargetRepoKey)
+	targetRepo, err := e.service.RepoDAO().FindByKey(task.TargetRepoKey)
 	if err != nil {
 		preview.Message = fmt.Sprintf("target repo error: %v", err)
 		return preview, nil
