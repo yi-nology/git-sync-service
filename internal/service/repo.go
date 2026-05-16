@@ -1,4 +1,4 @@
-package sync
+package service
 
 import (
 	"context"
@@ -7,26 +7,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/yi-nology/git-sync-service/internal/sync/model"
-	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
+	"github.com/yi-nology/git-sync-service/internal/provider"
+	"github.com/yi-nology/git-sync-service/sync/model"
 )
-
-type CreateRepoRequest struct {
-	Name        string `json:"name"`
-	RemoteURL   string `json:"remoteUrl"`
-	AccessToken string `json:"accessToken"`
-}
-
-type UpdateRepoRequest struct {
-	Key         string `json:"key"`
-	Name        string `json:"name"`
-	AccessToken string `json:"accessToken"`
-}
-
-type TestConnectionResult struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-}
 
 func (s *Service) ListRepos() ([]*model.Repo, error) {
 	return s.repoDAO.FindAll()
@@ -36,7 +19,7 @@ func (s *Service) GetRepo(key string) (*model.Repo, error) {
 	return s.repoDAO.FindByKey(key)
 }
 
-func (s *Service) CreateRepo(req *CreateRepoRequest) (*model.Repo, error) {
+func (s *Service) CreateRepo(req *model.CreateRepoRequest) (*model.Repo, error) {
 	platform, owner, repoName, err := parseRemoteURL(req.RemoteURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid remote URL: %w", err)
@@ -60,7 +43,7 @@ func (s *Service) CreateRepo(req *CreateRepoRequest) (*model.Repo, error) {
 	return repo, nil
 }
 
-func (s *Service) UpdateRepo(req *UpdateRepoRequest) (*model.Repo, error) {
+func (s *Service) UpdateRepo(req *model.UpdateRepoRequest) (*model.Repo, error) {
 	repo, err := s.repoDAO.FindByKey(req.Key)
 	if err != nil {
 		return nil, err
@@ -87,26 +70,26 @@ func (s *Service) DeleteRepo(key string) error {
 	return s.repoDAO.Delete(key)
 }
 
-func (s *Service) TestConnection(ctx context.Context, repoKey string) (*TestConnectionResult, error) {
+func (s *Service) TestConnection(ctx context.Context, repoKey string) (*model.TestConnectionResult, error) {
 	repo, err := s.repoDAO.FindByKey(repoKey)
 	if err != nil {
 		return nil, err
 	}
 	if repo == nil {
-		return &TestConnectionResult{Success: false, Message: "repo not found"}, nil
+		return &model.TestConnectionResult{Success: false, Message: "repo not found"}, nil
 	}
 
-	provider, err := s.providerMgr.GetProvider(repo)
+	prov, err := s.providerMgr.GetProvider(repo)
 	if err != nil {
-		return &TestConnectionResult{Success: false, Message: err.Error()}, nil
+		return &model.TestConnectionResult{Success: false, Message: err.Error()}, nil
 	}
 
-	result, err := provider.TestConnection(ctx)
+	result, err := prov.TestConnection(ctx)
 	if err != nil {
-		return &TestConnectionResult{Success: false, Message: err.Error()}, nil
+		return &model.TestConnectionResult{Success: false, Message: err.Error()}, nil
 	}
 
-	return &TestConnectionResult{Success: result.Connected, Message: result.Message}, nil
+	return &model.TestConnectionResult{Success: result.Connected, Message: result.Message}, nil
 }
 
 func (s *Service) ListBranches(ctx context.Context, repoKey string) ([]string, error) {
@@ -118,12 +101,12 @@ func (s *Service) ListBranches(ctx context.Context, repoKey string) ([]string, e
 		return nil, fmt.Errorf("repo not found")
 	}
 
-	provider, err := s.providerMgr.GetProvider(repo)
+	prov, err := s.providerMgr.GetProvider(repo)
 	if err != nil {
 		return nil, err
 	}
 
-	branches, err := provider.ListBranches(ctx, repo.PlatformOwner, repo.PlatformRepo)
+	branches, err := prov.ListBranches(ctx, repo.PlatformOwner, repo.PlatformRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +153,4 @@ func parseRemoteURL(remoteURL string) (platform, owner, repo string, err error) 
 	return platform, owner, repo, nil
 }
 
-var _ GitProvider = (*SDKProviderAdapter)(nil)
-
-type ProviderAdapter interface {
-	GetProvider(repo *model.Repo) (sdkprov.Provider, error)
-}
+var _ provider.GitProvider = (*provider.SDKProviderAdapter)(nil)

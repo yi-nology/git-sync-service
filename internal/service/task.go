@@ -1,28 +1,12 @@
-package sync
+package service
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/yi-nology/git-sync-service/internal/sync/model"
+	"github.com/yi-nology/git-sync-service/sync/model"
 )
-
-type PreviewSyncRequest struct {
-	SourceRepoKey string `json:"sourceRepoKey"`
-	SourceBranch  string `json:"sourceBranch"`
-	TargetRepoKey string `json:"targetRepoKey"`
-	TargetBranch  string `json:"targetBranch"`
-}
-
-type PreviewSyncResult struct {
-	CanSync       bool   `json:"canSync"`
-	SourceExists  bool   `json:"sourceExists"`
-	TargetExists  bool   `json:"targetExists"`
-	CommitCount   int    `json:"commitCount"`
-	LatestCommit  string `json:"latestCommit"`
-	Message       string `json:"message"`
-}
 
 func (s *Service) ListTasks(repoKey string) ([]*model.SyncTask, error) {
 	if repoKey != "" {
@@ -140,12 +124,11 @@ func (s *Service) RunTaskWithTrigger(ctx context.Context, taskKey, trigger strin
 		return fmt.Errorf("task not found")
 	}
 
-	executor := NewExecutor(s)
-	_, err = executor.Execute(ctx, task, trigger)
+	_, err = s.executor.Execute(ctx, task, trigger)
 	return err
 }
 
-func (s *Service) PreviewSync(req *PreviewSyncRequest) (*PreviewSyncResult, error) {
+func (s *Service) PreviewSync(req *model.PreviewSyncRequest) (*model.PreviewSyncResult, error) {
 	sourceRepo, err := s.repoDAO.FindByKey(req.SourceRepoKey)
 	if err != nil {
 		return nil, err
@@ -155,7 +138,7 @@ func (s *Service) PreviewSync(req *PreviewSyncRequest) (*PreviewSyncResult, erro
 		return nil, err
 	}
 
-	result := &PreviewSyncResult{
+	result := &model.PreviewSyncResult{
 		SourceExists: sourceRepo != nil,
 		TargetExists: targetRepo != nil,
 	}

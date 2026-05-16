@@ -1,8 +1,9 @@
-package sync
+package lock
 
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -89,6 +90,10 @@ func (l *RedisLock) Close() error {
 	return l.client.Close()
 }
 
+func (l *RedisLock) Client() *redis.Client {
+	return l.client
+}
+
 type Semaphore struct {
 	client *redis.Client
 	key    string
@@ -132,4 +137,36 @@ func (s *Semaphore) Cleanup(ctx context.Context, olderThan time.Duration) error 
 	cutoff := float64(time.Now().Add(-olderThan).Unix())
 	_, err := s.client.ZRemRangeByScore(ctx, s.key, "-inf", fmt.Sprintf("%f", cutoff)).Result()
 	return err
+}
+
+type LocalLock struct {
+	mu sync.Map
+}
+
+func (l *LocalLock) TryLock(ctx context.Context, key string) (bool, error) {
+	return l.TryLockWithTTL(ctx, key, defaultLockTTL)
+}
+
+func (l *LocalLock) TryLockWithTTL(ctx context.Context, key string, ttl time.Duration) (bool, error) {
+	_, loaded := l.mu.LoadOrStore(key, time.Now().Add(ttl))
+	return !loaded, nil
+}
+
+func (l *LocalLock) Lock(ctx context.Context, key string) error {
+	for {
+		ok, _ := l.TryLock(ctx, key)
+		if ok {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
+}
+
+func (l *LocalLock) Unlock(ctx context.Context, key string) error {
+	l.mu.Delete(key)
+	return nil
 }

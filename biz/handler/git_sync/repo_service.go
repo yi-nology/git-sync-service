@@ -8,8 +8,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	repo "github.com/yi-nology/git-sync-service/biz/model/repo"
-	synccore "github.com/yi-nology/git-sync-service/internal/sync"
-	syncmodel "github.com/yi-nology/git-sync-service/internal/sync/model"
+	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
 
 func toRepoModel(r *syncmodel.Repo) *repo.RepoInfo {
@@ -90,7 +89,7 @@ func CreateRepo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	svcReq := &synccore.CreateRepoRequest{
+	svcReq := &syncmodel.CreateRepoRequest{
 		Name:        req.Name,
 		RemoteURL:   req.RemoteURL,
 		AccessToken: req.AccessToken,
@@ -118,7 +117,7 @@ func UpdateRepo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	svcReq := &synccore.UpdateRepoRequest{
+	svcReq := &syncmodel.UpdateRepoRequest{
 		Key:         req.Key,
 		Name:        req.Name,
 		AccessToken: req.AccessToken,
