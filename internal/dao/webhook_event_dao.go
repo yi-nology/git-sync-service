@@ -46,3 +46,13 @@ func (d *WebhookEventDAO) FindByID(id uint) (*model.WebhookEvent, error) {
 	}
 	return &event, err
 }
+
+func (d *WebhookEventDAO) FindRecent(repoKey string, limit int) ([]*model.WebhookEvent, error) {
+	var events []*model.WebhookEvent
+	query := d.db.Order("id DESC").Limit(limit)
+	if repoKey != "" {
+		query = query.Where("repo_key = ?", repoKey)
+	}
+	err := query.Find(&events).Error
+	return events, err
+}

@@ -8,12 +8,12 @@ import (
 
 type SyncTask struct {
 	ID            uint           `json:"id" gorm:"primaryKey"`
-	Key           string         `json:"key" gorm:"uniqueIndex;size:36;not null"`
-	Name          string         `json:"name" gorm:"size:100;not null"`
-	SourceRepoKey string         `json:"sourceRepoKey" gorm:"size:255;not null;index"`
-	SourceBranch  string         `json:"sourceBranch" gorm:"size:255;not null"`
-	TargetRepoKey string         `json:"targetRepoKey" gorm:"size:255;not null;index"`
-	TargetBranch  string         `json:"targetBranch" gorm:"size:255;not null"`
+	Key           string         `json:"key" gorm:"uniqueIndex;size:36;not null;default:''"`
+	Name          string         `json:"name" gorm:"size:100;not null;default:''"`
+	SourceRepoKey string         `json:"sourceRepoKey" gorm:"size:255;not null;index;default:''"`
+	SourceBranch  string         `json:"sourceBranch" gorm:"size:255;not null;default:''"`
+	TargetRepoKey string         `json:"targetRepoKey" gorm:"size:255;not null;index;default:''"`
+	TargetBranch  string         `json:"targetBranch" gorm:"size:255;not null;default:''"`
 	SyncMode      string         `json:"syncMode" gorm:"size:20;default:single"`
 	Cron          string         `json:"cron" gorm:"size:100"`
 	WebhookToken  string         `json:"webhookToken" gorm:"uniqueIndex;size:36"`
@@ -50,16 +50,16 @@ type CreateTaskRequest struct {
 }
 
 type UpdateTaskRequest struct {
-	Key           string `json:"key"`
-	Name          string `json:"name"`
-	SourceBranch  string `json:"sourceBranch"`
-	TargetBranch  string `json:"targetBranch"`
-	SyncMode      string `json:"syncMode"`
-	Cron          string `json:"cron"`
-	Enabled       bool   `json:"enabled"`
-	GitTags       bool   `json:"gitTags"`
-	GitForce      bool   `json:"gitForce"`
-	GitPrune      bool   `json:"gitPrune"`
-	GitNoVerify   bool   `json:"gitNoVerify"`
-	PushOptions   string `json:"pushOptions"`
+	Key          string `json:"key"`
+	Name         string `json:"name"`
+	SourceBranch string `json:"sourceBranch"`
+	TargetBranch string `json:"targetBranch"`
+	SyncMode     string `json:"syncMode"`
+	Cron         string `json:"cron"`
+	Enabled      bool   `json:"enabled"`
+	GitTags      bool   `json:"gitTags"`
+	GitForce     bool   `json:"gitForce"`
+	GitPrune     bool   `json:"gitPrune"`
+	GitNoVerify  bool   `json:"gitNoVerify"`
+	PushOptions  string `json:"pushOptions"`
 }

@@ -47,3 +47,28 @@ func (d *SyncTaskDAO) Update(task *model.SyncTask) error {
 func (d *SyncTaskDAO) Delete(key string) error {
 	return d.db.Where("`key` = ?", key).Delete(&model.SyncTask{}).Error
 }
+
+func (d *SyncTaskDAO) FindAll() ([]*model.SyncTask, error) {
+	var tasks []*model.SyncTask
+	err := d.db.Find(&tasks).Error
+	return tasks, err
+}
+
+func (d *SyncTaskDAO) FindAllConfigs() ([]*model.SyncConfigEntry, error) {
+	var configs []*model.SyncConfigEntry
+	err := d.db.Find(&configs).Error
+	return configs, err
+}
+
+func (d *SyncTaskDAO) FindConfigByKey(key string) (*model.SyncConfigEntry, error) {
+	var cfg model.SyncConfigEntry
+	err := d.db.Where("`key` = ?", key).First(&cfg).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &cfg, err
+}
+
+func (d *SyncTaskDAO) SaveConfig(cfg *model.SyncConfigEntry) error {
+	return d.db.Save(cfg).Error
+}
