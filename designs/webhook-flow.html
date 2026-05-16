@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook 同步触发 — 交互流程图</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; padding: 32px; }
+        
+        .header { background: #001529; color: white; padding: 20px 32px; border-radius: 8px 8px 0 0; }
+        .header h1 { font-size: 20px; margin-bottom: 4px; }
+        .header p { font-size: 14px; color: rgba(255,255,255,0.65); }
+        
+        .container { background: white; border-radius: 0 0 8px 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        .phase { margin-bottom: 24px; }
+        .phase-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 8px 12px; border-radius: 6px; }
+        .phase-1 .phase-header { background: #e6f7ff; }
+        .phase-2 .phase-header { background: #f6ffed; }
+        .phase-3 .phase-header { background: #fff0f6; }
+        .phase-4 .phase-header { background: #f9f0ff; }
+        .phase-5 .phase-header { background: #e6fffb; }
+        
+        .phase-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; }
+        .phase-1 .phase-icon { background: #1890ff; }
+        .phase-2 .phase-icon { background: #52c41a; }
+        .phase-3 .phase-icon { background: #eb2f96; }
+        .phase-4 .phase-icon { background: #722ed1; }
+        .phase-5 .phase-icon { background: #13c2c2; }
+        
+        .phase-title { font-size: 15px; font-weight: 600; }
+        .phase-1 .phase-title { color: #1890ff; }
+        .phase-2 .phase-title { color: #52c41a; }
+        .phase-3 .phase-title { color: #eb2f96; }
+        .phase-4 .phase-title { color: #722ed1; }
+        .phase-5 .phase-title { color: #13c2c2; }
+        
+        .steps { display: flex; gap: 12px; }
+        
+        .step { flex: 1; background: white; border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; position: relative; }
+        .step:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); transition: all 0.2s; }
+        
+        .step-num { position: absolute; top: -12px; left: 16px; width: 24px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; }
+        .phase-1 .step-num { background: #1890ff; }
+        .phase-2 .step-num { background: #52c41a; }
+        .phase-3 .step-num { background: #eb2f96; }
+        .phase-4 .step-num { background: #722ed1; }
+        .phase-5 .step-num { background: #13c2c2; }
+        
+        .step-title { font-size: 14px; font-weight: 500; color: #262626; margin-top: 8px; margin-bottom: 4px; }
+        .step-desc { font-size: 12px; color: #8c8c8c; }
+        .step-code { font-size: 11px; color: #595959; background: #f5f5f5; padding: 4px 8px; border-radius: 4px; margin-top: 8px; font-family: 'SF Mono', monospace; }
+        
+        .arrow { display: flex; align-items: center; justify-content: center; color: #d9d9d9; font-size: 20px; }
+        
+        .legend { margin-top: 24px; padding: 16px; background: #fafafa; border-radius: 8px; }
+        .legend-title { font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px; }
+        .legend-items { display: flex; gap: 24px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #595959; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+        
+        .branch-example { margin-top: 24px; padding: 16px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; }
+        .branch-example h3 { font-size: 14px; color: #d48806; margin-bottom: 8px; }
+        .branch-example pre { font-size: 12px; color: #595959; background: white; padding: 12px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Webhook 同步触发 — 交互流程图</h1>
+        <p>Git Push → Webhook → 规则匹配 → 分支过滤 → 执行同步</p>
+    </div>
+    
+    <div class="container">
+        <!-- 阶段一：事件发起 -->
+        <div class="phase phase-1">
+            <div class="phase-header">
+                <div class="phase-icon">1</div>
+                <div class="phase-title">阶段一：事件发起</div>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-title">Git Push 触发</div>
+                    <div class="step-desc">开发者推送到 GitHub / GitLab / Gitea</div>
+                    <div class="step-code">git push origin feature/new-ui</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-title">发送 Webhook</div>
+                    <div class="step-desc">平台发送 HTTP POST 到回调地址</div>
+                    <div class="step-code">POST https://api.example.com/api/webhooks/receive</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-title">接收请求</div>
+                    <div class="step-desc">Webhook Receiver 处理入站请求</div>
+                    <div class="step-code">POST /api/webhooks/receive</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 阶段二：事件处理 -->
+        <div class="phase phase-2">
+            <div class="phase-header">
+                <div class="phase-icon">2</div>
+                <div class="phase-title">阶段二：事件处理</div>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-title">验证签名</div>
+                    <div class="step-desc">HMAC-SHA256 校验 Webhook Secret</div>
+                    <div class="step-code">p.ValidateWebhookSignature(r, secret)</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">5</div>
+                    <div class="step-title">解析事件</div>
+                    <div class="step-desc">提取分支、提交、作者等信息</div>
+                    <div class="step-code">p.ParseWebhookEvent(r, secret) → NormalizedEvent</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">6</div>
+                    <div class="step-title">匹配仓库</div>
+                    <div class="step-desc">按 PlatformOwner/PlatformRepo 匹配</div>
+                    <div class="step-code">repo.FullName == event.Repo.FullName</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">7</div>
+                    <div class="step-title">持久化事件</div>
+                    <div class="step-desc">保存 WebhookEvent 到数据库</div>
+                    <div class="step-code">db.Create(&WebhookEvent{...})</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 阶段三：规则匹配 -->
+        <div class="phase phase-3">
+            <div class="phase-header">
+                <div class="phase-icon">3</div>
+                <div class="phase-title">阶段三：规则匹配</div>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">8</div>
+                    <div class="step-title">查询规则</div>
+                    <div class="step-desc">获取所有 enabled 的 WebhookRule</div>
+                    <div class="step-code">db.Where("enabled = ? AND provider_config_id = ?", true, cfgID).Find(&rules)</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">9</div>
+                    <div class="step-title">匹配事件类型</div>
+                    <div class="step-desc">rule.EventTypePattern ↔ event.Type</div>
+                    <div class="step-code">matchPattern("push", "push") ✓</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">10</div>
+                    <div class="step-title">匹配仓库 + 分支</div>
+                    <div class="step-desc">RepoPattern + BranchPattern 过滤</div>
+                    <div class="step-code">matchPattern("*/backend", "user/backend") ✓<br>matchPattern("feature/*", "feature/new-ui") ✓</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">11</div>
+                    <div class="step-title">防抖检查</div>
+                    <div class="step-desc">检查 MinInterval 防止重复触发</div>
+                    <div class="step-code">time.Since(lastTrigger) > minInterval ✓</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 阶段四：同步执行 -->
+        <div class="phase phase-4">
+            <div class="phase-header">
+                <div class="phase-icon">4</div>
+                <div class="phase-title">阶段四：同步执行</div>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">12</div>
+                    <div class="step-title">查找同步任务</div>
+                    <div class="step-desc">解析 SyncTaskKeys 获取任务列表</div>
+                    <div class="step-code">taskKeys = strings.Split(rule.SyncTaskKeys, ",")</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">13</div>
+                    <div class="step-title">分支匹配</div>
+                    <div class="step-desc">single: SourceBranch == EventBranch<br>all-branch: 始终匹配</div>
+                    <div class="step-code">task.SourceBranch == extractBranch(event)<br>或 task.SyncMode == "all-branch"</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">14</div>
+                    <div class="step-title">获取分布式锁</div>
+                    <div class="step-desc">防止多实例重复执行</div>
+                    <div class="step-code">lockSvc.UpWait(ctx, lockKey, 5*time.Minute)</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">15</div>
+                    <div class="step-title">创建 SyncRun</div>
+                    <div class="step-desc">记录同步运行状态</div>
+                    <div class="step-code">db.Create(&SyncRun{TriggerSource: "webhook"})</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 阶段五：完成 -->
+        <div class="phase phase-5">
+            <div class="phase-header">
+                <div class="phase-icon">5</div>
+                <div class="phase-title">阶段五：完成</div>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">16</div>
+                    <div class="step-title">Git Fetch + Push</div>
+                    <div class="step-desc">执行代码同步操作</div>
+                    <div class="step-code">git fetch origin → git push target sourceHash:targetBranch</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">17</div>
+                    <div class="step-title">保存执行日志</div>
+                    <div class="step-desc">更新 SyncRun 状态和详情</div>
+                    <div class="step-code">run.Status = "success" / "failed"<br>run.Details = logs.String()</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="step-num">18</div>
+                    <div class="step-title">发送通知</div>
+                    <div class="step-desc">Webhook/邮件通知同步结果</div>
+                    <div class="step-code">notificationSvc.NotifySvc.Send(msg)</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step" style="display:flex;align-items:center;justify-content:center;background:#13c2c2;color:white;border:none;">
+                    <div class="step-title" style="margin:0;font-size:16px;font-weight:700;">完成</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分支匹配示例 -->
+        <div class="branch-example">
+            <h3>分支匹配示例</h3>
+            <pre>
+// 单分支同步 (sync_mode = "single")
+规则: branch_pattern = "feature/*"
+事件: push to feature/new-ui → ✅ 匹配，触发同步
+事件: push to main → ❌ 不匹配，跳过
+
+// 全分支同步 (sync_mode = "all-branch")  
+规则: branch_pattern = "" (留空)
+事件: push to feature/new-ui → ✅ 始终触发
+事件: push to main → ✅ 始终触发
+
+// 多分支匹配
+规则: branch_pattern = "feature/*, release/*"
+事件: push to feature/auth → ✅ 匹配
+事件: push to release/v2.0 → ✅ 匹配
+事件: push to hotfix/bug → ❌ 不匹配</pre>
+        </div>
+        
+        <!-- 图例 -->
+        <div class="legend">
+            <div class="legend-title">图例说明</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#1890ff;"></div>
+                    <span>事件发起</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#52c41a;"></div>
+                    <span>事件处理</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#eb2f96;"></div>
+                    <span>规则匹配</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#722ed1;"></div>
+                    <span>同步执行</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#13c2c2;"></div>
+                    <span>完成</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

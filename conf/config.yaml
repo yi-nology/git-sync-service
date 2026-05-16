@@ -1,0 +1,31 @@
+server:
+  host: 0.0.0.0
+  port: 8890
+  mode: debug
+
+database:
+  driver: sqlite
+  dsn: data/git_sync.db
+  max_idle_conns: 10
+  max_open_conns: 100
+
+redis:
+  addr: 127.0.0.1:6379
+  password: ""
+  db: 0
+
+git:
+  backend: gogit
+  temp_dir: /tmp/git-sync
+
+sync:
+  max_concurrent: 5
+  default_timeout: 300
+  retry_count: 3
+
+webhook:
+  rate_limit: 100
+
+log:
+  level: info
+  format: json
