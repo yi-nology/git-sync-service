@@ -2,6 +2,7 @@ package model
 
 import (
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -53,6 +54,16 @@ type WebhookConfig struct {
 type LogConfig struct {
 	Level  string `yaml:"level"`
 	Format string `yaml:"format"`
+}
+
+type SyncConfigEntry struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Key         string    `gorm:"uniqueIndex" json:"key"`
+	Value       string    `json:"value"`
+	Scope       string    `json:"scope"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 func LoadConfig(path string) (*Config, error) {

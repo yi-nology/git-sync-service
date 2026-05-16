@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/robfig/cron/v3"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/executor"
 	"github.com/yi-nology/git-sync-service/internal/lock"
 	"github.com/yi-nology/git-sync-service/internal/provider"
 	"github.com/yi-nology/git-sync-service/sync/model"
-	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 

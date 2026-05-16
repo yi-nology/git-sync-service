@@ -30,3 +30,9 @@ func (d *SyncRunDAO) Update(run *model.SyncRun) error {
 func (d *SyncRunDAO) Delete(id uint) error {
 	return d.db.Delete(&model.SyncRun{}, id).Error
 }
+
+func (d *SyncRunDAO) FindRecent(limit int) ([]*model.SyncRun, error) {
+	var runs []*model.SyncRun
+	err := d.db.Order("id DESC").Limit(limit).Find(&runs).Error
+	return runs, err
+}

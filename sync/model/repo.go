@@ -10,9 +10,9 @@ type Repo struct {
 	ID            uint           `json:"id" gorm:"primaryKey"`
 	Key           string         `json:"key" gorm:"uniqueIndex;size:255;not null"`
 	Name          string         `json:"name" gorm:"size:255;not null"`
-	Platform      string         `json:"platform" gorm:"size:50;not null"`
-	PlatformOwner string         `json:"platformOwner" gorm:"size:200;not null"`
-	PlatformRepo  string         `json:"platformRepo" gorm:"size:200;not null"`
+	Platform      string         `json:"platform" gorm:"size:50;not null;default:'unknown'"`
+	PlatformOwner string         `json:"platformOwner" gorm:"size:200;not null;default:''"`
+	PlatformRepo  string         `json:"platformRepo" gorm:"size:200;not null;default:''"`
 	CloneURL      string         `json:"cloneUrl" gorm:"size:500"`
 	SSHURL        string         `json:"sshUrl" gorm:"size:500"`
 	DefaultBranch string         `json:"defaultBranch" gorm:"size:100;default:main"`
