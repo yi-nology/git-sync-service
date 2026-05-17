@@ -3,12 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/yi-nology/git-sync-service/internal/provider"
 	"github.com/yi-nology/git-sync-service/sync/model"
+	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
 
 func (s *Service) ListRepos() ([]*model.Repo, error) {
@@ -20,17 +19,17 @@ func (s *Service) GetRepo(key string) (*model.Repo, error) {
 }
 
 func (s *Service) CreateRepo(req *model.CreateRepoRequest) (*model.Repo, error) {
-	platform, owner, repoName, err := parseRemoteURL(req.RemoteURL)
+	result, err := sdkprov.DetectPlatform(req.RemoteURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid remote URL: %w", err)
 	}
 
 	repo := &model.Repo{
-		Key:           uuid.New().String()[:8],
+		Key:           uuid.New().String(),
 		Name:          req.Name,
-		Platform:      platform,
-		PlatformOwner: owner,
-		PlatformRepo:  repoName,
+		Platform:      string(result.Platform),
+		PlatformOwner: result.Owner,
+		PlatformRepo:  result.Repo,
 		CloneURL:      req.RemoteURL,
 		AccessToken:   req.AccessToken,
 		Status:        "active",
@@ -117,40 +116,6 @@ func (s *Service) ListBranches(ctx context.Context, repoKey string) ([]string, e
 	}
 
 	return result, nil
-}
-
-func parseRemoteURL(remoteURL string) (platform, owner, repo string, err error) {
-	u, err := url.Parse(remoteURL)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	host := u.Hostname()
-	switch {
-	case strings.Contains(host, "github"):
-		platform = "github"
-	case strings.Contains(host, "gitlab"):
-		platform = "gitlab"
-	case strings.Contains(host, "gitea"):
-		platform = "gitea"
-	case strings.Contains(host, "forgejo"):
-		platform = "forgejo"
-	case strings.Contains(host, "coding") || strings.Contains(host, "tencent"):
-		platform = "tencent_code"
-	default:
-		platform = "github"
-	}
-
-	path := strings.TrimPrefix(u.Path, "/")
-	parts := strings.Split(path, "/")
-	if len(parts) < 2 {
-		return "", "", "", fmt.Errorf("invalid path")
-	}
-
-	owner = parts[0]
-	repo = strings.TrimSuffix(parts[1], ".git")
-
-	return platform, owner, repo, nil
 }
 
 var _ provider.GitProvider = (*provider.SDKProviderAdapter)(nil)

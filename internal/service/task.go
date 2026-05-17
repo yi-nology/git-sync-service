@@ -12,15 +12,7 @@ func (s *Service) ListTasks(repoKey string) ([]*model.SyncTask, error) {
 	if repoKey != "" {
 		return s.taskDAO.FindByRepoKey(repoKey)
 	}
-	tasks, err := s.taskDAO.FindAllEnabled()
-	if err != nil {
-		return nil, err
-	}
-	var allTasks []*model.SyncTask
-	for _, t := range tasks {
-		allTasks = append(allTasks, t)
-	}
-	return allTasks, nil
+	return s.taskDAO.FindAll()
 }
 
 func (s *Service) GetTask(key string) (*model.SyncTask, error) {
@@ -37,7 +29,7 @@ func (s *Service) CreateTask(req *model.CreateTaskRequest) (*model.SyncTask, err
 		TargetBranch:  req.TargetBranch,
 		SyncMode:      req.SyncMode,
 		Cron:          req.Cron,
-		WebhookToken:  uuid.New().String()[:16],
+		WebhookToken:  uuid.New().String(),
 		Enabled:       true,
 		GitTags:       req.GitTags,
 		GitForce:      req.GitForce,
@@ -94,20 +86,19 @@ func (s *Service) UpdateTask(req *model.UpdateTaskRequest) (*model.SyncTask, err
 		return nil, err
 	}
 
-	if task.Cron != "" {
+	if task.Cron != "" && task.Enabled {
 		if err := s.addCronJob(task); err != nil {
 			return nil, fmt.Errorf("update cron job failed: %w", err)
 		}
+	} else {
+		s.removeCronJob(task.Key)
 	}
 
 	return task, nil
 }
 
 func (s *Service) DeleteTask(key string) error {
-	if entryID, ok := s.cronEntryIDs[key]; ok {
-		s.cron.Remove(entryID)
-		delete(s.cronEntryIDs, key)
-	}
+	s.removeCronJob(key)
 	return s.taskDAO.Delete(key)
 }
 

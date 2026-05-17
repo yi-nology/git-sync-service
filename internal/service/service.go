@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,20 +22,21 @@ import (
 type Config = model.Config
 
 type Service struct {
-	config       *Config
-	db           *gorm.DB
-	repoDAO      *dao.RepoDAO
-	taskDAO      *dao.SyncTaskDAO
-	runDAO       *dao.SyncRunDAO
-	ruleDAO      *dao.WebhookRuleDAO
-	eventDAO     *dao.WebhookEventDAO
-	providerMgr  *provider.ProviderManager
-	cron         *cron.Cron
-	cronEntryIDs map[string]cron.EntryID
-	lock         lock.DistLock
-	semaphore    *lock.Semaphore
-	semaphoreID  string
-	executor     *executor.Executor
+	config        *Config
+	db            *gorm.DB
+	repoDAO       *dao.RepoDAO
+	taskDAO       *dao.SyncTaskDAO
+	runDAO        *dao.SyncRunDAO
+	ruleDAO       *dao.WebhookRuleDAO
+	eventDAO      *dao.WebhookEventDAO
+	providerMgr   *provider.ProviderManager
+	cron          *cron.Cron
+	cronEntryIDs  map[string]cron.EntryID
+	cronMu        sync.RWMutex
+	lock          lock.DistLock
+	semaphore     *lock.Semaphore
+	semaphoreID   string
+	executor      *executor.Executor
 }
 
 func NewService(cfg *Config) (*Service, error) {
@@ -98,7 +101,7 @@ func (s *Service) Start() error {
 	for _, task := range tasks {
 		if task.Cron != "" {
 			if err := s.addCronJob(task); err != nil {
-				fmt.Printf("add cron job for task %s failed: %v\n", task.Key, err)
+				slog.Error("add cron job failed", "taskKey", task.Key, "error", err)
 			}
 		}
 	}
@@ -115,6 +118,9 @@ func (s *Service) Stop() {
 }
 
 func (s *Service) addCronJob(task *model.SyncTask) error {
+	s.cronMu.Lock()
+	defer s.cronMu.Unlock()
+
 	if entryID, ok := s.cronEntryIDs[task.Key]; ok {
 		s.cron.Remove(entryID)
 	}
@@ -131,12 +137,26 @@ func (s *Service) addCronJob(task *model.SyncTask) error {
 	return nil
 }
 
+func (s *Service) removeCronJob(taskKey string) {
+	s.cronMu.Lock()
+	defer s.cronMu.Unlock()
+
+	if entryID, ok := s.cronEntryIDs[taskKey]; ok {
+		s.cron.Remove(entryID)
+		delete(s.cronEntryIDs, taskKey)
+	}
+}
+
 func (s *Service) GetTempDir(taskKey string) string {
 	return filepath.Join(s.config.Git.TempDir, taskKey)
 }
 
 func (s *Service) GetConfig() *model.Config {
 	return s.config
+}
+
+func (s *Service) GetAPIKey() string {
+	return s.config.Server.APIKey
 }
 
 func (s *Service) TryAcquireTaskLock(ctx context.Context, taskKey string) (bool, error) {

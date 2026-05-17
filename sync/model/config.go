@@ -18,9 +18,10 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
-	Mode string `yaml:"mode"`
+	Host   string `yaml:"host"`
+	Port   int    `yaml:"port"`
+	Mode   string `yaml:"mode"`
+	APIKey string `yaml:"api_key"`
 }
 
 type DatabaseConfig struct {
@@ -48,7 +49,8 @@ type SyncConfig struct {
 }
 
 type WebhookConfig struct {
-	RateLimit int `yaml:"rate_limit"`
+	RateLimit   int `yaml:"rate_limit"`
+	MaxBodySize int `yaml:"max_body_size"`
 }
 
 type LogConfig struct {

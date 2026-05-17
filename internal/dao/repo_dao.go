@@ -3,6 +3,7 @@ package dao
 import (
 	"errors"
 
+	"github.com/yi-nology/git-platform-sdk/credential"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
@@ -27,14 +28,34 @@ func (d *RepoDAO) FindByKey(key string) (*model.Repo, error) {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
-	return &repo, err
+	if err != nil {
+		return nil, err
+	}
+	decrypted, err := credential.DecryptGCM(repo.AccessToken)
+	if err != nil {
+		return &repo, nil
+	}
+	repo.AccessToken = decrypted
+	return &repo, nil
 }
 
 func (d *RepoDAO) Create(repo *model.Repo) error {
+	encrypted, err := credential.EncryptGCM(repo.AccessToken)
+	if err != nil {
+		return err
+	}
+	repo.AccessToken = encrypted
 	return d.db.Create(repo).Error
 }
 
 func (d *RepoDAO) Update(repo *model.Repo) error {
+	if repo.AccessToken != "" {
+		encrypted, err := credential.EncryptGCM(repo.AccessToken)
+		if err != nil {
+			return err
+		}
+		repo.AccessToken = encrypted
+	}
 	return d.db.Save(repo).Error
 }
 

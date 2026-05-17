@@ -3,10 +3,18 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/yi-nology/git-sync-service/sync/model"
+	"github.com/yi-nology/git-platform-sdk/branchfilter"
+)
+
+var (
+	lastTriggerTime sync.Map
 )
 
 func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
@@ -58,14 +66,24 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return err
 	}
 
-	go s.applyRules(ctx, repoKey, whEvent)
+	go s.safeApplyRules(context.Background(), repoKey, whEvent)
 
 	return nil
+}
+
+func (s *Service) safeApplyRules(ctx context.Context, repoKey string, event *model.WebhookEvent) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("panic in applyRules", "repoKey", repoKey, "error", r)
+		}
+	}()
+	s.applyRules(ctx, repoKey, event)
 }
 
 func (s *Service) applyRules(ctx context.Context, repoKey string, event *model.WebhookEvent) {
 	rules, err := s.ruleDAO.FindByRepoKey(repoKey)
 	if err != nil {
+		slog.Error("find rules failed", "repoKey", repoKey, "error", err)
 		return
 	}
 
@@ -78,13 +96,29 @@ func (s *Service) applyRules(ctx context.Context, repoKey string, event *model.W
 			continue
 		}
 
-		if rule.BranchPattern != "" && !matchBranch(rule.BranchPattern, event.Branch) {
+		if !branchfilter.New(rule.BranchPattern).Match(event.Branch) {
 			continue
 		}
 
 		if rule.Action == "sync" && rule.SyncTaskKeys != "" {
-			for _, taskKey := range splitAndTrim(rule.SyncTaskKeys, ",") {
-				_ = s.RunTaskWithTrigger(ctx, taskKey, "webhook")
+			for _, taskKey := range strings.Split(rule.SyncTaskKeys, ",") {
+				taskKey = strings.TrimSpace(taskKey)
+				if taskKey == "" {
+					continue
+				}
+				if rule.MinInterval > 0 {
+					key := fmt.Sprintf("%s:%s", rule.RepoKey, taskKey)
+					if lastTime, ok := lastTriggerTime.Load(key); ok {
+						if time.Since(lastTime.(time.Time)) < time.Duration(rule.MinInterval)*time.Second {
+							slog.Warn("skipping due to min interval", "taskKey", taskKey, "minInterval", rule.MinInterval)
+							continue
+						}
+					}
+					lastTriggerTime.Store(key, time.Now())
+				}
+				if err := s.RunTaskWithTrigger(ctx, taskKey, "webhook"); err != nil {
+					slog.Error("run task failed", "taskKey", taskKey, "error", err)
+				}
 			}
 		}
 	}
@@ -171,9 +205,10 @@ func (s *Service) RetryEvent(ctx context.Context, eventID uint) error {
 		return fmt.Errorf("event not found")
 	}
 
-	go s.applyRules(ctx, event.RepoKey, event)
+	go s.safeApplyRules(context.Background(), event.RepoKey, event)
 
-	event.ProcessedAt = &time.Time{}
+	now := time.Now()
+	event.ProcessedAt = &now
 	event.Status = "processed"
 	return s.eventDAO.Update(event)
 }
