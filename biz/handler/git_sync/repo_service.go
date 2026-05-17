@@ -3,45 +3,13 @@ package git_sync
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/yi-nology/git-sync-service/internal/converter"
 	repo "github.com/yi-nology/git-sync-service/biz/model/repo"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
-
-func toRepoModel(r *syncmodel.Repo) *repo.RepoInfo {
-	if r == nil {
-		return nil
-	}
-	return &repo.RepoInfo{
-		ID:            int64(r.ID),
-		Key:           r.Key,
-		Name:          r.Name,
-		Platform:      r.Platform,
-		PlatformOwner: r.PlatformOwner,
-		PlatformRepo:  r.PlatformRepo,
-		CloneURL:      r.CloneURL,
-		SSHURL:        r.SSHURL,
-		DefaultBranch: r.DefaultBranch,
-		Status:        r.Status,
-		CreatedAt:     r.CreatedAt.Format("2006-01-02 15:04:05"),
-	}
-}
-
-func pageToOffset(page, pageSize int32) (int, int) {
-	if pageSize <= 0 {
-		pageSize = 50
-	}
-	if pageSize > 200 {
-		pageSize = 200
-	}
-	if page <= 0 {
-		page = 1
-	}
-	return int((page - 1) * pageSize), int(pageSize)
-}
 
 func ListRepos(ctx context.Context, c *app.RequestContext) {
 	var req repo.ListReposReq
@@ -50,19 +18,17 @@ func ListRepos(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	offset, limit := pageToOffset(req.Page, req.PageSize)
+	offset, limit := converter.PageToOffset(req.Page, req.PageSize)
 	list, total, err := GetSyncService().ListRepos(ctx, offset, limit)
 	if err != nil {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
 
-	repos := make([]*repo.RepoInfo, 0, len(list))
-	for _, r := range list {
-		repos = append(repos, toRepoModel(r))
-	}
-
-	c.JSON(consts.StatusOK, &repo.ListReposResp{Repos: repos, Total: total})
+	c.JSON(consts.StatusOK, &repo.ListReposResp{
+		Repos: converter.ToRepoInfoList(list),
+		Total: total,
+	})
 }
 
 func GetRepo(ctx context.Context, c *app.RequestContext) {
@@ -81,7 +47,7 @@ func GetRepo(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.GetRepoResp{Repo: toRepoModel(r)})
+	c.JSON(consts.StatusOK, &repo.GetRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
 func CreateRepo(ctx context.Context, c *app.RequestContext) {
@@ -102,7 +68,7 @@ func CreateRepo(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": fmt.Sprintf("create repo failed: %v", err)})
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.CreateRepoResp{Repo: toRepoModel(r)})
+	c.JSON(consts.StatusOK, &repo.CreateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
 func UpdateRepo(ctx context.Context, c *app.RequestContext) {
@@ -123,7 +89,7 @@ func UpdateRepo(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.UpdateRepoResp{Repo: toRepoModel(r)})
+	c.JSON(consts.StatusOK, &repo.UpdateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
 func DeleteRepo(ctx context.Context, c *app.RequestContext) {
@@ -180,15 +146,4 @@ func ListBranches(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	c.JSON(consts.StatusOK, &repo.ListBranchesResp{Branches: branches})
-}
-
-func parseInt32OrDefault(s string, def int32) int32 {
-	if s == "" {
-		return def
-	}
-	v, err := strconv.ParseInt(s, 10, 32)
-	if err != nil {
-		return def
-	}
-	return int32(v)
 }

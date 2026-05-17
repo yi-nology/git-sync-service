@@ -5,39 +5,10 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/yi-nology/git-sync-service/internal/converter"
 	webhook "github.com/yi-nology/git-sync-service/biz/model/webhook"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
-
-func toRuleModel(r *syncmodel.WebhookRule) *webhook.WebhookRuleInfo {
-	if r == nil {
-		return nil
-	}
-	return &webhook.WebhookRuleInfo{
-		ID: int64(r.ID), Name: r.Name, RepoKey: r.RepoKey,
-		EventType: r.EventType, BranchPattern: r.BranchPattern,
-		Action: r.Action, SyncTaskKeys: r.SyncTaskKeys,
-		MinInterval: int32(r.MinInterval), Enabled: r.Enabled,
-		Description: r.Description, CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
-	}
-}
-
-func toEventModel(e *syncmodel.WebhookEvent) *webhook.WebhookEventInfo {
-	if e == nil {
-		return nil
-	}
-	processedAt := ""
-	if e.ProcessedAt != nil {
-		processedAt = e.ProcessedAt.Format("2006-01-02 15:04:05")
-	}
-	return &webhook.WebhookEventInfo{
-		ID: int64(e.ID), EventID: e.EventID, RepoKey: e.RepoKey,
-		EventType: e.EventType, Source: e.Source, ActorName: e.ActorName,
-		Branch: e.Branch, CommitSha: e.CommitSHA, Status: e.Status,
-		ErrorMessage: e.ErrorMessage, ProcessedAt: processedAt,
-		CreatedAt: e.CreatedAt.Format("2006-01-02 15:04:05"),
-	}
-}
 
 func ListRules(ctx context.Context, c *app.RequestContext) {
 	var req webhook.ListRulesReq
@@ -55,11 +26,7 @@ func ListRules(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	rules := make([]*webhook.WebhookRuleInfo, 0, len(list))
-	for _, r := range list {
-		rules = append(rules, toRuleModel(r))
-	}
-	c.JSON(consts.StatusOK, &webhook.ListRulesResp{Rules: rules})
+	c.JSON(consts.StatusOK, &webhook.ListRulesResp{Rules: converter.ToRuleInfoList(list)})
 }
 
 func GetRule(ctx context.Context, c *app.RequestContext) {
@@ -77,7 +44,7 @@ func GetRule(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.GetRuleResp{Rule: toRuleModel(r)})
+	c.JSON(consts.StatusOK, &webhook.GetRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
 func CreateRule(ctx context.Context, c *app.RequestContext) {
@@ -100,7 +67,7 @@ func CreateRule(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.CreateRuleResp{Rule: toRuleModel(r)})
+	c.JSON(consts.StatusOK, &webhook.CreateRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
 func UpdateRule(ctx context.Context, c *app.RequestContext) {
@@ -123,7 +90,7 @@ func UpdateRule(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.UpdateRuleResp{Rule: toRuleModel(r)})
+	c.JSON(consts.StatusOK, &webhook.UpdateRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
 func DeleteRule(ctx context.Context, c *app.RequestContext) {
@@ -164,11 +131,7 @@ func ListEvents(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	result := make([]*webhook.WebhookEventInfo, 0, len(events))
-	for _, e := range events {
-		result = append(result, toEventModel(e))
-	}
-	c.JSON(consts.StatusOK, &webhook.ListEventsResp{Events: result})
+	c.JSON(consts.StatusOK, &webhook.ListEventsResp{Events: converter.ToEventInfoList(events)})
 }
 
 func RetryEvent(ctx context.Context, c *app.RequestContext) {
