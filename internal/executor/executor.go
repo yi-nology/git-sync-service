@@ -3,13 +3,13 @@ package executor
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/yi-nology/git-platform-sdk/credential"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
@@ -30,10 +30,14 @@ type Service interface {
 
 type Executor struct {
 	service Service
+	credMgr *credential.Manager
 }
 
 func NewExecutor(svc Service) *Executor {
-	return &Executor{service: svc}
+	return &Executor{
+		service: svc,
+		credMgr: credential.NewManager(),
+	}
 }
 
 func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger string) (*model.SyncRun, error) {
@@ -79,10 +83,9 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	workDir := e.service.GetTempDir(task.Key)
 	if err := os.MkdirAll(workDir, 0755); err != nil {
 		run.Status = "failed"
-		run.ErrorMessage = fmt.Sprintf("create work dir failed: %w", err)
+		run.ErrorMessage = fmt.Sprintf("create work dir failed: %v", err)
 		return run, err
 	}
-	defer os.RemoveAll(workDir)
 
 	repoDir := filepath.Join(workDir, "repo")
 
@@ -154,7 +157,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 }
 
 func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, branch string, details *strings.Builder) error {
-	authURL := e.buildAuthURL(repo.CloneURL, repo.AccessToken)
+	authURL := e.credMgr.BuildAuthURL(repo.CloneURL, "http_token", "oauth2", repo.AccessToken)
 
 	args := []string{"clone", "--branch", branch, "--single-branch", "--depth", "1", authURL, dir}
 	cmd := exec.CommandContext(ctx, "git", args...)
@@ -204,7 +207,7 @@ func (e *Executor) ensureRemote(ctx context.Context, dir string, repo *model.Rep
 		return e.addRemote(ctx, dir, repo, details)
 	}
 
-	authURL := e.buildAuthURL(repo.CloneURL, repo.AccessToken)
+	authURL := e.credMgr.BuildAuthURL(repo.CloneURL, "http_token", "oauth2", repo.AccessToken)
 	cmd = exec.CommandContext(ctx, "git", "remote", "set-url", "target", authURL)
 	cmd.Dir = dir
 
@@ -215,7 +218,7 @@ func (e *Executor) ensureRemote(ctx context.Context, dir string, repo *model.Rep
 }
 
 func (e *Executor) addRemote(ctx context.Context, dir string, repo *model.Repo, details *strings.Builder) error {
-	authURL := e.buildAuthURL(repo.CloneURL, repo.AccessToken)
+	authURL := e.credMgr.BuildAuthURL(repo.CloneURL, "http_token", "oauth2", repo.AccessToken)
 
 	cmd := exec.CommandContext(ctx, "git", "remote", "add", "target", authURL)
 	cmd.Dir = dir
@@ -257,20 +260,6 @@ func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, d
 	details.Write(output)
 
 	return err
-}
-
-func (e *Executor) buildAuthURL(cloneURL, token string) string {
-	if token == "" {
-		return cloneURL
-	}
-
-	u, err := url.Parse(cloneURL)
-	if err != nil {
-		return cloneURL
-	}
-
-	u.User = url.UserPassword("oauth2", token)
-	return u.String()
 }
 
 func timePtr(t time.Time) *time.Time {

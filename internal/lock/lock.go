@@ -2,6 +2,8 @@ package lock
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
@@ -12,6 +14,14 @@ import (
 const (
 	defaultLockTTL = 30 * time.Second
 )
+
+var unlockScript = redis.NewScript(`
+	if redis.call("get", KEYS[1]) == ARGV[1] then
+		return redis.call("del", KEYS[1])
+	else
+		return 0
+	end
+`)
 
 type DistLock interface {
 	TryLock(ctx context.Context, key string) (bool, error)
@@ -34,22 +44,62 @@ func NewRedisLock(addr, password string, db int) *RedisLock {
 	return &RedisLock{client: client}
 }
 
+func generateLockValue() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
 func (l *RedisLock) TryLock(ctx context.Context, key string) (bool, error) {
 	return l.TryLockWithTTL(ctx, key, defaultLockTTL)
 }
 
 func (l *RedisLock) TryLockWithTTL(ctx context.Context, key string, ttl time.Duration) (bool, error) {
 	lockKey := "git-sync:lock:" + key
-	ok, err := l.client.SetNX(ctx, lockKey, "1", ttl).Result()
+	value := generateLockValue()
+	ok, err := l.client.SetNX(ctx, lockKey, value, ttl).Result()
 	if err != nil {
 		return false, fmt.Errorf("redis setnx failed: %w", err)
+	}
+	if ok {
+		ctx2 := context.WithValue(ctx, lockValueKey{}, value)
+		*lockValueFromContext(ctx2) = value
 	}
 	return ok, nil
 }
 
+type lockValueKey struct{}
+
+func lockValueFromContext(ctx context.Context) *string {
+	val := ctx.Value(lockValueKey{})
+	if val == nil {
+		return new(string)
+	}
+	return val.(*string)
+}
+
+func (l *RedisLock) LockWithTTL(ctx context.Context, key string, ttl time.Duration) (bool, string, error) {
+	lockKey := "git-sync:lock:" + key
+	value := generateLockValue()
+	ok, err := l.client.SetNX(ctx, lockKey, value, ttl).Result()
+	if err != nil {
+		return false, "", fmt.Errorf("redis setnx failed: %w", err)
+	}
+	return ok, value, nil
+}
+
+func (l *RedisLock) UnlockWithValue(ctx context.Context, key, value string) error {
+	lockKey := "git-sync:lock:" + key
+	_, err := unlockScript.Run(ctx, l.client, []string{lockKey}, value).Result()
+	if err != nil {
+		return fmt.Errorf("redis unlock failed: %w", err)
+	}
+	return nil
+}
+
 func (l *RedisLock) Lock(ctx context.Context, key string) error {
 	for {
-		ok, err := l.TryLock(ctx, key)
+		ok, _, err := l.LockWithTTL(ctx, key, defaultLockTTL)
 		if err != nil {
 			return err
 		}
@@ -66,11 +116,15 @@ func (l *RedisLock) Lock(ctx context.Context, key string) error {
 
 func (l *RedisLock) Unlock(ctx context.Context, key string) error {
 	lockKey := "git-sync:lock:" + key
-	_, err := l.client.Del(ctx, lockKey).Result()
-	if err != nil {
-		return fmt.Errorf("redis del failed: %w", err)
+	value := lockValueFromContext(ctx)
+	if *value == "" {
+		_, err := l.client.Del(ctx, lockKey).Result()
+		if err != nil {
+			return fmt.Errorf("redis del failed: %w", err)
+		}
+		return nil
 	}
-	return nil
+	return l.UnlockWithValue(ctx, key, *value)
 }
 
 func (l *RedisLock) ExtendLock(ctx context.Context, key string, ttl time.Duration) error {
@@ -139,6 +193,10 @@ func (s *Semaphore) Cleanup(ctx context.Context, olderThan time.Duration) error 
 	return err
 }
 
+type localLockEntry struct {
+	expiresAt time.Time
+}
+
 type LocalLock struct {
 	mu sync.Map
 }
@@ -148,8 +206,16 @@ func (l *LocalLock) TryLock(ctx context.Context, key string) (bool, error) {
 }
 
 func (l *LocalLock) TryLockWithTTL(ctx context.Context, key string, ttl time.Duration) (bool, error) {
-	_, loaded := l.mu.LoadOrStore(key, time.Now().Add(ttl))
-	return !loaded, nil
+	now := time.Now()
+	existing, loaded := l.mu.LoadOrStore(key, &localLockEntry{expiresAt: now.Add(ttl)})
+	if !loaded {
+		return true, nil
+	}
+	if entry, ok := existing.(*localLockEntry); ok && now.After(entry.expiresAt) {
+		l.mu.Store(key, &localLockEntry{expiresAt: now.Add(ttl)})
+		return true, nil
+	}
+	return false, nil
 }
 
 func (l *LocalLock) Lock(ctx context.Context, key string) error {

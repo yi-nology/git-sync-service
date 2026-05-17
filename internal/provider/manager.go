@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"sync"
+	"time"
 
 	"github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
@@ -48,14 +48,21 @@ func (a *SDKProviderAdapter) Platform() sdkprov.Platform {
 	return a.provider.Platform()
 }
 
+type cachedProvider struct {
+	provider  GitProvider
+	createdAt time.Time
+}
+
 type ProviderManager struct {
-	providers map[string]GitProvider
+	providers map[string]cachedProvider
 	mu        sync.RWMutex
+	ttl       time.Duration
 }
 
 func NewProviderManager() *ProviderManager {
 	return &ProviderManager{
-		providers: make(map[string]GitProvider),
+		providers: make(map[string]cachedProvider),
+		ttl:       30 * time.Minute,
 	}
 }
 
@@ -63,9 +70,11 @@ func (m *ProviderManager) GetProvider(repo *model.Repo) (GitProvider, error) {
 	key := fmt.Sprintf("%s:%s", repo.Platform, repo.Key)
 
 	m.mu.RLock()
-	if p, ok := m.providers[key]; ok {
-		m.mu.RUnlock()
-		return p, nil
+	if cp, ok := m.providers[key]; ok {
+		if time.Since(cp.createdAt) < m.ttl {
+			m.mu.RUnlock()
+			return cp.provider, nil
+		}
 	}
 	m.mu.RUnlock()
 
@@ -75,23 +84,21 @@ func (m *ProviderManager) GetProvider(repo *model.Repo) (GitProvider, error) {
 	}
 
 	m.mu.Lock()
-	m.providers[key] = p
+	m.providers[key] = cachedProvider{provider: p, createdAt: time.Now()}
 	m.mu.Unlock()
 
 	return p, nil
 }
 
 func (m *ProviderManager) newProvider(repo *model.Repo) (GitProvider, error) {
-	platform, err := parsePlatform(repo.Platform)
+	result, err := sdkprov.DetectPlatform(repo.CloneURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("detect platform failed: %w", err)
 	}
 
-	baseURL := getPlatformBaseURL(repo.Platform, repo.CloneURL)
-
 	sdkProvider, err := sdkprov.NewProvider(sdkprov.Config{
-		Platform: platform,
-		BaseURL:  baseURL,
+		Platform: result.Platform,
+		BaseURL:  result.BaseURL,
 		Token:    repo.AccessToken,
 		SkipTLS:  false,
 	})
@@ -102,124 +109,10 @@ func (m *ProviderManager) newProvider(repo *model.Repo) (GitProvider, error) {
 	return &SDKProviderAdapter{provider: sdkProvider}, nil
 }
 
-func parsePlatform(platform string) (sdkprov.Platform, error) {
-	switch platform {
-	case "github":
-		return sdkprov.PlatformGitHub, nil
-	case "gitlab":
-		return sdkprov.PlatformGitLab, nil
-	case "gitea":
-		return sdkprov.PlatformGitea, nil
-	case "forgejo":
-		return sdkprov.PlatformForgejo, nil
-	case "tencent_code":
-		return sdkprov.PlatformTencentCode, nil
-	case "gitee":
-		return sdkprov.PlatformGitee, nil
-	default:
-		return "", fmt.Errorf("unsupported platform: %s", platform)
-	}
-}
-
-func getPlatformBaseURL(platform, cloneURL string) string {
-	if cloneURL == "" {
-		return getDefaultBaseURL(platform)
-	}
-
-	u, err := parseCloneURL(cloneURL)
-	if err != nil {
-		return getDefaultBaseURL(platform)
-	}
-
-	baseURL := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
-	switch platform {
-	case "github":
-		if strings.Contains(u.Host, "github.com") {
-			return ""
-		}
-	case "gitlab":
-		if strings.Contains(u.Host, "gitlab.com") {
-			return ""
-		}
-		baseURL = fmt.Sprintf("%s/api/v4", baseURL)
-	case "gitea":
-		baseURL = fmt.Sprintf("%s/api/v1", baseURL)
-	case "forgejo":
-		baseURL = fmt.Sprintf("%s/api/v1", baseURL)
-	}
-
-	return baseURL
-}
-
-func getDefaultBaseURL(platform string) string {
-	switch platform {
-	case "gitlab":
-		return "https://gitlab.com/api/v4"
-	case "gitea":
-		return "https://gitea.com/api/v1"
-	case "forgejo":
-		return "https://codeberg.org/api/v1"
-	case "tencent_code":
-		return "https://e.coding.net/open-api"
-	case "gitee":
-		return "https://gitee.com/api/v5"
-	default:
-		return ""
-	}
-}
-
-type URLParts struct {
-	Scheme string
-	Host   string
-	Owner  string
-	Repo   string
-}
-
-func parseCloneURL(cloneURL string) (*URLParts, error) {
-	if strings.HasPrefix(cloneURL, "git@") {
-		return parseSSHURL(cloneURL)
-	}
-	return parseHTTPSURL(cloneURL)
-}
-
-func parseSSHURL(cloneURL string) (*URLParts, error) {
-	parts := strings.SplitN(strings.TrimPrefix(cloneURL, "git@"), ":", 2)
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid SSH URL")
-	}
-
-	pathParts := strings.SplitN(strings.TrimSuffix(parts[1], ".git"), "/", 2)
-	if len(pathParts) != 2 {
-		return nil, fmt.Errorf("invalid SSH URL path")
-	}
-
-	return &URLParts{
-		Scheme: "https",
-		Host:   parts[0],
-		Owner:  pathParts[0],
-		Repo:   pathParts[1],
-	}, nil
-}
-
-func parseHTTPSURL(cloneURL string) (*URLParts, error) {
-	withoutScheme := strings.TrimPrefix(strings.TrimPrefix(cloneURL, "https://"), "http://")
-	parts := strings.SplitN(withoutScheme, "/", 3)
-	if len(parts) < 3 {
-		return nil, fmt.Errorf("invalid HTTPS URL")
-	}
-
-	return &URLParts{
-		Scheme: "https",
-		Host:   parts[0],
-		Owner:  parts[1],
-		Repo:   strings.TrimSuffix(parts[2], ".git"),
-	}, nil
-}
-
 func ExtractOwnerRepoFromURL(cloneURL string) (string, string, error) {
-	parts, err := parseCloneURL(cloneURL)
+	result, err := sdkprov.DetectPlatform(cloneURL)
 	if err != nil {
 		return "", "", err
 	}
-	return parts.Owner, parts.Repo, nil
+	return result.Owner, result.Repo, nil
 }
