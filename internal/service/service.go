@@ -204,3 +204,16 @@ func (s *Service) RepoDAO() interface {
 } {
 	return s.repoDAO
 }
+
+func (s *Service) CleanupOldData(maxAge time.Duration) (events int64, runs int64, err error) {
+	events, err = s.eventDAO.CleanupOlderThan(maxAge)
+	if err != nil {
+		return 0, 0, err
+	}
+	runs, err = s.runDAO.CleanupOlderThan(maxAge)
+	if err != nil {
+		return events, 0, err
+	}
+	slog.Info("data cleanup completed", "events_deleted", events, "runs_deleted", runs)
+	return events, runs, nil
+}

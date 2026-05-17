@@ -15,10 +15,13 @@ func NewSyncTaskDAO(db *gorm.DB) *SyncTaskDAO {
 	return &SyncTaskDAO{db: db}
 }
 
-func (d *SyncTaskDAO) FindByRepoKey(repoKey string) ([]*model.SyncTask, error) {
+func (d *SyncTaskDAO) FindByRepoKey(repoKey string, page Pagination) ([]*model.SyncTask, int64, error) {
 	var tasks []*model.SyncTask
-	err := d.db.Where("source_repo_key = ? OR target_repo_key = ?", repoKey, repoKey).Find(&tasks).Error
-	return tasks, err
+	var total int64
+	query := d.db.Where("source_repo_key = ? OR target_repo_key = ?", repoKey, repoKey)
+	query.Model(&model.SyncTask{}).Count(&total)
+	err := query.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&tasks).Error
+	return tasks, total, err
 }
 
 func (d *SyncTaskDAO) FindByKey(key string) (*model.SyncTask, error) {
@@ -48,27 +51,10 @@ func (d *SyncTaskDAO) Delete(key string) error {
 	return d.db.Where("`key` = ?", key).Delete(&model.SyncTask{}).Error
 }
 
-func (d *SyncTaskDAO) FindAll() ([]*model.SyncTask, error) {
+func (d *SyncTaskDAO) FindAll(page Pagination) ([]*model.SyncTask, int64, error) {
 	var tasks []*model.SyncTask
-	err := d.db.Find(&tasks).Error
-	return tasks, err
-}
-
-func (d *SyncTaskDAO) FindAllConfigs() ([]*model.SyncConfigEntry, error) {
-	var configs []*model.SyncConfigEntry
-	err := d.db.Find(&configs).Error
-	return configs, err
-}
-
-func (d *SyncTaskDAO) FindConfigByKey(key string) (*model.SyncConfigEntry, error) {
-	var cfg model.SyncConfigEntry
-	err := d.db.Where("`key` = ?", key).First(&cfg).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-	return &cfg, err
-}
-
-func (d *SyncTaskDAO) SaveConfig(cfg *model.SyncConfigEntry) error {
-	return d.db.Save(cfg).Error
+	var total int64
+	d.db.Model(&model.SyncTask{}).Count(&total)
+	err := d.db.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&tasks).Error
+	return tasks, total, err
 }

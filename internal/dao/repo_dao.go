@@ -8,6 +8,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type Pagination struct {
+	Offset int
+	Limit  int
+}
+
+func DefaultPagination(offset, limit int) Pagination {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return Pagination{Offset: offset, Limit: limit}
+}
+
 type RepoDAO struct {
 	db *gorm.DB
 }
@@ -16,10 +34,12 @@ func NewRepoDAO(db *gorm.DB) *RepoDAO {
 	return &RepoDAO{db: db}
 }
 
-func (d *RepoDAO) FindAll() ([]*model.Repo, error) {
+func (d *RepoDAO) FindAll(page Pagination) ([]*model.Repo, int64, error) {
 	var repos []*model.Repo
-	err := d.db.Find(&repos).Error
-	return repos, err
+	var total int64
+	d.db.Model(&model.Repo{}).Count(&total)
+	err := d.db.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&repos).Error
+	return repos, total, err
 }
 
 func (d *RepoDAO) FindByKey(key string) (*model.Repo, error) {

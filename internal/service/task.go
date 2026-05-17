@@ -5,21 +5,23 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
-func (s *Service) ListTasks(repoKey string) ([]*model.SyncTask, error) {
+func (s *Service) ListTasks(ctx context.Context, repoKey string, offset, limit int) ([]*model.SyncTask, int64, error) {
+	page := dao.DefaultPagination(offset, limit)
 	if repoKey != "" {
-		return s.taskDAO.FindByRepoKey(repoKey)
+		return s.taskDAO.FindByRepoKey(repoKey, page)
 	}
-	return s.taskDAO.FindAll()
+	return s.taskDAO.FindAll(page)
 }
 
-func (s *Service) GetTask(key string) (*model.SyncTask, error) {
+func (s *Service) GetTask(ctx context.Context, key string) (*model.SyncTask, error) {
 	return s.taskDAO.FindByKey(key)
 }
 
-func (s *Service) CreateTask(req *model.CreateTaskRequest) (*model.SyncTask, error) {
+func (s *Service) CreateTask(ctx context.Context, req *model.CreateTaskRequest) (*model.SyncTask, error) {
 	task := &model.SyncTask{
 		Key:           uuid.New().String(),
 		Name:          req.Name,
@@ -51,7 +53,7 @@ func (s *Service) CreateTask(req *model.CreateTaskRequest) (*model.SyncTask, err
 	return task, nil
 }
 
-func (s *Service) UpdateTask(req *model.UpdateTaskRequest) (*model.SyncTask, error) {
+func (s *Service) UpdateTask(ctx context.Context, req *model.UpdateTaskRequest) (*model.SyncTask, error) {
 	task, err := s.taskDAO.FindByKey(req.Key)
 	if err != nil {
 		return nil, err
@@ -97,7 +99,7 @@ func (s *Service) UpdateTask(req *model.UpdateTaskRequest) (*model.SyncTask, err
 	return task, nil
 }
 
-func (s *Service) DeleteTask(key string) error {
+func (s *Service) DeleteTask(ctx context.Context, key string) error {
 	s.removeCronJob(key)
 	return s.taskDAO.Delete(key)
 }
@@ -119,7 +121,7 @@ func (s *Service) RunTaskWithTrigger(ctx context.Context, taskKey, trigger strin
 	return err
 }
 
-func (s *Service) PreviewSync(req *model.PreviewSyncRequest) (*model.PreviewSyncResult, error) {
+func (s *Service) PreviewSync(ctx context.Context, req *model.PreviewSyncRequest) (*model.PreviewSyncResult, error) {
 	sourceRepo, err := s.repoDAO.FindByKey(req.SourceRepoKey)
 	if err != nil {
 		return nil, err
@@ -145,13 +147,11 @@ func (s *Service) PreviewSync(req *model.PreviewSyncRequest) (*model.PreviewSync
 	return result, nil
 }
 
-func (s *Service) ListHistory(taskKey string, limit int) ([]*model.SyncRun, error) {
-	if limit <= 0 {
-		limit = 50
-	}
-	return s.runDAO.FindByTaskKey(taskKey, limit)
+func (s *Service) ListHistory(ctx context.Context, taskKey string, offset, limit int) ([]*model.SyncRun, int64, error) {
+	page := dao.DefaultPagination(offset, limit)
+	return s.runDAO.FindByTaskKey(taskKey, page)
 }
 
-func (s *Service) DeleteHistory(id uint) error {
+func (s *Service) DeleteHistory(ctx context.Context, id uint) error {
 	return s.runDAO.Delete(id)
 }

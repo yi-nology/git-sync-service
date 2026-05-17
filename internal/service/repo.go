@@ -5,20 +5,22 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/provider"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
 
-func (s *Service) ListRepos() ([]*model.Repo, error) {
-	return s.repoDAO.FindAll()
+func (s *Service) ListRepos(ctx context.Context, offset, limit int) ([]*model.Repo, int64, error) {
+	page := dao.DefaultPagination(offset, limit)
+	return s.repoDAO.FindAll(page)
 }
 
-func (s *Service) GetRepo(key string) (*model.Repo, error) {
+func (s *Service) GetRepo(ctx context.Context, key string) (*model.Repo, error) {
 	return s.repoDAO.FindByKey(key)
 }
 
-func (s *Service) CreateRepo(req *model.CreateRepoRequest) (*model.Repo, error) {
+func (s *Service) CreateRepo(ctx context.Context, req *model.CreateRepoRequest) (*model.Repo, error) {
 	result, err := sdkprov.DetectPlatform(req.RemoteURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid remote URL: %w", err)
@@ -42,7 +44,7 @@ func (s *Service) CreateRepo(req *model.CreateRepoRequest) (*model.Repo, error) 
 	return repo, nil
 }
 
-func (s *Service) UpdateRepo(req *model.UpdateRepoRequest) (*model.Repo, error) {
+func (s *Service) UpdateRepo(ctx context.Context, req *model.UpdateRepoRequest) (*model.Repo, error) {
 	repo, err := s.repoDAO.FindByKey(req.Key)
 	if err != nil {
 		return nil, err
@@ -65,7 +67,7 @@ func (s *Service) UpdateRepo(req *model.UpdateRepoRequest) (*model.Repo, error) 
 	return repo, nil
 }
 
-func (s *Service) DeleteRepo(key string) error {
+func (s *Service) DeleteRepo(ctx context.Context, key string) error {
 	return s.repoDAO.Delete(key)
 }
 
