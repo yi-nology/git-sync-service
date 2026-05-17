@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+	"time"
 
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
@@ -24,10 +25,13 @@ func (d *WebhookEventDAO) FindByEventID(eventID string) (*model.WebhookEvent, er
 	return &event, err
 }
 
-func (d *WebhookEventDAO) FindByRepoKey(repoKey string, limit int) ([]*model.WebhookEvent, error) {
+func (d *WebhookEventDAO) FindByRepoKey(repoKey string, page Pagination) ([]*model.WebhookEvent, int64, error) {
 	var events []*model.WebhookEvent
-	err := d.db.Where("repo_key = ?", repoKey).Order("id DESC").Limit(limit).Find(&events).Error
-	return events, err
+	var total int64
+	query := d.db.Where("repo_key = ?", repoKey)
+	query.Model(&model.WebhookEvent{}).Count(&total)
+	err := query.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&events).Error
+	return events, total, err
 }
 
 func (d *WebhookEventDAO) Create(event *model.WebhookEvent) error {
@@ -47,12 +51,24 @@ func (d *WebhookEventDAO) FindByID(id uint) (*model.WebhookEvent, error) {
 	return &event, err
 }
 
-func (d *WebhookEventDAO) FindRecent(repoKey string, limit int) ([]*model.WebhookEvent, error) {
+func (d *WebhookEventDAO) FindRecent(repoKey string, page Pagination) ([]*model.WebhookEvent, error) {
 	var events []*model.WebhookEvent
-	query := d.db.Order("id DESC").Limit(limit)
+	query := d.db.Offset(page.Offset).Limit(page.Limit).Order("id DESC")
 	if repoKey != "" {
 		query = query.Where("repo_key = ?", repoKey)
 	}
 	err := query.Find(&events).Error
 	return events, err
+}
+
+func (d *WebhookEventDAO) CleanupOlderThan(olderThan time.Duration) (int64, error) {
+	cutoff := time.Now().Add(-olderThan)
+	result := d.db.Where("created_at < ?", cutoff).Delete(&model.WebhookEvent{})
+	return result.RowsAffected, result.Error
+}
+
+func (d *WebhookEventDAO) CountByRepoKey(repoKey string) (int64, error) {
+	var count int64
+	err := d.db.Model(&model.WebhookEvent{}).Where("repo_key = ?", repoKey).Count(&count).Error
+	return count, err
 }

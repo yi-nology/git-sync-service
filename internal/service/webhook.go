@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/yi-nology/git-platform-sdk/branchfilter"
 )
@@ -124,15 +125,15 @@ func (s *Service) applyRules(ctx context.Context, repoKey string, event *model.W
 	}
 }
 
-func (s *Service) ListRules(repoKey string) ([]*model.WebhookRule, error) {
+func (s *Service) ListRules(ctx context.Context, repoKey string) ([]*model.WebhookRule, error) {
 	return s.ruleDAO.FindByRepoKey(repoKey)
 }
 
-func (s *Service) GetRule(id uint) (*model.WebhookRule, error) {
+func (s *Service) GetRule(ctx context.Context, id uint) (*model.WebhookRule, error) {
 	return s.ruleDAO.FindByID(id)
 }
 
-func (s *Service) CreateRule(req *model.CreateRuleRequest) (*model.WebhookRule, error) {
+func (s *Service) CreateRule(ctx context.Context, req *model.CreateRuleRequest) (*model.WebhookRule, error) {
 	rule := &model.WebhookRule{
 		Name:          req.Name,
 		RepoKey:       req.RepoKey,
@@ -152,7 +153,7 @@ func (s *Service) CreateRule(req *model.CreateRuleRequest) (*model.WebhookRule, 
 	return rule, nil
 }
 
-func (s *Service) UpdateRule(req *model.UpdateRuleRequest) (*model.WebhookRule, error) {
+func (s *Service) UpdateRule(ctx context.Context, req *model.UpdateRuleRequest) (*model.WebhookRule, error) {
 	rule, err := s.ruleDAO.FindByID(req.ID)
 	if err != nil {
 		return nil, err
@@ -185,15 +186,13 @@ func (s *Service) UpdateRule(req *model.UpdateRuleRequest) (*model.WebhookRule, 
 	return rule, nil
 }
 
-func (s *Service) DeleteRule(id uint) error {
+func (s *Service) DeleteRule(ctx context.Context, id uint) error {
 	return s.ruleDAO.Delete(id)
 }
 
-func (s *Service) ListEvents(repoKey string, limit int) ([]*model.WebhookEvent, error) {
-	if limit <= 0 {
-		limit = 50
-	}
-	return s.eventDAO.FindByRepoKey(repoKey, limit)
+func (s *Service) ListEvents(ctx context.Context, repoKey string, offset, limit int) ([]*model.WebhookEvent, int64, error) {
+	page := dao.DefaultPagination(offset, limit)
+	return s.eventDAO.FindByRepoKey(repoKey, page)
 }
 
 func (s *Service) RetryEvent(ctx context.Context, eventID uint) error {
