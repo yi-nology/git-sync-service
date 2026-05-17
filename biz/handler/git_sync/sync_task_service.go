@@ -6,45 +6,10 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/yi-nology/git-sync-service/internal/converter"
 	sync_task "github.com/yi-nology/git-sync-service/biz/model/sync_task"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
-
-func toTaskModel(t *syncmodel.SyncTask) *sync_task.SyncTaskInfo {
-	if t == nil {
-		return nil
-	}
-	lastRunAt := ""
-	if t.LastRunAt != nil {
-		lastRunAt = t.LastRunAt.Format("2006-01-02 15:04:05")
-	}
-	return &sync_task.SyncTaskInfo{
-		ID: int64(t.ID), Key: t.Key, Name: t.Name,
-		SourceRepoKey: t.SourceRepoKey, SourceBranch: t.SourceBranch,
-		TargetRepoKey: t.TargetRepoKey, TargetBranch: t.TargetBranch,
-		SyncMode: t.SyncMode, Cron: t.Cron, WebhookToken: t.WebhookToken,
-		Enabled: t.Enabled, GitTags: t.GitTags, GitForce: t.GitForce,
-		GitPrune: t.GitPrune, GitNoVerify: t.GitNoVerify,
-		LastRunAt: lastRunAt, LastStatus: t.LastStatus,
-		CreatedAt: t.CreatedAt.Format("2006-01-02 15:04:05"),
-	}
-}
-
-func toSyncRunModel(r *syncmodel.SyncRun) *sync_task.SyncRunInfo {
-	if r == nil {
-		return nil
-	}
-	endTime := ""
-	if r.EndTime != nil {
-		endTime = r.EndTime.Format("2006-01-02 15:04:05")
-	}
-	return &sync_task.SyncRunInfo{
-		ID: int64(r.ID), TaskKey: r.TaskKey, TriggerSource: r.TriggerSource,
-		Status: r.Status, StartTime: r.StartTime.Format("2006-01-02 15:04:05"),
-		EndTime: endTime, CommitRange: r.CommitRange, Details: r.Details,
-		ErrorMessage: r.ErrorMessage, CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
-	}
-}
 
 func ListTasks(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.ListTasksReq
@@ -53,18 +18,17 @@ func ListTasks(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	offset, limit := pageToOffset(req.Page, req.PageSize)
+	offset, limit := converter.PageToOffset(req.Page, req.PageSize)
 	list, total, err := GetSyncService().ListTasks(ctx, req.RepoKey, offset, limit)
 	if err != nil {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
 
-	tasks := make([]*sync_task.SyncTaskInfo, 0, len(list))
-	for _, t := range list {
-		tasks = append(tasks, toTaskModel(t))
-	}
-	c.JSON(consts.StatusOK, &sync_task.ListTasksResp{Tasks: tasks, Total: total})
+	c.JSON(consts.StatusOK, &sync_task.ListTasksResp{
+		Tasks: converter.ToTaskInfoList(list),
+		Total: total,
+	})
 }
 
 func GetTask(ctx context.Context, c *app.RequestContext) {
@@ -83,7 +47,7 @@ func GetTask(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.GetTaskResp{Task: toTaskModel(t)})
+	c.JSON(consts.StatusOK, &sync_task.GetTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
 func CreateTask(ctx context.Context, c *app.RequestContext) {
@@ -108,7 +72,7 @@ func CreateTask(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": fmt.Sprintf("create task failed: %v", err)})
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.CreateTaskResp{Task: toTaskModel(t)})
+	c.JSON(consts.StatusOK, &sync_task.CreateTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
 func UpdateTask(ctx context.Context, c *app.RequestContext) {
@@ -132,7 +96,7 @@ func UpdateTask(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.UpdateTaskResp{Task: toTaskModel(t)})
+	c.JSON(consts.StatusOK, &sync_task.UpdateTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
 func DeleteTask(ctx context.Context, c *app.RequestContext) {
@@ -216,9 +180,5 @@ func ListHistory(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	result := make([]*sync_task.SyncRunInfo, 0, len(runs))
-	for _, r := range runs {
-		result = append(result, toSyncRunModel(r))
-	}
-	c.JSON(consts.StatusOK, &sync_task.ListHistoryResp{Runs: result})
+	c.JSON(consts.StatusOK, &sync_task.ListHistoryResp{Runs: converter.ToSyncRunInfoList(runs)})
 }
