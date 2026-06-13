@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/yi-nology/git-platform-sdk/branchfilter"
+	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
 )
 
 func matchBranch(pattern, branch string) bool {
