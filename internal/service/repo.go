@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"git.enjoye.top/enjoydream/ekit/pkg/uidgen"
+	"github.com/google/uuid"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/provider"
 	"github.com/yi-nology/git-sync-service/sync/model"
@@ -27,7 +27,7 @@ func (s *Service) CreateRepo(ctx context.Context, req *model.CreateRepoRequest) 
 	}
 
 	repo := &model.Repo{
-		Key:           uidgen.UUID(),
+		Key:           uuid.New().String(),
 		Name:          req.Name,
 		Platform:      string(result.Platform),
 		PlatformOwner: result.Owner,
