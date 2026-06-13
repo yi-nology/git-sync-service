@@ -3,7 +3,7 @@ package dao
 import (
 	"errors"
 
-	"github.com/yi-nology/git-platform-sdk/credential"
+	"github.com/yi-nology/git-platform-sdk/pkg/credential"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )

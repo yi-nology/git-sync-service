@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/yi-nology/git-platform-sdk/credential"
+	"github.com/yi-nology/git-platform-sdk/gitbackend"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
@@ -30,13 +29,17 @@ type Service interface {
 
 type Executor struct {
 	service Service
-	credMgr *credential.Manager
+	backend gitbackend.GitBackend
 }
 
 func NewExecutor(svc Service) *Executor {
+	backend, err := gitbackend.NewGitBackend(gitbackend.Options{})
+	if err != nil {
+		panic(fmt.Sprintf("init git backend failed: %v", err))
+	}
 	return &Executor{
 		service: svc,
-		credMgr: credential.NewManager(),
+		backend: backend,
 	}
 }
 
@@ -156,109 +159,71 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	return run, nil
 }
 
+func (e *Executor) authConfig(repo *model.Repo) gitbackend.AuthConfig {
+	if repo.AccessToken != "" {
+		return gitbackend.AuthConfig{
+			Type:  gitbackend.AuthHTTPToken,
+			Token: repo.AccessToken,
+		}
+	}
+	return gitbackend.AuthConfig{Type: gitbackend.AuthNone}
+}
+
 func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, branch string, details *strings.Builder) error {
-	authURL := e.credMgr.BuildAuthURL(repo.CloneURL, "http_token", "oauth2", repo.AccessToken)
-
-	args := []string{"clone", "--branch", branch, "--single-branch", "--depth", "1", authURL, dir}
-	cmd := exec.CommandContext(ctx, "git", args...)
-
-	output, err := cmd.CombinedOutput()
-	details.Write(output)
-
+	err := e.backend.Clone(ctx, gitbackend.CloneOptions{
+		URL:    repo.CloneURL,
+		Path:   dir,
+		Branch: branch,
+		Depth:  1,
+		Auth:   e.authConfig(repo),
+	})
+	if err != nil {
+		details.WriteString(fmt.Sprintf("clone error: %v\n", err))
+	}
 	return err
 }
 
 func (e *Executor) fetchRepo(ctx context.Context, dir string, branch string, details *strings.Builder) error {
-	args := []string{"fetch", "origin", branch}
-	cmd := exec.CommandContext(ctx, "git", args...)
-	cmd.Dir = dir
-
-	output, err := cmd.CombinedOutput()
-	details.Write(output)
+	_, err := e.backend.Fetch(ctx, gitbackend.FetchOptions{
+		RepoPath: dir,
+		Remote:   "origin",
+		Branches: []string{branch},
+		Auth:     gitbackend.AuthConfig{Type: gitbackend.AuthNone},
+	})
 	if err != nil {
+		details.WriteString(fmt.Sprintf("fetch error: %v\n", err))
 		return err
 	}
 
-	args = []string{"checkout", branch}
-	cmd = exec.CommandContext(ctx, "git", args...)
-	cmd.Dir = dir
-
-	output, err = cmd.CombinedOutput()
-	details.Write(output)
-	if err != nil {
+	if err := e.backend.Checkout(ctx, dir, branch); err != nil {
+		details.WriteString(fmt.Sprintf("checkout error: %v\n", err))
 		return err
 	}
 
-	args = []string{"pull", "origin", branch}
-	cmd = exec.CommandContext(ctx, "git", args...)
-	cmd.Dir = dir
-
-	output, err = cmd.CombinedOutput()
-	details.Write(output)
-
-	return err
+	return nil
 }
 
 func (e *Executor) ensureRemote(ctx context.Context, dir string, repo *model.Repo, details *strings.Builder) error {
-	cmd := exec.CommandContext(ctx, "git", "remote", "get-url", "target")
-	cmd.Dir = dir
-
-	if err := cmd.Run(); err != nil {
-		return e.addRemote(ctx, dir, repo, details)
+	remotes, err := e.backend.ListRemoteBranches(ctx, dir, "target")
+	if err != nil || len(remotes) == 0 {
+		return e.backend.AddRemote(ctx, dir, "target", repo.CloneURL)
 	}
-
-	authURL := e.credMgr.BuildAuthURL(repo.CloneURL, "http_token", "oauth2", repo.AccessToken)
-	cmd = exec.CommandContext(ctx, "git", "remote", "set-url", "target", authURL)
-	cmd.Dir = dir
-
-	output, err := cmd.CombinedOutput()
-	details.Write(output)
-
-	return err
-}
-
-func (e *Executor) addRemote(ctx context.Context, dir string, repo *model.Repo, details *strings.Builder) error {
-	authURL := e.credMgr.BuildAuthURL(repo.CloneURL, "http_token", "oauth2", repo.AccessToken)
-
-	cmd := exec.CommandContext(ctx, "git", "remote", "add", "target", authURL)
-	cmd.Dir = dir
-
-	output, err := cmd.CombinedOutput()
-	details.Write(output)
-
-	return err
+	return nil
 }
 
 func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, details *strings.Builder) error {
-	args := []string{"push"}
-	if task.GitForce {
-		args = append(args, "--force")
-	}
-	if task.GitPrune {
-		args = append(args, "--prune")
-	}
-	if task.GitNoVerify {
-		args = append(args, "--no-verify")
-	}
-	if task.GitTags {
-		args = append(args, "--tags")
-	}
-
 	refSpec := fmt.Sprintf("%s:%s", task.SourceBranch, task.TargetBranch)
-	args = append(args, "target", refSpec)
 
-	if task.PushOptions != "" {
-		for _, opt := range strings.Split(task.PushOptions, ",") {
-			args = append(args, "-o", strings.TrimSpace(opt))
-		}
+	_, err := e.backend.Push(ctx, gitbackend.PushOptions{
+		RepoPath: dir,
+		Remote:   "target",
+		RefSpecs: []string{refSpec},
+		Force:    task.GitForce,
+		Auth:     gitbackend.AuthConfig{Type: gitbackend.AuthNone},
+	})
+	if err != nil {
+		details.WriteString(fmt.Sprintf("push error: %v\n", err))
 	}
-
-	cmd := exec.CommandContext(ctx, "git", args...)
-	cmd.Dir = dir
-
-	output, err := cmd.CombinedOutput()
-	details.Write(output)
-
 	return err
 }
 

@@ -11,7 +11,7 @@ import (
 
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
-	"github.com/yi-nology/git-platform-sdk/branchfilter"
+	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
 )
 
 var (
