@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"git.enjoye.top/enjoydream/ekit/pkg/uidgen"
+	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/executor"
@@ -84,7 +84,7 @@ func NewService(cfg *Config) (*Service, error) {
 		cronEntryIDs: make(map[string]cron.EntryID),
 		lock:         distLock,
 		semaphore:    sem,
-		semaphoreID:  uidgen.UUID(),
+		semaphoreID:  uuid.New().String(),
 	}
 
 	svc.executor = executor.NewExecutor(svc)

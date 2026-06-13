@@ -3,9 +3,9 @@ module github.com/yi-nology/git-sync-service
 go 1.26
 
 require (
-	git.enjoye.top/enjoydream/ekit v0.6.7
 	github.com/apache/thrift v0.23.0
 	github.com/cloudwego/hertz v0.10.4
+	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.20.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/yi-nology/git-platform-sdk v0.11.0
@@ -54,7 +54,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/google/go-github/v69 v69.2.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hashicorp/go-version v1.9.0 // indirect

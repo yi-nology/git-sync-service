@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"git.enjoye.top/enjoydream/ekit/pkg/uidgen"
+	"github.com/google/uuid"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -23,7 +23,7 @@ func (s *Service) GetTask(ctx context.Context, key string) (*model.SyncTask, err
 
 func (s *Service) CreateTask(ctx context.Context, req *model.CreateTaskRequest) (*model.SyncTask, error) {
 	task := &model.SyncTask{
-		Key:           uidgen.UUID(),
+		Key:           uuid.New().String(),
 		Name:          req.Name,
 		SourceRepoKey: req.SourceRepoKey,
 		SourceBranch:  req.SourceBranch,
@@ -31,7 +31,7 @@ func (s *Service) CreateTask(ctx context.Context, req *model.CreateTaskRequest) 
 		TargetBranch:  req.TargetBranch,
 		SyncMode:      req.SyncMode,
 		Cron:          req.Cron,
-		WebhookToken:  uidgen.UUID(),
+		WebhookToken:  uuid.New().String(),
 		Enabled:       true,
 		GitTags:       req.GitTags,
 		GitForce:      req.GitForce,
