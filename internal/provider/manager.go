@@ -1,9 +1,7 @@
 package provider
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"sync"
 	"time"
 
@@ -11,45 +9,8 @@ import (
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
 
-type GitProvider interface {
-	GetRepository(ctx context.Context, owner, name string) (*sdkprov.PlatformRepo, error)
-	ListBranches(ctx context.Context, owner, name string) ([]*sdkprov.PlatformBranch, error)
-	ValidateWebhookSignature(r *http.Request, secret string) error
-	ParseWebhookEvent(r *http.Request, secret string) (*sdkprov.NormalizedEvent, error)
-	TestConnection(ctx context.Context) (*sdkprov.TestConnectionResult, error)
-	Platform() sdkprov.Platform
-}
-
-type SDKProviderAdapter struct {
-	provider sdkprov.Provider
-}
-
-func (a *SDKProviderAdapter) GetRepository(ctx context.Context, owner, name string) (*sdkprov.PlatformRepo, error) {
-	return a.provider.GetRepo(ctx, owner, name)
-}
-
-func (a *SDKProviderAdapter) ListBranches(ctx context.Context, owner, name string) ([]*sdkprov.PlatformBranch, error) {
-	return a.provider.ListBranches(ctx, owner, name)
-}
-
-func (a *SDKProviderAdapter) ValidateWebhookSignature(r *http.Request, secret string) error {
-	return a.provider.ValidateWebhookSignature(r, secret)
-}
-
-func (a *SDKProviderAdapter) ParseWebhookEvent(r *http.Request, secret string) (*sdkprov.NormalizedEvent, error) {
-	return a.provider.ParseWebhookEvent(r, secret)
-}
-
-func (a *SDKProviderAdapter) TestConnection(ctx context.Context) (*sdkprov.TestConnectionResult, error) {
-	return a.provider.TestConnection(ctx)
-}
-
-func (a *SDKProviderAdapter) Platform() sdkprov.Platform {
-	return a.provider.Platform()
-}
-
 type cachedProvider struct {
-	provider  GitProvider
+	provider  sdkprov.Provider
 	createdAt time.Time
 }
 
@@ -66,7 +27,7 @@ func NewProviderManager() *ProviderManager {
 	}
 }
 
-func (m *ProviderManager) GetProvider(repo *model.Repo) (GitProvider, error) {
+func (m *ProviderManager) GetProvider(repo *model.Repo) (sdkprov.Provider, error) {
 	key := fmt.Sprintf("%s:%s", repo.Platform, repo.Key)
 
 	m.mu.RLock()
@@ -90,7 +51,7 @@ func (m *ProviderManager) GetProvider(repo *model.Repo) (GitProvider, error) {
 	return p, nil
 }
 
-func (m *ProviderManager) newProvider(repo *model.Repo) (GitProvider, error) {
+func (m *ProviderManager) newProvider(repo *model.Repo) (sdkprov.Provider, error) {
 	result, err := sdkprov.DetectPlatform(repo.CloneURL)
 	if err != nil {
 		return nil, fmt.Errorf("detect platform failed: %w", err)
@@ -106,7 +67,7 @@ func (m *ProviderManager) newProvider(repo *model.Repo) (GitProvider, error) {
 		return nil, fmt.Errorf("create provider failed: %w", err)
 	}
 
-	return &SDKProviderAdapter{provider: sdkProvider}, nil
+	return sdkProvider, nil
 }
 
 func ExtractOwnerRepoFromURL(cloneURL string) (string, string, error) {

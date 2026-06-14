@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/yi-nology/git-sync-service/internal/dao"
-	"github.com/yi-nology/git-sync-service/internal/provider"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
@@ -119,5 +118,3 @@ func (s *Service) ListBranches(ctx context.Context, repoKey string) ([]string, e
 
 	return result, nil
 }
-
-var _ provider.GitProvider = (*provider.SDKProviderAdapter)(nil)

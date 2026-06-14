@@ -101,14 +101,14 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	if _, err := os.Stat(filepath.Join(repoDir, ".git")); os.IsNotExist(err) {
 		details.WriteString("Step 1: Initial clone of source repo...\n")
-		if err := e.cloneRepo(execCtx, repoDir, sourceRepo, task.SourceBranch, &details); err != nil {
+		if err := e.cloneRepo(execCtx, repoDir, sourceRepo, task, &details); err != nil {
 			run.Status = "failed"
 			run.ErrorMessage = fmt.Sprintf("clone failed: %v", err)
 			return run, err
 		}
 	} else {
 		details.WriteString("Step 1: Fetch updates from source repo...\n")
-		if err := e.fetchRepo(execCtx, repoDir, task.SourceBranch, &details); err != nil {
+		if err := e.fetchRepo(execCtx, repoDir, task, &details); err != nil {
 			run.Status = "failed"
 			run.ErrorMessage = fmt.Sprintf("fetch failed: %v", err)
 			return run, err
@@ -135,14 +135,14 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 			time.Sleep(time.Duration(attempt*500) * time.Millisecond)
 		}
 
-		pushErr = e.push(execCtx, repoDir, task, &details)
+		pushErr = e.push(execCtx, repoDir, task, sourceRepo, &details)
 		if pushErr == nil {
 			break
 		}
 
 		if attempt < maxRetries {
 			details.WriteString(fmt.Sprintf("Push failed, retrying fetch...\n"))
-			if err := e.fetchRepo(execCtx, repoDir, task.SourceBranch, &details); err != nil {
+			if err := e.fetchRepo(execCtx, repoDir, task, &details); err != nil {
 				details.WriteString(fmt.Sprintf("Retry fetch failed: %v\n", err))
 			}
 		}
@@ -169,13 +169,14 @@ func (e *Executor) authConfig(repo *model.Repo) gitbackend.AuthConfig {
 	return gitbackend.AuthConfig{Type: gitbackend.AuthNone}
 }
 
-func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, branch string, details *strings.Builder) error {
+func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, task *model.SyncTask, details *strings.Builder) error {
 	err := e.backend.Clone(ctx, gitbackend.CloneOptions{
-		URL:    repo.CloneURL,
-		Path:   dir,
-		Branch: branch,
-		Depth:  1,
-		Auth:   e.authConfig(repo),
+		URL:          repo.CloneURL,
+		Path:         dir,
+		Branch:       task.SourceBranch,
+		Depth:        1,
+		SingleBranch: true,
+		Auth:         e.authConfig(repo),
 	})
 	if err != nil {
 		details.WriteString(fmt.Sprintf("clone error: %v\n", err))
@@ -183,11 +184,13 @@ func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, 
 	return err
 }
 
-func (e *Executor) fetchRepo(ctx context.Context, dir string, branch string, details *strings.Builder) error {
+func (e *Executor) fetchRepo(ctx context.Context, dir string, task *model.SyncTask, details *strings.Builder) error {
 	_, err := e.backend.Fetch(ctx, gitbackend.FetchOptions{
 		RepoPath: dir,
 		Remote:   "origin",
-		Branches: []string{branch},
+		Branches: []string{task.SourceBranch},
+		Tags:     task.GitTags,
+		Prune:    task.GitPrune,
 		Auth:     gitbackend.AuthConfig{Type: gitbackend.AuthNone},
 	})
 	if err != nil {
@@ -195,7 +198,7 @@ func (e *Executor) fetchRepo(ctx context.Context, dir string, branch string, det
 		return err
 	}
 
-	if err := e.backend.Checkout(ctx, dir, branch); err != nil {
+	if err := e.backend.Checkout(ctx, dir, task.SourceBranch); err != nil {
 		details.WriteString(fmt.Sprintf("checkout error: %v\n", err))
 		return err
 	}
@@ -211,7 +214,7 @@ func (e *Executor) ensureRemote(ctx context.Context, dir string, repo *model.Rep
 	return nil
 }
 
-func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, details *strings.Builder) error {
+func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, repo *model.Repo, details *strings.Builder) error {
 	refSpec := fmt.Sprintf("%s:%s", task.SourceBranch, task.TargetBranch)
 
 	_, err := e.backend.Push(ctx, gitbackend.PushOptions{
@@ -219,7 +222,7 @@ func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, d
 		Remote:   "target",
 		RefSpecs: []string{refSpec},
 		Force:    task.GitForce,
-		Auth:     gitbackend.AuthConfig{Type: gitbackend.AuthNone},
+		Auth:     e.authConfig(repo),
 	})
 	if err != nil {
 		details.WriteString(fmt.Sprintf("push error: %v\n", err))

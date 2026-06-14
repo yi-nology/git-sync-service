@@ -2,6 +2,8 @@ package service
 
 import (
 	"testing"
+
+	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
 )
 
 func TestMatchBranch(t *testing.T) {
@@ -26,9 +28,9 @@ func TestMatchBranch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.pattern+"/"+tt.branch, func(t *testing.T) {
-			got := matchBranch(tt.pattern, tt.branch)
+			got := branchfilter.New(tt.pattern).Match(tt.branch)
 			if got != tt.want {
-				t.Errorf("matchBranch(%q, %q) = %v, want %v", tt.pattern, tt.branch, got, tt.want)
+				t.Errorf("branchfilter.New(%q).Match(%q) = %v, want %v", tt.pattern, tt.branch, got, tt.want)
 			}
 		})
 	}
