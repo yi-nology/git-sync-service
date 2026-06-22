@@ -1,70 +1,78 @@
 import axios from 'axios'
+import type {
+  ListReposResp, ListTasksResp, ListHistoryResp, ListRulesResp, ListEventsResp,
+  TestConnectionResp, PreviewSyncResp,
+  CreateRepoRequest, UpdateRepoRequest,
+  CreateTaskRequest, UpdateTaskRequest,
+  CreateRuleRequest, UpdateRuleRequest,
+  Pagination,
+} from '@/types'
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
   timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 })
 
-// 请求拦截器
-api.interceptors.request.use(
-  (config) => {
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
-
-// 响应拦截器
 api.interceptors.response.use(
-  (response) => {
-    return response.data
-  },
+  (response) => response.data,
   (error) => {
-    console.error('API Error:', error)
-    return Promise.reject(error)
+    console.error('API Error:', error.response?.data || error.message)
+    return Promise.reject(error.response?.data || error)
   }
 )
 
-// 同步任务 API
+export const repoApi = {
+  list: (params?: Pagination) =>
+    api.get<any, ListReposResp>('/repos', { params }),
+  get: (key: string) =>
+    api.get<any, { repo: any }>('/repo', { params: { key } }),
+  create: (data: CreateRepoRequest) =>
+    api.post<any, { repo: any }>('/repo/create', data),
+  update: (data: UpdateRepoRequest) =>
+    api.post<any, { repo: any }>('/repo/update', data),
+  delete: (key: string) =>
+    api.post<any, { success: boolean }>('/repo/delete', null, { params: { key } }),
+  testConnection: (key: string) =>
+    api.post<any, TestConnectionResp>('/repo/test', null, { params: { key } }),
+  listBranches: (key: string) =>
+    api.get<any, { branches: string[] }>('/repo/branches', { params: { key } }),
+}
+
 export const syncTaskApi = {
-  list: (params?: any) => api.get('/sync/tasks', { params }),
-  get: (id: number) => api.get(`/sync/tasks/${id}`),
-  create: (data: any) => api.post('/sync/tasks', data),
-  update: (id: number, data: any) => api.put(`/sync/tasks/${id}`, data),
-  delete: (id: number) => api.delete(`/sync/tasks/${id}`),
-  run: (id: number) => api.post(`/sync/tasks/${id}/run`),
-  history: (params?: any) => api.get('/sync/history', { params }),
+  list: (params?: { repo_key?: string } & Pagination) =>
+    api.get<any, ListTasksResp>('/sync/tasks', { params }),
+  get: (key: string) =>
+    api.get<any, { task: any }>('/sync/task', { params: { key } }),
+  create: (data: CreateTaskRequest) =>
+    api.post<any, { task: any }>('/sync/task/create', data),
+  update: (data: UpdateTaskRequest) =>
+    api.post<any, { task: any }>('/sync/task/update', data),
+  delete: (key: string) =>
+    api.post<any, { success: boolean }>('/sync/task/delete', null, { params: { key } }),
+  run: (key: string) =>
+    api.post<any, { success: boolean; message: string }>('/sync/task/run', null, { params: { key } }),
+  preview: (data: { source_repo_key: string; source_branch?: string; target_repo_key: string; target_branch?: string }) =>
+    api.post<any, PreviewSyncResp>('/sync/preview', data),
+  history: (params: { task_key: string; limit?: number }) =>
+    api.get<any, ListHistoryResp>('/sync/history', { params }),
 }
 
-// Webhook API
 export const webhookApi = {
-  rules: (params?: any) => api.get('/webhook/rules', { params }),
-  createRule: (data: any) => api.post('/webhook/rules', data),
-  updateRule: (id: number, data: any) => api.put(`/webhook/rules/${id}`, data),
-  deleteRule: (id: number) => api.delete(`/webhook/rules/${id}`),
-  events: (params?: any) => api.get('/webhook/events', { params }),
-}
-
-// 系统设置 API
-export const settingsApi = {
-  get: () => api.get('/settings'),
-  update: (data: any) => api.put('/settings', data),
-  credentials: () => api.get('/settings/credentials'),
-  createCredential: (data: any) => api.post('/settings/credentials', data),
-  updateCredential: (id: number, data: any) => api.put(`/settings/credentials/${id}`, data),
-  deleteCredential: (id: number) => api.delete(`/settings/credentials/${id}`),
-  testCredential: (id: number) => api.post(`/settings/credentials/${id}/test`),
-}
-
-// 仪表盘 API
-export const dashboardApi = {
-  stats: () => api.get('/dashboard/stats'),
-  recentSyncs: () => api.get('/dashboard/recent-syncs'),
-  chartData: () => api.get('/dashboard/chart-data'),
+  listRules: (repo_key: string) =>
+    api.get<any, ListRulesResp>('/webhook/rules', { params: { repo_key } }),
+  getRule: (id: number) =>
+    api.get<any, { rule: any }>('/webhook/rule', { params: { id } }),
+  createRule: (data: CreateRuleRequest) =>
+    api.post<any, { rule: any }>('/webhook/rule/create', data),
+  updateRule: (data: UpdateRuleRequest) =>
+    api.post<any, { rule: any }>('/webhook/rule/update', data),
+  deleteRule: (id: number) =>
+    api.post<any, { success: boolean }>('/webhook/rule/delete', null, { params: { id } }),
+  listEvents: (params: { repo_key: string; limit?: number }) =>
+    api.get<any, ListEventsResp>('/webhook/events', { params }),
+  retryEvent: (id: number) =>
+    api.post<any, { success: boolean; message: string }>('/webhook/event/retry', null, { params: { id } }),
 }
 
 export default api
