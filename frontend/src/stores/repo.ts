@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repoApi } from '@/api'
-import type { Repo, CreateRepoRequest, UpdateRepoRequest, Pagination } from '@/types'
+import type { Repo, CreateRepoRequest, UpdateRepoRequest, TestConnectionResp, Pagination } from '@/types'
 import { ElMessage } from 'element-plus'
 
 export const useRepoStore = defineStore('repo', () => {
@@ -92,8 +92,3 @@ export const useRepoStore = defineStore('repo', () => {
     testConnection, listBranches,
   }
 })
-
-interface TestConnectionResp {
-  success: boolean
-  message: string
-}
