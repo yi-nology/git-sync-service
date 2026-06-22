@@ -1,234 +1,205 @@
-<template><div class="page-container">
-   <div class="page-header">
-     <h1 class="page-title-light">同步任务</h1>
-     <div class="header-actions">
-       <button class="btn-primary-light" @click="openCreate">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-         </svg>创建任务
-       </button>
-     </div>
-   </div>
-
-  <div class="stats-row-light">
-    <div class="stat-card-light" v-for="stat in stats" :key="stat.name">
-      <div class="stat-card-inner">
-        <div class="stat-content-light">
-          <div class="stat-num-light" :style="{color: stat.color}">{{ stat.num }}</div>
-          <div class="stat-name-light">{{ stat.name }}</div>
-        </div>
-        <div class="stat-icon-wrap" :style="{background: stat.bg}">
-          <svg v-html="stat.icon" width="24" height="24" viewBox="0 0 24 24" fill="none" :stroke="stat.color" stroke-width="2"></svg>
-        </div>
+<template>
+  <div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">同步任务</h1>
+      <div class="header-actions">
+        <button class="btn-primary" @click="openCreate">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          创建任务
+        </button>
       </div>
     </div>
-  </div>
 
-  <div class="filter-bar-light">
-    <div class="filter-input-light" style="width:280px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8c8c8c" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="text" placeholder="搜索任务名称..." v-model="filters.keyword">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num blue">{{ taskStore.total }}</div>
+        <div class="stat-name">总任务数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num green">{{ taskStore.tasks.filter(t => t.last_status === 'success').length }}</div>
+        <div class="stat-name">成功</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num orange">{{ taskStore.tasks.filter(t => t.last_status === 'running').length }}</div>
+        <div class="stat-name">运行中</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num red">{{ taskStore.tasks.filter(t => t.last_status === 'failed').length }}</div>
+        <div class="stat-name">失败</div>
+      </div>
     </div>
-    <div class="filter-select-light"><span>状态</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8c8c8c" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
-    <div class="filter-select-light"><span>仓库</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8c8c8c" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
-  </div>
 
-  <div class="table-card">
-    <table class="sync-table">
-      <thead><tr>
-        <th style="text-align:left;width:180px;">任务名称</th>
-        <th style="text-align:left;">源分支</th>
-        <th style="text-align:left;">目标分支</th>
-        <th style="text-align:left;">同步模式</th>
-        <th style="text-align:left;width:100px;">状态</th>
-        <th style="text-align:left;width:120px;">最后运行</th>
-        <th style="text-align:center;width:120px;">操作</th>
-      </tr></thead>
-      <tbody><tr v-for="task in tasks" :key="task.id">
-        <td><span class="task-name-text">{{ task.name }}</span></td>
-        <td><span class="branch-tag">{{ task.source }}</span></td>
-        <td><span class="branch-tag">{{ task.target }}</span></td>
-        <td><span class="mode-text">{{ task.mode }}</span></td>
-        <td><span class="status-dot-light" :class="task.status"></span>{{ task.statusText }}</td>
-        <td class="time-col">{{ task.lastRun }}</td>
-       <td class="action-col">
-            <button class="action-btn edit" title="立即同步" @click="handleSync(task)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              <span>运行</span>
-            </button>
-            <button class="action-btn run" title="编辑" @click="openEdit(task)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              <span>编辑</span>
-            </button>
-            <button class="action-btn delete" title="删除" @click="handleDelete(task.id)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              <span>删除</span>
-            </button>
+    <div v-if="taskStore.loading" class="loading-state">加载中...</div>
+    <div v-else-if="taskStore.tasks.length === 0" class="empty-state">暂无任务数据</div>
+    <div v-else class="table-card">
+      <table class="data-table">
+        <thead><tr>
+          <th style="text-align:left;">任务名称</th>
+          <th style="text-align:left;">源分支</th>
+          <th style="text-align:left;">目标分支</th>
+          <th style="text-align:left;">同步模式</th>
+          <th style="text-align:left;width:100px;">状态</th>
+          <th style="text-align:left;width:120px;">最后运行</th>
+          <th style="text-align:center;width:180px;">操作</th>
+        </tr></thead>
+        <tbody><tr v-for="task in taskStore.tasks" :key="task.key">
+          <td><span class="task-name">{{ task.name }}</span></td>
+          <td><span class="branch-tag">{{ task.source_branch }}</span></td>
+          <td><span class="branch-tag">{{ task.target_branch }}</span></td>
+          <td><span class="mode-text">{{ task.sync_mode || 'single' }}</span></td>
+          <td>
+            <span class="status-dot" :class="task.last_status || 'idle'"></span>
+            {{ statusText(task.last_status) }}
           </td>
-      </tr></tbody>
-    </table>
-    <div class="table-footer">
-      <span class="total-text">共 12 条任务</span>
-      <div class="pager">
-        <button class="page-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <button class="page-btn active">1</button><button class="page-btn">2</button>
-        <button class="page-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
-      </div>
-     </div>
-   </div>
+          <td class="time-col">{{ task.last_run_at || '未运行' }}</td>
+          <td class="action-col">
+            <button class="action-btn run" @click="handleRun(task.key)">运行</button>
+            <button class="action-btn edit" @click="openEdit(task)">编辑</button>
+            <button class="action-btn delete" @click="handleDelete(task.key)">删除</button>
+          </td>
+        </tr></tbody>
+      </table>
+    </div>
 
-    <DeleteConfirmModal 
-      v-model="deleteModal.visible" 
-      :task-name="deleteModal.taskName"
-      @confirm="confirmDelete"
-    />
-    
-    <EditTaskModal
-      v-model="editModal.visible"
-      :task="editModal.task"
-      @confirm="handleEditSubmit"
-    />
- </div></template>
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+      <el-form :model="formData" label-width="120px">
+        <el-form-item label="任务名称">
+          <el-input v-model="formData.name" placeholder="请输入任务名称"/>
+        </el-form-item>
+        <el-form-item label="源仓库 Key">
+          <el-input v-model="formData.source_repo_key" placeholder="请输入源仓库 Key"/>
+        </el-form-item>
+        <el-form-item label="源分支">
+          <el-input v-model="formData.source_branch" placeholder="main"/>
+        </el-form-item>
+        <el-form-item label="目标仓库 Key">
+          <el-input v-model="formData.target_repo_key" placeholder="请输入目标仓库 Key"/>
+        </el-form-item>
+        <el-form-item label="目标分支">
+          <el-input v-model="formData.target_branch" placeholder="main"/>
+        </el-form-item>
+        <el-form-item label="Cron 表达式">
+          <el-input v-model="formData.cron" placeholder="可选，如 0 */5 * * * *"/>
+        </el-form-item>
+        <el-form-item label="同步模式">
+          <el-select v-model="formData.sync_mode" style="width: 100%">
+            <el-option label="单分支" value="single"/>
+            <el-option label="全分支" value="all"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="选项">
+          <el-checkbox v-model="formData.git_tags">同步 Tags</el-checkbox>
+          <el-checkbox v-model="formData.git_force">强制推送</el-checkbox>
+          <el-checkbox v-model="formData.git_prune">Prune</el-checkbox>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
 
-  <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import DeleteConfirmModal from '@/components/DeleteConfirmModal.vue'
-import EditTaskModal from '@/components/EditTaskModal.vue'
+<script setup lang="ts">
+import { onMounted, ref, reactive } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useSyncTaskStore } from '@/stores/syncTask'
+import type { SyncTask } from '@/types'
 
-const filters = reactive({ keyword: '' })
+const taskStore = useSyncTaskStore()
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+const editingKey = ref('')
 
-const tasks = ref([
- { id: 1, name: 'frontend-sync', source: 'GitHub / main', target: 'GitLab / main', mode: '单分支', status: 'success', statusText: '成功', lastRun: '2 分钟前' },
- { id: 2, name: 'backend-api-sync', source: 'GitLab / develop', target: 'Gitee / develop', mode: '单分支', status: 'running', statusText: '同步中', lastRun: '运行中...' },
- { id: 3, name: 'docs-mirror', source: 'GitHub / master', target: 'Gitee / master', mode: '单分支', status: 'error', statusText: '失败', lastRun: '15 分钟前' },
- { id: 4, name: 'config-backup', source: 'GitLab / main', target: 'GitHub / main', mode: '单分支', status: 'stopped', statusText: '已停止', lastRun: '1 小时前' },
-])
-
-const stats = ref([
-   { name: '总任务数', num: 12, color: '#1890ff', bg: '#e6f7ff', icon: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>' },
-   { name: '运行中', num: 8, color: '#52c41a', bg: '#f6ffed', icon: '<polygon points="5 3 19 12 5 21 5 3"/>' },
-   { name: '今日同步', num: 156, color: '#faad14', bg: '#fffbe6', icon: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' },
-   { name: '失败任务', num: 1, color: '#ff4d4f', bg: '#fff2f0', icon: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>' },
- ])
-
-// 删除弹窗
-const deleteModal = reactive({
-  visible: false,
-  taskName: '',
-  deletingId: null as number | null,
+const formData = reactive({
+  name: '',
+  source_repo_key: '',
+  source_branch: 'main',
+  target_repo_key: '',
+  target_branch: 'main',
+  sync_mode: 'single',
+  cron: '',
+  git_tags: false,
+  git_force: false,
+  git_prune: false,
 })
 
-// 编辑弹窗
-const editModal = reactive({
-  visible: false,
-  task: null as any,
+onMounted(() => {
+  taskStore.fetchTasks()
 })
+
+function statusText(status: string) {
+  const map: Record<string, string> = { success: '成功', running: '运行中', failed: '失败', idle: '未运行' }
+  return map[status] || '未运行'
+}
 
 function openCreate() {
-  editModal.task = null
-  editModal.visible = true
+  dialogTitle.value = '创建任务'
+  editingKey.value = ''
+  Object.assign(formData, { name: '', source_repo_key: '', source_branch: 'main', target_repo_key: '', target_branch: 'main', sync_mode: 'single', cron: '', git_tags: false, git_force: false, git_prune: false })
+  dialogVisible.value = true
 }
 
-function openEdit(task: any) {
-  editModal.task = task
-  editModal.visible = true
+function openEdit(task: SyncTask) {
+  dialogTitle.value = '编辑任务'
+  editingKey.value = task.key
+  Object.assign(formData, {
+    name: task.name, source_repo_key: task.source_repo_key, source_branch: task.source_branch,
+    target_repo_key: task.target_repo_key, target_branch: task.target_branch,
+    sync_mode: task.sync_mode, cron: task.cron,
+    git_tags: task.git_tags, git_force: task.git_force, git_prune: task.git_prune,
+  })
+  dialogVisible.value = true
 }
 
-function showDeleteModal(task: any) {
-  deleteModal.taskName = task.name
-  deleteModal.deletingId = task.id
-  deleteModal.visible = true
-}
-
-function confirmDelete() {
-  if (deleteModal.deletingId) {
-    tasks.value = tasks.value.filter(t => t.id !== deleteModal.deletingId)
-    ElMessage.success('删除成功')
+async function handleSubmit() {
+  if (!formData.name || !formData.source_repo_key || !formData.target_repo_key) {
+    ElMessage.warning('请填写必填字段')
+    return
   }
-  deleteModal.visible = false
-  deleteModal.deletingId = null
-}
-
-function handleSync(task: any) {
-  ElMessage.info(`开始同步: ${task.name}`)
-}
-
-function handleEditSubmit(data: any) {
-  if (editModal.task?.id) {
-    const index = tasks.value.findIndex(t => t.id === editModal.task.id)
-    if (index > -1) {
-      tasks.value[index] = { ...tasks.value[index], ...data }
-    }
-    ElMessage.success('更新成功')
+  if (editingKey.value) {
+    await taskStore.updateTask({ key: editingKey.value, ...formData })
   } else {
-    tasks.value.unshift({
-      id: Date.now(),
-      ...data,
-      status: 'stopped',
-      statusText: '已停止',
-      lastRun: '未运行'
-    })
-    ElMessage.success('创建成功')
+    await taskStore.createTask(formData)
   }
+  dialogVisible.value = false
 }
- </script>
+
+async function handleDelete(key: string) {
+  await ElMessageBox.confirm('确定要删除该任务吗？', '提示', { type: 'warning' })
+  await taskStore.deleteTask(key)
+}
+
+async function handleRun(key: string) {
+  await taskStore.runTask(key)
+}
+</script>
 
 <style scoped lang="scss">
-.page-container { background: #f0f2f5; min-height: 100%; }
+.page-container { background: #f0f2f5; min-height: 100%; padding: 24px; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.page-title-light { font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0; }
+.page-title { font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0; }
 .header-actions { display: flex; gap: 12px; }
-.btn-primary-light { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 6px; background: #1890ff; border: none; color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; &:hover { background: #40a9ff; } }
-.stats-row-light { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
-.stat-card-light { background: #fff; border-radius: 8px; height: 100px; padding: 0 20px; display: flex; align-items: center; }
-.stat-card-inner { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-.stat-num-light { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
-.stat-name-light { font-size: 13px; color: #8c8c8c; }
-.stat-icon-wrap { width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; }
-.filter-bar-light { display: flex; gap: 12px; margin-bottom: 16px; }
-.filter-input-light { background: #fff; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 12px; height: 32px; display: flex; align-items: center; gap: 8px; input { background: transparent; border: none; outline: none; font-size: 13px; color: #262626; width: 100%; } }
-.filter-select-light { background: #fff; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 12px; height: 32px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #262626; }
+.btn-primary { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 6px; background: #1890ff; border: none; color: #fff; font-size: 13px; cursor: pointer; &:hover { background: #40a9ff; } }
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.stat-card { background: #fff; border-radius: 8px; padding: 20px; text-align: center; }
+.stat-num { font-size: 28px; font-weight: 700; margin-bottom: 4px; &.blue { color: #1890ff; } &.green { color: #52c41a; } &.orange { color: #faad14; } &.red { color: #ff4d4f; } }
+.stat-name { font-size: 13px; color: #8c8c8c; }
+.loading-state, .empty-state { text-align: center; padding: 48px; color: #8c8c8c; font-size: 14px; background: #fff; border-radius: 8px; }
 .table-card { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; overflow: hidden; }
-.sync-table { width: 100%; border-collapse: collapse; th { background: #fafafa; height: 56px; padding: 0 24px; font-size: 13px; font-weight: 500; color: #8c8c8c; text-align: left; border-bottom: 1px solid #f0f0f0; } td { height: 64px; padding: 0 24px; font-size: 13px; color: #262626; border-bottom: 1px solid #f0f0f0; } }
-.task-name-text { font-weight: 500; }
+.data-table { width: 100%; border-collapse: collapse; th { background: #fafafa; height: 56px; padding: 0 24px; font-size: 13px; font-weight: 500; color: #8c8c8c; text-align: left; border-bottom: 1px solid #f0f0f0; } td { height: 64px; padding: 0 24px; font-size: 13px; color: #262626; border-bottom: 1px solid #f0f0f0; } }
+.task-name { font-weight: 500; }
 .branch-tag { padding: 5px 12px; background: #f5f5f5; border-radius: 4px; font-size: 12px; }
 .mode-text { color: #8c8c8c; }
-.status-dot-light { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 8px; &.success { background: #52c41a; } &.running { background: #1890ff; } &.error { background: #ff4d4f; } &.stopped { background: #d9d9d9; } }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 8px; background: #d9d9d9; &.success { background: #52c41a; } &.running { background: #1890ff; } &.failed { background: #ff4d4f; } }
 .time-col { color: #8c8c8c; }
 .action-col { display: flex; justify-content: center; gap: 8px; }
-.action-btn { 
-  display: flex; 
-  align-items: center; 
-  gap: 4px; 
-  padding: 4px 8px; 
-  border-radius: 4px; 
-  border: none; 
-  cursor: pointer; 
-  font-size: 12px; 
-  font-family: 'Inter';
-  transition: all 0.2s;
-  
-  &.edit { 
-    background: #e6f7ff; 
-    color: #1890ff; 
-    &:hover { background: #bae7ff; }
-  }
-  &.run { 
-    background: #f6ffed; 
-    color: #52c41a; 
-    &:hover { background: #d9f7be; }
-  }
-  &.delete { 
-    background: #fff2f0; 
-    color: #ff4d4f; 
-    &:hover { background: #ffccc7; }
-  }
+.action-btn { display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; transition: all 0.2s;
+  &.run { background: #e6f7ff; color: #1890ff; &:hover { background: #bae7ff; } }
+  &.edit { background: #f6ffed; color: #52c41a; &:hover { background: #d9f7be; } }
+  &.delete { background: #fff2f0; color: #ff4d4f; &:hover { background: #ffccc7; } }
 }
-.table-footer { display: flex; justify-content: space-between; align-items: center; padding: 0 24px; height: 48px; border-top: 1px solid #f0f0f0; }
-.total-text { font-size: 13px; color: #8c8c8c; }
-.pager { display: flex; gap: 8px; }
-.page-btn { width: 28px; height: 28px; border-radius: 4px; border: 1px solid #d9d9d9; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #595959; &.active { background: #1890ff; border-color: #1890ff; color: #fff; } }
 </style>

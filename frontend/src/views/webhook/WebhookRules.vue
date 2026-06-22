@@ -1,135 +1,168 @@
-<template><div class="page-container">
-   <div class="page-header">
-     <h1 class="page-title-light">Webhook 规则管理</h1>
-     <div class="header-actions">
-       <button class="btn-default-light">批量导出</button>
-       <button class="btn-primary-light" @click="openCreate">添加规则</button>
-     </div>
-   </div>
-   <div class="table-card" style="margin-top:24px;">
-     <table class="sync-table">
-       <thead><tr><th style="width:200px;">规则名称</th><th>Git 平台</th><th>触发事件</th><th>仓库过滤</th><th>触发次数</th><th>状态</th><th style="width:120px;text-align:center;">操作</th></tr></thead>
-       <tbody><tr v-for="rule in rules" :key="rule.id">
-         <td class="task-name-text">{{ rule.name }}</td>
-         <td><span class="badge platform" :class="rule.platform">{{ rule.platform }}</span></td>
-         <td><span v-for="e in rule.events" :key="e" class="badge event-tag">{{ e }}</span></td>
-         <td><span class="badge filter-tag">{{ rule.filter || '全部' }}</span></td>
-         <td>{{ rule.count }}</td>
-         <td><span class="status-badge" :class="rule.status">{{ rule.status==='enabled'?'已启用':'已停用' }}</span></td>
-         <td class="action-col"><button class="icon-btn" @click="openEdit(rule)">编辑</button><button class="icon-btn danger" @click="handleDelete(rule.id)">删除</button></td>
-       </tr></tbody>
-     </table>
-   </div>
+<template>
+  <div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">Webhook 规则管理</h1>
+      <div class="header-actions">
+        <el-input v-model="repoKey" placeholder="输入仓库 Key" style="width: 200px;" @keyup.enter="loadRules"/>
+        <button class="btn-primary" @click="openCreate">添加规则</button>
+      </div>
+    </div>
 
-   <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-     <el-form :model="formData" label-width="100px">
-       <el-form-item label="规则名称">
-         <el-input v-model="formData.name" placeholder="请输入规则名称"/>
-       </el-form-item>
-       <el-form-item label="Git 平台">
-         <el-select v-model="formData.platform" style="width: 100%">
-           <el-option label="GitHub" value="GitHub"/>
-           <el-option label="GitLab" value="GitLab"/>
-           <el-option label="Gitee" value="Gitee"/>
-         </el-select>
-       </el-form-item>
-       <el-form-item label="触发事件">
-         <el-checkbox-group v-model="formData.events">
-           <el-checkbox label="push"/>
-           <el-checkbox label="merge_request"/>
-           <el-checkbox label="tag"/>
-           <el-checkbox label="issue"/>
-         </el-checkbox-group>
-       </el-form-item>
-       <el-form-item label="仓库过滤">
-         <el-input v-model="formData.filter" placeholder="请输入仓库过滤规则"/>
-       </el-form-item>
-     </el-form>
-     <template #footer>
-       <el-button @click="closeDialog">取消</el-button>
-       <el-button type="primary" @click="handleSubmit">确定</el-button>
-     </template>
-   </el-dialog>
- </div></template>
+    <div v-if="webhookStore.loading" class="loading-state">加载中...</div>
+    <div v-else-if="webhookStore.rules.length === 0" class="empty-state">暂无规则数据</div>
+    <div v-else class="table-card">
+      <table class="data-table">
+        <thead><tr>
+          <th style="width:200px;">规则名称</th>
+          <th>仓库</th>
+          <th>事件类型</th>
+          <th>分支过滤</th>
+          <th>状态</th>
+          <th style="width:120px;text-align:center;">操作</th>
+        </tr></thead>
+        <tbody><tr v-for="rule in webhookStore.rules" :key="rule.id">
+          <td class="task-name">{{ rule.name }}</td>
+          <td>{{ rule.repo_key }}</td>
+          <td><span class="badge event-tag">{{ rule.event_type || '全部' }}</span></td>
+          <td><span class="badge filter-tag">{{ rule.branch_pattern || '全部' }}</span></td>
+          <td><span class="status-badge" :class="rule.enabled ? 'enabled' : 'disabled'">{{ rule.enabled ? '已启用' : '已停用' }}</span></td>
+          <td class="action-col">
+            <button class="action-btn edit" @click="openEdit(rule)">编辑</button>
+            <button class="action-btn delete" @click="handleDelete(rule.id)">删除</button>
+          </td>
+        </tr></tbody>
+      </table>
+    </div>
 
- <script setup lang="ts">
- import { ref, reactive } from 'vue'
- import { ElMessage, ElMessageBox } from 'element-plus'
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
+      <el-form :model="formData" label-width="100px">
+        <el-form-item label="规则名称">
+          <el-input v-model="formData.name" placeholder="请输入规则名称"/>
+        </el-form-item>
+        <el-form-item label="仓库 Key">
+          <el-input v-model="formData.repo_key" placeholder="请输入仓库 Key"/>
+        </el-form-item>
+        <el-form-item label="事件类型">
+          <el-select v-model="formData.event_type" style="width: 100%">
+            <el-option label="全部" value=""/>
+            <el-option label="push" value="push"/>
+            <el-option label="merge_request" value="merge_request"/>
+            <el-option label="tag" value="tag"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="分支过滤">
+          <el-input v-model="formData.branch_pattern" placeholder="如 main,feature/*"/>
+        </el-form-item>
+        <el-form-item label="触发动作">
+          <el-select v-model="formData.action" style="width: 100%">
+            <el-option label="同步" value="sync"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联任务">
+          <el-input v-model="formData.sync_task_keys" placeholder="任务 Key，逗号分隔"/>
+        </el-form-item>
+        <el-form-item label="最小间隔">
+          <el-input-number v-model="formData.min_interval" :min="0" :max="3600"/>
+          <span style="margin-left: 8px; color: #8c8c8c;">秒</span>
+        </el-form-item>
+        <el-form-item label="启用">
+          <el-switch v-model="formData.enabled"/>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
 
- const rules = ref([{ id: 1, name: '主分支同步触发', platform: 'GitHub', events: ['push'], filter: 'owner/*', count: 156, status: 'enabled' }, { id: 2, name: 'PR 自动同步', platform: 'GitLab', events: ['merge_request'], filter: 'group/*', count: 42, status: 'enabled' }])
- const platformColors = {
-   GitHub: { bg: '#e6f7ff', color: '#1890ff' },
-   GitLab: { bg: '#f6ffed', color: '#52c41a' },
-   Gitee: { bg: '#fff7e6', color: '#fa8c16' }
- }
+<script setup lang="ts">
+import { onMounted, ref, reactive } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useWebhookStore } from '@/stores/webhook'
+import type { WebhookRule } from '@/types'
 
- const dialogVisible = ref(false)
- const dialogTitle = ref('')
- const formData = reactive<any>({ events: [] })
+const webhookStore = useWebhookStore()
+const repoKey = ref('')
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+const editingId = ref(0)
 
- function openCreate() {
-   dialogTitle.value = '新建Webhook规则'
-   Object.assign(formData, { name: '', platform: 'GitHub', events: ['push'], filter: '' })
-   dialogVisible.value = true
- }
+const formData = reactive({
+  name: '',
+  repo_key: '',
+  event_type: '',
+  branch_pattern: '',
+  action: 'sync',
+  sync_task_keys: '',
+  min_interval: 0,
+  enabled: true,
+})
 
- function openEdit(rule: any) {
-   dialogTitle.value = '编辑Webhook规则'
-   Object.assign(formData, rule)
-   dialogVisible.value = true
- }
+function loadRules() {
+  if (repoKey.value) {
+    webhookStore.fetchRules(repoKey.value)
+  }
+}
 
- async function handleDelete(id: number) {
-   try {
-     await ElMessageBox.confirm('确定要删除该规则吗？', '提示', {
-       confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
-     })
-     rules.value = rules.value.filter(r => r.id !== id)
-     ElMessage.success('删除成功')
-   } catch {}
- }
+onMounted(() => {
+  repoKey.value = 'default'
+  loadRules()
+})
 
- function handleSubmit() {
-   if (formData.id) {
-     const index = rules.value.findIndex(r => r.id === formData.id)
-     if (index > -1) {
-       rules.value[index] = { ...rules.value[index], ...formData }
-     }
-     ElMessage.success('更新成功')
-   } else {
-     rules.value.unshift({ id: Date.now(), ...formData, count: 0, status: 'enabled' })
-     ElMessage.success('创建成功')
-   }
-   dialogVisible.value = false
- }
+function openCreate() {
+  dialogTitle.value = '添加规则'
+  editingId.value = 0
+  Object.assign(formData, { name: '', repo_key: repoKey.value, event_type: '', branch_pattern: '', action: 'sync', sync_task_keys: '', min_interval: 0, enabled: true })
+  dialogVisible.value = true
+}
 
- function closeDialog() {
-   dialogVisible.value = false
-   Object.keys(formData).forEach(key => delete formData[key])
- }
- </script>
+function openEdit(rule: WebhookRule) {
+  dialogTitle.value = '编辑规则'
+  editingId.value = rule.id
+  Object.assign(formData, { name: rule.name, repo_key: rule.repo_key, event_type: rule.event_type, branch_pattern: rule.branch_pattern, action: rule.action, sync_task_keys: rule.sync_task_keys, min_interval: rule.min_interval, enabled: rule.enabled })
+  dialogVisible.value = true
+}
+
+async function handleSubmit() {
+  if (!formData.name || !formData.repo_key) {
+    ElMessage.warning('请填写必填字段')
+    return
+  }
+  if (editingId.value) {
+    await webhookStore.updateRule({ id: editingId.value, ...formData })
+  } else {
+    await webhookStore.createRule(formData)
+  }
+  dialogVisible.value = false
+  loadRules()
+}
+
+async function handleDelete(id: number) {
+  await ElMessageBox.confirm('确定要删除该规则吗？', '提示', { type: 'warning' })
+  await webhookStore.deleteRule(id)
+  loadRules()
+}
+</script>
 
 <style scoped lang="scss">
- .page-container { background: #f0f2f5; min-height: 100%; }
- .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
- .page-title-light { font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0; }
- .header-actions { display: flex; gap: 12px; }
- .btn-primary-light { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 6px; background: #1890ff; border: none; color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; &:hover { background: #40a9ff; } }
- .btn-default-light { padding: 7px 14px; border-radius: 6px; background: #fff; border: 1px solid #d9d9d9; color: #595959; font-size: 13px; cursor: pointer; transition: all 0.2s; &:hover { color: #1890ff; border-color: #1890ff; } }
- .table-card { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; overflow: hidden; }
- .sync-table { width: 100%; border-collapse: collapse; th { background: #fafafa; height: 56px; padding: 0 24px; font-size: 13px; font-weight: 500; color: #8c8c8c; text-align: left; border-bottom: 1px solid #f0f0f0; } td { height: 64px; padding: 0 24px; font-size: 13px; color: #262626; border-bottom: 1px solid #f0f0f0; } }
- .badge { padding: 4px 12px; border-radius: 4px; font-size: 12px; display: inline-block; margin-right: 4px; }
- .badge.platform {
-   &.GitHub { background: #e6f7ff; color: #1890ff; }
-   &.GitLab { background: #f6ffed; color: #52c41a; }
-   &.Gitee { background: #fff7e6; color: #fa8c16; }
- }
- .event-tag { background: #f5f5f5; color: #595959; }
- .filter-tag { background: #fff7e6; color: #fa8c16; }
- .status-badge { padding: 4px 12px; border-radius: 4px; font-size: 12px; display: inline-block;
-   &.enabled { background: #f6ffed; color: #52c41a; }
-   &.disabled { background: #f5f5f5; color: #8c8c8c; }
- }
- .action-col { display: flex; justify-content: center; gap: 8px; }
- .icon-btn { padding: 4px 8px; border-radius: 4px; border: 1px solid #d9d9d9; background: #fff; font-size: 12px; cursor: pointer; color: #595959; &:hover { color: #1890ff; border-color: #1890ff; } &.danger:hover { color: #ff4d4f; border-color: #ff4d4f; } }
- </style>
+.page-container { background: #f0f2f5; min-height: 100%; padding: 24px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.page-title { font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0; }
+.header-actions { display: flex; gap: 12px; align-items: center; }
+.btn-primary { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 6px; background: #1890ff; border: none; color: #fff; font-size: 13px; cursor: pointer; &:hover { background: #40a9ff; } }
+.loading-state, .empty-state { text-align: center; padding: 48px; color: #8c8c8c; font-size: 14px; background: #fff; border-radius: 8px; }
+.table-card { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; overflow: hidden; }
+.data-table { width: 100%; border-collapse: collapse; th { background: #fafafa; height: 56px; padding: 0 24px; font-size: 13px; font-weight: 500; color: #8c8c8c; text-align: left; border-bottom: 1px solid #f0f0f0; } td { height: 64px; padding: 0 24px; font-size: 13px; color: #262626; border-bottom: 1px solid #f0f0f0; } }
+.task-name { font-weight: 500; }
+.badge { padding: 4px 12px; border-radius: 4px; font-size: 12px; display: inline-block; }
+.event-tag { background: #e6f7ff; color: #1890ff; }
+.filter-tag { background: #fff7e6; color: #fa8c16; }
+.status-badge { padding: 4px 12px; border-radius: 4px; font-size: 12px; &.enabled { background: #f6ffed; color: #52c41a; } &.disabled { background: #f5f5f5; color: #8c8c8c; } }
+.action-col { display: flex; justify-content: center; gap: 8px; }
+.action-btn { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; transition: all 0.2s;
+  &.edit { background: #e6f7ff; color: #1890ff; &:hover { background: #bae7ff; } }
+  &.delete { background: #fff2f0; color: #ff4d4f; &:hover { background: #ffccc7; } }
+}
+</style>
