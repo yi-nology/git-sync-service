@@ -186,22 +186,15 @@ func (s *Service) ReleaseSemaphore(ctx context.Context, taskKey string) {
 	}
 }
 
-func (s *Service) RunDAO() interface {
-	Create(run *model.SyncRun) error
-	Update(run *model.SyncRun) error
-} {
+func (s *Service) RunDAO() executor.RunWriter {
 	return s.runDAO
 }
 
-func (s *Service) TaskDAO() interface {
-	Update(task *model.SyncTask) error
-} {
+func (s *Service) TaskDAO() executor.TaskUpdater {
 	return s.taskDAO
 }
 
-func (s *Service) RepoDAO() interface {
-	FindByKey(key string) (*model.Repo, error)
-} {
+func (s *Service) RepoDAO() executor.RepoReader {
 	return s.repoDAO
 }
 

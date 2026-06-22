@@ -12,19 +12,25 @@ import (
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
+type RunWriter interface {
+	Create(run *model.SyncRun) error
+	Update(run *model.SyncRun) error
+}
+
+type TaskUpdater interface {
+	Update(task *model.SyncTask) error
+}
+
+type RepoReader interface {
+	FindByKey(key string) (*model.Repo, error)
+}
+
 type Service interface {
 	GetTempDir(taskKey string) string
 	GetConfig() *model.Config
-	RunDAO() interface {
-		Create(run *model.SyncRun) error
-		Update(run *model.SyncRun) error
-	}
-	TaskDAO() interface {
-		Update(task *model.SyncTask) error
-	}
-	RepoDAO() interface {
-		FindByKey(key string) (*model.Repo, error)
-	}
+	RunDAO() RunWriter
+	TaskDAO() TaskUpdater
+	RepoDAO() RepoReader
 }
 
 type Executor struct {
