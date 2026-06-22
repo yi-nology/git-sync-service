@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title-light">高级配置</h1>
+      <h1 class="page-title">高级配置</h1>
     </div>
 
     <div class="config-card">
@@ -67,7 +67,7 @@
     </div>
 
     <div class="action-footer">
-      <el-button>重置</el-button>
+      <el-button @click="resetConfig">重置</el-button>
       <el-button type="primary" @click="saveConfig">保存配置</el-button>
     </div>
   </div>
@@ -87,80 +87,37 @@ const config = reactive({
   gitLfs: false,
   verifySignature: false,
   auditLog: true,
-  retentionDays: 30
+  retentionDays: 30,
 })
 
 function saveConfig() {
   ElMessage.success('配置已保存')
 }
+
+function resetConfig() {
+  Object.assign(config, {
+    incrementalSync: true,
+    distributedLock: true,
+    syncTimeout: 300,
+    maxConcurrent: 3,
+    retryCount: 2,
+    excludeBranches: '',
+    gitLfs: false,
+    verifySignature: false,
+    auditLog: true,
+    retentionDays: 30,
+  })
+  ElMessage.info('配置已重置')
+}
 </script>
 
 <style scoped lang="scss">
-.page-container {
-  background: #f0f2f5;
-  min-height: 100%;
-}
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title-light {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin: 0;
-}
-
-.config-card {
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #f0f0f0;
-  padding: 20px 24px;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #262626;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.form-row {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 20px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 200px;
-
-  label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #595959;
-  }
-
-  &.full-width {
-    flex: 1;
-    width: 100%;
-  }
-}
-
-.action-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 8px;
-}
+.page-container { background: #f0f2f5; min-height: 100%; padding: 24px; }
+.page-header { margin-bottom: 24px; }
+.page-title { font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0; }
+.config-card { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; padding: 20px 24px; margin-bottom: 16px; }
+.section-title { font-size: 15px; font-weight: 600; color: #262626; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+.form-row { display: flex; gap: 24px; margin-bottom: 20px; &:last-child { margin-bottom: 0; } }
+.form-item { display: flex; flex-direction: column; gap: 8px; min-width: 200px; label { font-size: 14px; font-weight: 500; color: #595959; } &.full-width { flex: 1; width: 100%; } }
+.action-footer { display: flex; justify-content: flex-end; gap: 12px; padding-top: 8px; }
 </style>
