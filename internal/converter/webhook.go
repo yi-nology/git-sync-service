@@ -1,6 +1,8 @@
 package converter
 
 import (
+	"strings"
+
 	webhookmodel "github.com/yi-nology/git-sync-service/biz/model/webhook"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -12,7 +14,7 @@ func ToRuleInfo(r *model.WebhookRule) *webhookmodel.WebhookRuleInfo {
 	return &webhookmodel.WebhookRuleInfo{
 		ID: int64(r.ID), Name: r.Name, RepoKey: r.RepoKey,
 		EventType: r.EventType, BranchPattern: r.BranchPattern,
-		Action: r.Action, SyncTaskKeys: r.SyncTaskKeys,
+		Action: r.Action, SyncTaskKeys: strings.Join(r.GetTaskKeys(), ","),
 		MinInterval: int32(r.MinInterval), Enabled: r.Enabled,
 		Description: r.Description, CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
 	}

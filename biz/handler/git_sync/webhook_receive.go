@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 )
 
 const maxWebhookBodySize = 10 << 20
@@ -15,17 +16,13 @@ const maxWebhookBodySize = 10 << 20
 func ReceiveWebhook(ctx context.Context, c *app.RequestContext) {
 	repoKey := c.Param("repoKey")
 	if repoKey == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{
-			"error": "repoKey is required",
-		})
+		response.BadRequest(c, "repoKey is required")
 		return
 	}
 
 	bodyBytes, _ := c.Body()
 	if len(bodyBytes) > maxWebhookBodySize {
-		c.JSON(consts.StatusRequestEntityTooLarge, map[string]interface{}{
-			"error": "request body too large",
-		})
+		response.Error(c, consts.StatusRequestEntityTooLarge, "request body too large")
 		return
 	}
 
@@ -40,9 +37,7 @@ func ReceiveWebhook(ctx context.Context, c *app.RequestContext) {
 		io.LimitReader(bytes.NewReader(bodyBytes), maxWebhookBodySize),
 	)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{
-			"error": err.Error(),
-		})
+		response.InternalError(c, err.Error())
 		return
 	}
 
@@ -53,14 +48,11 @@ func ReceiveWebhook(ctx context.Context, c *app.RequestContext) {
 
 	err = GetSyncService().ReceiveWebhook(ctx, repoKey, httpReq)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{
-			"error": err.Error(),
-		})
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	c.JSON(consts.StatusOK, map[string]interface{}{
-		"success": true,
+	response.Success(c, map[string]interface{}{
 		"message": "webhook received",
 	})
 }

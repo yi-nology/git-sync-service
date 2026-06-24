@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/yi-nology/git-sync-service/internal/converter"
+	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	repo "github.com/yi-nology/git-sync-service/biz/model/repo"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -14,18 +14,18 @@ import (
 func ListRepos(ctx context.Context, c *app.RequestContext) {
 	var req repo.ListReposReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 
 	offset, limit := converter.PageToOffset(req.Page, req.PageSize)
 	list, total, err := GetSyncService().ListRepos(ctx, offset, limit)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	c.JSON(consts.StatusOK, &repo.ListReposResp{
+	response.Success(c, &repo.ListReposResp{
 		Repos: converter.ToRepoInfoList(list),
 		Total: total,
 	})
@@ -34,30 +34,30 @@ func ListRepos(ctx context.Context, c *app.RequestContext) {
 func GetRepo(ctx context.Context, c *app.RequestContext) {
 	var req repo.GetRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 
 	r, err := GetSyncService().GetRepo(ctx, req.Key)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.GetRepoResp{Repo: converter.ToRepoInfo(r)})
+	response.Success(c, &repo.GetRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
 func CreateRepo(ctx context.Context, c *app.RequestContext) {
 	var req repo.CreateRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Name == "" || req.RemoteURL == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "name and remoteUrl are required"})
+		response.BadRequest(c, "name and remoteUrl are required")
 		return
 	}
 
@@ -65,20 +65,20 @@ func CreateRepo(ctx context.Context, c *app.RequestContext) {
 		Name: req.Name, RemoteURL: req.RemoteURL, AccessToken: req.AccessToken,
 	})
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": fmt.Sprintf("create repo failed: %v", err)})
+		response.InternalError(c, fmt.Sprintf("create repo failed: %v", err))
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.CreateRepoResp{Repo: converter.ToRepoInfo(r)})
+	response.Created(c, &repo.CreateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
 func UpdateRepo(ctx context.Context, c *app.RequestContext) {
 	var req repo.UpdateRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 
@@ -86,64 +86,64 @@ func UpdateRepo(ctx context.Context, c *app.RequestContext) {
 		Key: req.Key, Name: req.Name, AccessToken: req.AccessToken,
 	})
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.UpdateRepoResp{Repo: converter.ToRepoInfo(r)})
+	response.Success(c, &repo.UpdateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
 func DeleteRepo(ctx context.Context, c *app.RequestContext) {
 	var req repo.DeleteRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 
 	if err := GetSyncService().DeleteRepo(ctx, req.Key); err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.DeleteRepoResp{Success: true})
+	response.NoContent(c)
 }
 
 func TestConnection(ctx context.Context, c *app.RequestContext) {
 	var req repo.TestConnectionReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 
 	result, err := GetSyncService().TestConnection(ctx, req.Key)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.TestConnectionResp{Success: result.Success, Message: result.Message})
+	response.Success(c, &repo.TestConnectionResp{Success: result.Success, Message: result.Message})
 }
 
 func ListBranches(ctx context.Context, c *app.RequestContext) {
 	var req repo.ListBranchesReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 
 	branches, err := GetSyncService().ListBranches(ctx, req.Key)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &repo.ListBranchesResp{Branches: branches})
+	response.Success(c, &repo.ListBranchesResp{Branches: branches})
 }

@@ -13,5 +13,5 @@ func customizedRegister(r *server.Hertz) {
 	r.GET("/ping", handler.Ping)
 
 	// Webhook 接收端点
-	r.POST("/api/v1/webhook/receive/:repoKey", git_sync.ReceiveWebhook)
+	r.POST("/api/webhook/receive/:repoKey", git_sync.ReceiveWebhook)
 }

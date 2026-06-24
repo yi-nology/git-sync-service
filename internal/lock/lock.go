@@ -198,7 +198,14 @@ type localLockEntry struct {
 }
 
 type LocalLock struct {
-	mu sync.Map
+	mu      sync.Mutex
+	entries map[string]*localLockEntry
+}
+
+func NewLocalLock() *LocalLock {
+	return &LocalLock{
+		entries: make(map[string]*localLockEntry),
+	}
 }
 
 func (l *LocalLock) TryLock(ctx context.Context, key string) (bool, error) {
@@ -206,13 +213,13 @@ func (l *LocalLock) TryLock(ctx context.Context, key string) (bool, error) {
 }
 
 func (l *LocalLock) TryLockWithTTL(ctx context.Context, key string, ttl time.Duration) (bool, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	now := time.Now()
-	existing, loaded := l.mu.LoadOrStore(key, &localLockEntry{expiresAt: now.Add(ttl)})
-	if !loaded {
-		return true, nil
-	}
-	if entry, ok := existing.(*localLockEntry); ok && now.After(entry.expiresAt) {
-		l.mu.Store(key, &localLockEntry{expiresAt: now.Add(ttl)})
+	entry, exists := l.entries[key]
+	if !exists || now.After(entry.expiresAt) {
+		l.entries[key] = &localLockEntry{expiresAt: now.Add(ttl)}
 		return true, nil
 	}
 	return false, nil
@@ -233,6 +240,9 @@ func (l *LocalLock) Lock(ctx context.Context, key string) error {
 }
 
 func (l *LocalLock) Unlock(ctx context.Context, key string) error {
-	l.mu.Delete(key)
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	delete(l.entries, key)
 	return nil
 }

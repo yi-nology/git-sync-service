@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,12 +26,20 @@ type RepoReader interface {
 	FindByKey(key string) (*model.Repo, error)
 }
 
-type Service interface {
+type ConfigProvider interface {
 	GetTempDir(taskKey string) string
 	GetConfig() *model.Config
+}
+
+type DAOProvider interface {
 	RunDAO() RunWriter
 	TaskDAO() TaskUpdater
 	RepoDAO() RepoReader
+}
+
+type Service interface {
+	ConfigProvider
+	DAOProvider
 }
 
 type Executor struct {
@@ -38,15 +47,15 @@ type Executor struct {
 	backend gitbackend.GitBackend
 }
 
-func NewExecutor(svc Service) *Executor {
+func NewExecutor(svc Service) (*Executor, error) {
 	backend, err := gitbackend.NewGitBackend(gitbackend.Options{})
 	if err != nil {
-		panic(fmt.Sprintf("init git backend failed: %v", err))
+		return nil, fmt.Errorf("init git backend failed: %w", err)
 	}
 	return &Executor{
 		service: svc,
 		backend: backend,
-	}
+	}, nil
 }
 
 func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger string) (*model.SyncRun, error) {
@@ -68,11 +77,15 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	defer func() {
 		run.EndTime = timePtr(time.Now())
 		run.Details = details.String()
-		_ = e.service.RunDAO().Update(run)
+		if err := e.service.RunDAO().Update(run); err != nil {
+			slog.Error("failed to update sync run", "error", err)
+		}
 
 		task.LastRunAt = run.EndTime
 		task.LastStatus = run.Status
-		_ = e.service.TaskDAO().Update(task)
+		if err := e.service.TaskDAO().Update(task); err != nil {
+			slog.Error("failed to update task status", "error", err)
+		}
 	}()
 
 	sourceRepo, err := e.service.RepoDAO().FindByKey(task.SourceRepoKey)

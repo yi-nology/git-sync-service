@@ -7,6 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/yi-nology/git-sync-service/internal/converter"
+	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	sync_task "github.com/yi-nology/git-sync-service/biz/model/sync_task"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -14,18 +15,18 @@ import (
 func ListTasks(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.ListTasksReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 
 	offset, limit := converter.PageToOffset(req.Page, req.PageSize)
 	list, total, err := GetSyncService().ListTasks(ctx, req.RepoKey, offset, limit)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	c.JSON(consts.StatusOK, &sync_task.ListTasksResp{
+	response.Success(c, &sync_task.ListTasksResp{
 		Tasks: converter.ToTaskInfoList(list),
 		Total: total,
 	})
@@ -34,30 +35,30 @@ func ListTasks(ctx context.Context, c *app.RequestContext) {
 func GetTask(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.GetTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 
 	t, err := GetSyncService().GetTask(ctx, req.Key)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.GetTaskResp{Task: converter.ToTaskInfo(t)})
+	response.Success(c, &sync_task.GetTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
 func CreateTask(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.CreateTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Name == "" || req.SourceRepoKey == "" || req.TargetRepoKey == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "name, sourceRepoKey and targetRepoKey are required"})
+		response.BadRequest(c, "name, sourceRepoKey and targetRepoKey are required")
 		return
 	}
 
@@ -69,10 +70,10 @@ func CreateTask(ctx context.Context, c *app.RequestContext) {
 		GitNoVerify: req.GitNoVerify, PushOptions: req.PushOptions,
 	})
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": fmt.Sprintf("create task failed: %v", err)})
+		response.InternalError(c, fmt.Sprintf("create task failed: %v", err))
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.CreateTaskResp{Task: converter.ToTaskInfo(t)})
+	response.Created(c, &sync_task.CreateTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
 func UpdateTask(ctx context.Context, c *app.RequestContext) {

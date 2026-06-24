@@ -51,64 +51,76 @@ git-sync-service/
 ├── main.go                          # 独立服务入口 (模式 A)
 ├── go.mod
 ├── go.sum
+├── router.go                        # 自定义路由注册
+├── router_gen.go                    # hz 生成
 │
-├── sync/                            # 核心库 (模式 B) ★ 可复用
-│   ├── service.go                   # 对外暴露的 Service
-│   ├── config.go                    # 配置结构
-│   ├── task.go                      # 同步任务逻辑
-│   ├── executor.go                  # Git 操作执行器
-│   ├── cron.go                      # 定时任务
-│   ├── webhook.go                   # Webhook 处理
-│   ├── rule.go                      # 规则引擎
-│   ├── repo.go                      # 仓库管理
+├── sync/                            # 核心库包装层 (模式 B)
+│   ├── service.go                   # 包装 internal/service
 │   └── model/                       # 数据模型
+│       ├── config.go
+│       ├── init.go
+│       ├── repo.go
+│       ├── requests.go
 │       ├── sync_task.go
 │       ├── sync_run.go
-│       ├── repo.go
-│       ├── webhook_rule.go
-│       └── webhook_event.go
-│
-├── idl/                             # hz IDL 定义
-│   ├── api.proto                    # HTTP 注解
-│   ├── common.proto                 # 通用消息
-│   ├── sync_task.proto              # 同步任务接口
-│   ├── repo.proto                   # 仓库管理接口
-│   ├── webhook.proto                # Webhook 接口
-│   └── event.proto                  # 事件日志接口
-│
-├── biz/                             # hz 生成的代码
-│   ├── handler/                     # HTTP handlers (hz 生成)
-│   │   ├── sync/
-│   │   │   └── sync_service.go
-│   │   ├── repo/
-│   │   │   └── repo_service.go
-│   │   ├── webhook/
-│   │   │   └── webhook_service.go
-│   │   └── event/
-│   │       └── event_service.go
-│   ├── router/                      # 路由注册 (hz 生成)
-│   │   ├── register.go
-│   │   └── sync/
-│   │       └── middleware.go
-│   └── model/                       # 请求/响应模型 (hz 生成)
-│       ├── sync_task/
-│       ├── repo/
-│       ├── webhook/
-│       └── event/
+│       ├── webhook_event.go
+│       └── webhook_rule.go
 │
 ├── internal/                        # 内部实现
-│   ├── config/
-│   │   └── config.go
-│   └── pkg/
-│       ├── response/
-│       └── lock/
+│   ├── service/                     # 业务逻辑层
+│   │   ├── service.go
+│   │   ├── repo.go
+│   │   ├── task.go
+│   │   ├── webhook.go
+│   │   └── rule_test.go
+│   ├── executor/                    # Git 操作执行器
+│   │   └── executor.go
+│   ├── dao/                         # 数据访问层
+│   │   ├── repo_dao.go
+│   │   ├── sync_task_dao.go
+│   │   ├── sync_run_dao.go
+│   │   ├── webhook_rule_dao.go
+│   │   └── webhook_event_dao.go
+│   ├── provider/                    # Git Provider 管理
+│   │   └── manager.go
+│   ├── lock/                        # 分布式锁
+│   │   └── lock.go
+│   ├── converter/                   # 数据转换器
+│   │   ├── repo.go
+│   │   ├── task.go
+│   │   └── webhook.go
+│   └── pkg/                         # 内部工具包
+│       └── response/
+│           └── response.go
 │
-├── router_gen.go                    # hz 生成
-├── router.go                        # 手动补充
+├── idl/                             # Thrift IDL 定义
+│   ├── base.thrift
+│   ├── git_sync.thrift
+│   ├── repo.thrift
+│   ├── sync_task.thrift
+│   └── webhook.thrift
+│
+├── biz/                             # hz 生成的代码
+│   ├── handler/                     # HTTP handlers
+│   │   ├── ping.go
+│   │   └── git_sync/
+│   │       ├── init.go
+│   │       ├── repo_service.go
+│   │       ├── sync_task_service.go
+│   │       ├── webhook_service.go
+│   │       └── webhook_receive.go
+│   ├── model/                       # 请求/响应模型
+│   │   ├── repo/
+│   │   ├── sync_task/
+│   │   └── webhook/
+│   └── router/                      # 路由注册
+│
 ├── conf/
 │   └── config.yaml
-├── Dockerfile
-└── Makefile
+├── data/                            # SQLite 数据文件
+├── Makefile
+├── build.sh
+└── test_api.sh
 ```
 
 ## 3. 核心库 API 设计
@@ -225,158 +237,68 @@ svc.Start()
 svc.RunTask(ctx, taskKey)
 ```
 
-## 4. IDL 定义 (hz 规范)
+## 4. IDL 定义 (Thrift + hz 规范)
 
 ### 4.1 同步任务接口
 
-```protobuf
-// idl/sync_task.proto
-syntax = "proto3";
-package sync_task;
-
-import "api.proto";
+```thrift
+// idl/sync_task.thrift
+namespace go sync_task
 
 service SyncTaskService {
-    rpc ListTasks(ListTasksRequest) returns (ListTasksResponse) (api.get="/api/v1/sync/tasks");
-    rpc GetTask(GetTaskRequest) returns (TaskResponse) (api.get="/api/v1/sync/task");
-    rpc CreateTask(CreateTaskRequest) returns (TaskResponse) (api.post="/api/v1/sync/task");
-    rpc UpdateTask(UpdateTaskRequest) returns (TaskResponse) (api.put="/api/v1/sync/task");
-    rpc DeleteTask(DeleteTaskRequest) returns (DeleteResponse) (api.delete="/api/v1/sync/task");
-    rpc RunTask(RunTaskRequest) returns (RunTaskResponse) (api.post="/api/v1/sync/run");
-    rpc PreviewSync(PreviewRequest) returns (PreviewResponse) (api.post="/api/v1/sync/preview");
-    rpc ListHistory(ListHistoryRequest) returns (ListHistoryResponse) (api.get="/api/v1/sync/history");
-}
-
-message SyncTask {
-    int64 id = 1;
-    string key = 2;
-    string name = 3;
-    string source_repo_key = 4;
-    string source_branch = 5;
-    string target_repo_key = 6;
-    string target_branch = 7;
-    string sync_mode = 8;
-    string cron = 9;
-    string webhook_token = 10;
-    bool enabled = 11;
-    bool git_tags = 12;
-    bool git_force = 13;
-    bool git_prune = 14;
-    bool git_no_verify = 15;
-    string last_run_at = 16;
-    string last_status = 17;
-}
-
-message ListTasksRequest {
-    string repo_key = 1;
-    int32 page = 2;
-    int32 page_size = 3;
-}
-
-message ListTasksResponse {
-    repeated SyncTask tasks = 1;
-    int64 total = 2;
-}
-
-message CreateTaskRequest {
-    string name = 1;
-    string source_repo_key = 2;
-    string source_branch = 3;
-    string target_repo_key = 4;
-    string target_branch = 5;
-    string sync_mode = 6;
-    string cron = 7;
-    bool git_tags = 8;
-    bool git_force = 9;
-    bool git_prune = 10;
-    bool git_no_verify = 11;
-    string push_options = 12;
+    sync_task.ListTasksResp ListTasks(1: sync_task.ListTasksReq req) (api.get="/api/v1/sync/tasks")
+    sync_task.GetTaskResp GetTask(1: sync_task.GetTaskReq req) (api.get="/api/v1/sync/task")
+    sync_task.CreateTaskResp CreateTask(1: sync_task.CreateTaskReq req) (api.post="/api/v1/sync/task")
+    sync_task.UpdateTaskResp UpdateTask(1: sync_task.UpdateTaskReq req) (api.put="/api/v1/sync/task")
+    sync_task.DeleteTaskResp DeleteTask(1: sync_task.DeleteTaskReq req) (api.delete="/api/v1/sync/task")
+    sync_task.RunTaskResp RunTask(1: sync_task.RunTaskReq req) (api.post="/api/v1/sync/task/run")
+    sync_task.PreviewSyncResp PreviewSync(1: sync_task.PreviewSyncReq req) (api.post="/api/v1/sync/preview")
+    sync_task.ListHistoryResp ListHistory(1: sync_task.ListHistoryReq req) (api.get="/api/v1/sync/history")
 }
 ```
 
 ### 4.2 仓库管理接口
 
-```protobuf
-// idl/repo.proto
-syntax = "proto3";
-package repo;
-
-import "api.proto";
+```thrift
+// idl/repo.thrift
+namespace go repo
 
 service RepoService {
-    rpc ListRepos(ListReposRequest) returns (ListReposResponse) (api.get="/api/v1/repos");
-    rpc GetRepo(GetRepoRequest) returns (RepoResponse) (api.get="/api/v1/repo");
-    rpc CreateRepo(CreateRepoRequest) returns (RepoResponse) (api.post="/api/v1/repo");
-    rpc UpdateRepo(UpdateRepoRequest) returns (RepoResponse) (api.put="/api/v1/repo");
-    rpc DeleteRepo(DeleteRepoRequest) returns (DeleteResponse) (api.delete="/api/v1/repo");
-    rpc TestConnection(TestConnectionRequest) returns (TestConnectionResponse) (api.post="/api/v1/repo/test");
-    rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse) (api.get="/api/v1/repo/branches");
-}
-
-message Repo {
-    int64 id = 1;
-    string key = 2;
-    string name = 3;
-    string platform = 4;
-    string platform_owner = 5;
-    string platform_repo = 6;
-    string clone_url = 7;
-    string ssh_url = 8;
-    string default_branch = 9;
-    string status = 10;
-}
-
-message CreateRepoRequest {
-    string name = 1;
-    string remote_url = 2;
-    string access_token = 3;
+    repo.ListReposResp ListRepos(1: repo.ListReposReq req) (api.get="/api/v1/repos")
+    repo.GetRepoResp GetRepo(1: repo.GetRepoReq req) (api.get="/api/v1/repo")
+    repo.CreateRepoResp CreateRepo(1: repo.CreateRepoReq req) (api.post="/api/v1/repo")
+    repo.UpdateRepoResp UpdateRepo(1: repo.UpdateRepoReq req) (api.put="/api/v1/repo")
+    repo.DeleteRepoResp DeleteRepo(1: repo.DeleteRepoReq req) (api.delete="/api/v1/repo")
+    repo.TestConnectionResp TestConnection(1: repo.TestConnectionReq req) (api.post="/api/v1/repo/test")
+    repo.ListBranchesResp ListBranches(1: repo.ListBranchesReq req) (api.get="/api/v1/repo/branches")
 }
 ```
 
 ### 4.3 Webhook 接口
 
-```protobuf
-// idl/webhook.proto
-syntax = "proto3";
-package webhook;
-
-import "api.proto";
+```thrift
+// idl/webhook.thrift
+namespace go webhook
 
 service WebhookService {
-    rpc ListRules(ListRulesRequest) returns (ListRulesResponse) (api.get="/api/v1/webhook/rules");
-    rpc GetRule(GetRuleRequest) returns (RuleResponse) (api.get="/api/v1/webhook/rule");
-    rpc CreateRule(CreateRuleRequest) returns (RuleResponse) (api.post="/api/v1/webhook/rule");
-    rpc UpdateRule(UpdateRuleRequest) returns (RuleResponse) (api.put="/api/v1/webhook/rule");
-    rpc DeleteRule(DeleteRuleRequest) returns (DeleteResponse) (api.delete="/api/v1/webhook/rule");
-    rpc ReceiveWebhook(ReceiveRequest) returns (ReceiveResponse) (api.post="/api/webhook/receive/:repoKey");
-    rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) (api.get="/api/v1/webhook/events");
-    rpc RetryEvent(RetryEventRequest) returns (RetryEventResponse) (api.post="/api/v1/webhook/event/retry");
-}
-
-message WebhookRule {
-    int64 id = 1;
-    string name = 2;
-    string repo_key = 3;
-    string event_type = 4;
-    string branch_pattern = 5;
-    string action = 6;
-    string sync_task_keys = 7;
-    int32 min_interval = 8;
-    bool enabled = 9;
+    webhook.ListRulesResp ListRules(1: webhook.ListRulesReq req) (api.get="/api/v1/webhook/rules")
+    webhook.GetRuleResp GetRule(1: webhook.GetRuleReq req) (api.get="/api/v1/webhook/rule")
+    webhook.CreateRuleResp CreateRule(1: webhook.CreateRuleReq req) (api.post="/api/v1/webhook/rule")
+    webhook.UpdateRuleResp UpdateRule(1: webhook.UpdateRuleReq req) (api.put="/api/v1/webhook/rule")
+    webhook.DeleteRuleResp DeleteRule(1: webhook.DeleteRuleReq req) (api.delete="/api/v1/webhook/rule")
+    webhook.ListEventsResp ListEvents(1: webhook.ListEventsReq req) (api.get="/api/v1/webhook/events")
+    webhook.RetryEventResp RetryEvent(1: webhook.RetryEventReq req) (api.post="/api/v1/webhook/event/retry")
 }
 ```
 
-### 4.4 hz 生成命令
+### 4.4 代码生成命令
 
 ```bash
-# 生成同步任务接口
-hz update -idl idl/sync_task.proto
+# 生成代码
+make generate
 
-# 生成仓库管理接口
-hz update -idl idl/repo.proto
-
-# 生成 Webhook 接口
-hz update -idl idl/webhook.proto
+# 或者手动执行
+cd idl && thriftgo --out ../biz --go --go-recurse 10 git_sync.thrift
 ```
 
 ## 5. 数据模型
@@ -747,7 +669,7 @@ git-sync-service
 | POST | /api/v1/sync/task | 创建任务 |
 | PUT | /api/v1/sync/task | 更新任务 |
 | DELETE | /api/v1/sync/task?key=xxx | 删除任务 |
-| POST | /api/v1/sync/run | 运行任务 |
+| POST | /api/v1/sync/task/run | 运行任务 |
 | POST | /api/v1/sync/preview | 预览同步 |
 | GET | /api/v1/sync/history | 同步历史 |
 | **仓库管理** | | |
@@ -760,6 +682,7 @@ git-sync-service
 | GET | /api/v1/repo/branches?key=xxx | 分支列表 |
 | **Webhook** | | |
 | GET | /api/v1/webhook/rules | 规则列表 |
+| GET | /api/v1/webhook/rule?id=xxx | 规则详情 |
 | POST | /api/v1/webhook/rule | 创建规则 |
 | PUT | /api/v1/webhook/rule | 更新规则 |
 | DELETE | /api/v1/webhook/rule?id=xxx | 删除规则 |

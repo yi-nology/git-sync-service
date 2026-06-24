@@ -5,17 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
-)
-
-var (
-	lastTriggerTime sync.Map
 )
 
 func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
@@ -67,7 +61,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return err
 	}
 
-	go s.safeApplyRules(context.Background(), repoKey, whEvent)
+	go s.safeApplyRules(ctx, repoKey, whEvent)
 
 	return nil
 }
@@ -101,21 +95,21 @@ func (s *Service) applyRules(ctx context.Context, repoKey string, event *model.W
 			continue
 		}
 
-		if rule.Action == "sync" && rule.SyncTaskKeys != "" {
-			for _, taskKey := range strings.Split(rule.SyncTaskKeys, ",") {
-				taskKey = strings.TrimSpace(taskKey)
+		if rule.Action == "sync" {
+			taskKeys := rule.GetTaskKeys()
+			for _, taskKey := range taskKeys {
 				if taskKey == "" {
 					continue
 				}
 				if rule.MinInterval > 0 {
 					key := fmt.Sprintf("%s:%s", rule.RepoKey, taskKey)
-					if lastTime, ok := lastTriggerTime.Load(key); ok {
+					if lastTime, ok := s.lastTriggerTime.Load(key); ok {
 						if time.Since(lastTime.(time.Time)) < time.Duration(rule.MinInterval)*time.Second {
 							slog.Warn("skipping due to min interval", "taskKey", taskKey, "minInterval", rule.MinInterval)
 							continue
 						}
 					}
-					lastTriggerTime.Store(key, time.Now())
+					s.lastTriggerTime.Store(key, time.Now())
 				}
 				if err := s.RunTaskWithTrigger(ctx, taskKey, "webhook"); err != nil {
 					slog.Error("run task failed", "taskKey", taskKey, "error", err)
@@ -140,11 +134,11 @@ func (s *Service) CreateRule(ctx context.Context, req *model.CreateRuleRequest) 
 		EventType:     req.EventType,
 		BranchPattern: req.BranchPattern,
 		Action:        req.Action,
-		SyncTaskKeys:  req.SyncTaskKeys,
 		MinInterval:   req.MinInterval,
 		Enabled:       req.Enabled,
 		Description:   req.Description,
 	}
+	rule.SetTaskKeys(req.TaskKeys)
 
 	if err := s.ruleDAO.Create(rule); err != nil {
 		return nil, err
@@ -172,7 +166,9 @@ func (s *Service) UpdateRule(ctx context.Context, req *model.UpdateRuleRequest) 
 	if req.Action != "" {
 		rule.Action = req.Action
 	}
-	rule.SyncTaskKeys = req.SyncTaskKeys
+	if req.TaskKeys != nil {
+		rule.SetTaskKeys(req.TaskKeys)
+	}
 	if req.MinInterval > 0 {
 		rule.MinInterval = req.MinInterval
 	}

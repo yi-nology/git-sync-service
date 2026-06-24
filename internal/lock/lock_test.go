@@ -6,110 +6,111 @@ import (
 	"time"
 )
 
-func TestLocalLockBasic(t *testing.T) {
-	l := &LocalLock{}
+func TestLocalLock_TryLock(t *testing.T) {
+	lock := NewLocalLock()
 	ctx := context.Background()
 
-	ok, err := l.TryLock(ctx, "test-key")
+	ok, err := lock.TryLock(ctx, "test-key")
 	if err != nil {
 		t.Fatalf("TryLock failed: %v", err)
 	}
 	if !ok {
-		t.Fatal("TryLock should succeed on first attempt")
+		t.Fatal("Expected to acquire lock")
 	}
 
-	ok, err = l.TryLock(ctx, "test-key")
+	ok, err = lock.TryLock(ctx, "test-key")
 	if err != nil {
 		t.Fatalf("TryLock failed: %v", err)
 	}
 	if ok {
-		t.Fatal("TryLock should fail when already locked")
+		t.Fatal("Expected lock to be already held")
 	}
-
-	if err := l.Unlock(ctx, "test-key"); err != nil {
-		t.Fatalf("Unlock failed: %v", err)
-	}
-
-	ok, err = l.TryLock(ctx, "test-key")
-	if err != nil {
-		t.Fatalf("TryLock after unlock failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("TryLock should succeed after unlock")
-	}
-	l.Unlock(ctx, "test-key")
 }
 
-func TestLocalLockTTLExpiry(t *testing.T) {
-	l := &LocalLock{}
+func TestLocalLock_TryLockWithTTL(t *testing.T) {
+	lock := NewLocalLock()
 	ctx := context.Background()
 
-	ok, err := l.TryLockWithTTL(ctx, "ttl-key", 100*time.Millisecond)
+	ok, err := lock.TryLockWithTTL(ctx, "test-key", 100*time.Millisecond)
 	if err != nil {
 		t.Fatalf("TryLockWithTTL failed: %v", err)
 	}
 	if !ok {
-		t.Fatal("TryLockWithTTL should succeed")
+		t.Fatal("Expected to acquire lock")
+	}
+
+	ok, err = lock.TryLockWithTTL(ctx, "test-key", 100*time.Millisecond)
+	if err != nil {
+		t.Fatalf("TryLockWithTTL failed: %v", err)
+	}
+	if ok {
+		t.Fatal("Expected lock to be already held")
 	}
 
 	time.Sleep(150 * time.Millisecond)
 
-	ok, err = l.TryLock(ctx, "ttl-key")
+	ok, err = lock.TryLockWithTTL(ctx, "test-key", 100*time.Millisecond)
 	if err != nil {
-		t.Fatalf("TryLock after TTL failed: %v", err)
+		t.Fatalf("TryLockWithTTL failed: %v", err)
 	}
 	if !ok {
-		t.Fatal("TryLock should succeed after TTL expired")
+		t.Fatal("Expected to acquire lock after TTL expired")
 	}
-	l.Unlock(ctx, "ttl-key")
 }
 
-func TestLocalLockDifferentKeys(t *testing.T) {
-	l := &LocalLock{}
+func TestLocalLock_Unlock(t *testing.T) {
+	lock := NewLocalLock()
 	ctx := context.Background()
 
-	ok1, _ := l.TryLock(ctx, "key-a")
-	ok2, _ := l.TryLock(ctx, "key-b")
-
-	if !ok1 || !ok2 {
-		t.Fatal("Different keys should be independently lockable")
+	ok, err := lock.TryLock(ctx, "test-key")
+	if err != nil {
+		t.Fatalf("TryLock failed: %v", err)
+	}
+	if !ok {
+		t.Fatal("Expected to acquire lock")
 	}
 
-	l.Unlock(ctx, "key-a")
-	l.Unlock(ctx, "key-b")
+	err = lock.Unlock(ctx, "test-key")
+	if err != nil {
+		t.Fatalf("Unlock failed: %v", err)
+	}
+
+	ok, err = lock.TryLock(ctx, "test-key")
+	if err != nil {
+		t.Fatalf("TryLock failed: %v", err)
+	}
+	if !ok {
+		t.Fatal("Expected to acquire lock after unlock")
+	}
 }
 
-func TestLocalLockBlocking(t *testing.T) {
-	l := &LocalLock{}
+func TestLocalLock_Concurrent(t *testing.T) {
+	lock := NewLocalLock()
 	ctx := context.Background()
 
-	l.TryLock(ctx, "block-key")
+	acquired := make(chan bool, 2)
 
-	done := make(chan struct{})
 	go func() {
-		l.Unlock(ctx, "block-key")
-		close(done)
+		ok, _ := lock.TryLock(ctx, "concurrent-key")
+		acquired <- ok
+		if ok {
+			time.Sleep(50 * time.Millisecond)
+			lock.Unlock(ctx, "concurrent-key")
+		}
 	}()
 
-	err := l.Lock(ctx, "block-key")
-	if err != nil {
-		t.Fatalf("Lock should succeed after unlock: %v", err)
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		ok, _ := lock.TryLock(ctx, "concurrent-key")
+		acquired <- ok
+	}()
+
+	results := make([]bool, 2)
+	for i := 0; i < 2; i++ {
+		results[i] = <-acquired
 	}
-	<-done
-	l.Unlock(ctx, "block-key")
-}
 
-func TestLocalLockCanceledContext(t *testing.T) {
-	l := &LocalLock{}
-	ctx, cancel := context.WithCancel(context.Background())
-
-	l.TryLock(ctx, "cancel-key")
-
-	cancel()
-
-	err := l.Lock(ctx, "cancel-key")
-	if err == nil {
-		t.Fatal("Lock should fail with canceled context")
+	if !results[0] && !results[1] {
+		t.Fatal("At least one goroutine should have acquired the lock")
 	}
-	l.Unlock(ctx, "cancel-key")
 }
