@@ -21,34 +21,40 @@ func Register(r *server.Hertz) {
 		_api := root.Group("/api", _apiMw()...)
 		{
 			_v1 := _api.Group("/v1", _v1Mw()...)
-			_v1.GET("/repo", append(_getrepoMw(), git_sync.GetRepo)...)
-			_repo := _v1.Group("/repo", _repoMw()...)
-			_repo.GET("/branches", append(_listbranchesMw(), git_sync.ListBranches)...)
-			_repo.POST("/create", append(_createrepoMw(), git_sync.CreateRepo)...)
-			_repo.POST("/delete", append(_deleterepoMw(), git_sync.DeleteRepo)...)
-			_repo.POST("/test", append(_testconnectionMw(), git_sync.TestConnection)...)
-			_repo.POST("/update", append(_updaterepoMw(), git_sync.UpdateRepo)...)
+			{
+				_repo := _v1.Group("/repo", _repoMw()...)
+				_repo.GET("", append(_getrepoMw(), git_sync.GetRepo)...)
+				_repo.GET("/branches", append(_listbranchesMw(), git_sync.ListBranches)...)
+				_repo.POST("", append(_createrepoMw(), git_sync.CreateRepo)...)
+				_repo.PUT("", append(_updaterepoMw(), git_sync.UpdateRepo)...)
+				_repo.DELETE("", append(_deleterepoMw(), git_sync.DeleteRepo)...)
+				_repo.POST("/test", append(_testconnectionMw(), git_sync.TestConnection)...)
+			}
 			_v1.GET("/repos", append(_listreposMw(), git_sync.ListRepos)...)
 			{
 				_sync := _v1.Group("/sync", _syncMw()...)
 				_sync.GET("/history", append(_listhistoryMw(), git_sync.ListHistory)...)
 				_sync.POST("/preview", append(_previewsyncMw(), git_sync.PreviewSync)...)
-				_sync.GET("/task", append(_gettaskMw(), git_sync.GetTask)...)
-				_task := _sync.Group("/task", _taskMw()...)
-				_task.POST("/create", append(_createtaskMw(), git_sync.CreateTask)...)
-				_task.POST("/delete", append(_deletetaskMw(), git_sync.DeleteTask)...)
-				_task.POST("/run", append(_runtaskMw(), git_sync.RunTask)...)
-				_task.POST("/update", append(_updatetaskMw(), git_sync.UpdateTask)...)
+				{
+					_task := _sync.Group("/task", _taskMw()...)
+					_task.GET("", append(_gettaskMw(), git_sync.GetTask)...)
+					_task.POST("", append(_createtaskMw(), git_sync.CreateTask)...)
+					_task.PUT("", append(_updatetaskMw(), git_sync.UpdateTask)...)
+					_task.DELETE("", append(_deletetaskMw(), git_sync.DeleteTask)...)
+					_task.POST("/run", append(_runtaskMw(), git_sync.RunTask)...)
+				}
 				_sync.GET("/tasks", append(_listtasksMw(), git_sync.ListTasks)...)
 			}
 			{
 				_webhook := _v1.Group("/webhook", _webhookMw()...)
 				_webhook.GET("/events", append(_listeventsMw(), git_sync.ListEvents)...)
-				_webhook.GET("/rule", append(_getruleMw(), git_sync.GetRule)...)
-				_rule := _webhook.Group("/rule", _ruleMw()...)
-				_rule.POST("/create", append(_createruleMw(), git_sync.CreateRule)...)
-				_rule.POST("/delete", append(_deleteruleMw(), git_sync.DeleteRule)...)
-				_rule.POST("/update", append(_updateruleMw(), git_sync.UpdateRule)...)
+				{
+					_rule := _webhook.Group("/rule", _ruleMw()...)
+					_rule.GET("", append(_getruleMw(), git_sync.GetRule)...)
+					_rule.POST("", append(_createruleMw(), git_sync.CreateRule)...)
+					_rule.PUT("", append(_updateruleMw(), git_sync.UpdateRule)...)
+					_rule.DELETE("", append(_deleteruleMw(), git_sync.DeleteRule)...)
+				}
 				_webhook.GET("/rules", append(_listrulesMw(), git_sync.ListRules)...)
 				{
 					_event := _webhook.Group("/event", _eventMw()...)
