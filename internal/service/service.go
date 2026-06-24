@@ -1,13 +1,10 @@
 package service
 
 import (
-	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
@@ -22,21 +19,22 @@ import (
 type Config = model.Config
 
 type Service struct {
-	config        *Config
-	db            *gorm.DB
-	repoDAO       *dao.RepoDAO
-	taskDAO       *dao.SyncTaskDAO
-	runDAO        *dao.SyncRunDAO
-	ruleDAO       *dao.WebhookRuleDAO
-	eventDAO      *dao.WebhookEventDAO
-	providerMgr   *provider.ProviderManager
-	cron          *cron.Cron
-	cronEntryIDs  map[string]cron.EntryID
-	cronMu        sync.RWMutex
-	lock          lock.DistLock
-	semaphore     *lock.Semaphore
-	semaphoreID   string
-	executor      *executor.Executor
+	config          *Config
+	db              *gorm.DB
+	repoDAO         *dao.RepoDAO
+	taskDAO         *dao.SyncTaskDAO
+	runDAO          *dao.SyncRunDAO
+	ruleDAO         *dao.WebhookRuleDAO
+	eventDAO        *dao.WebhookEventDAO
+	providerMgr     *provider.ProviderManager
+	cron            *cron.Cron
+	cronEntryIDs    map[string]cron.EntryID
+	cronMu          sync.RWMutex
+	lock            lock.DistLock
+	semaphore       *lock.Semaphore
+	semaphoreID     string
+	executor        *executor.Executor
+	lastTriggerTime sync.Map
 }
 
 func NewService(cfg *Config) (*Service, error) {
@@ -68,7 +66,7 @@ func NewService(cfg *Config) (*Service, error) {
 		}
 		sem = lock.NewSemaphore(redisClient, "sync-tasks", maxConcurrent)
 	} else {
-		distLock = &lock.LocalLock{}
+		distLock = lock.NewLocalLock()
 	}
 
 	svc := &Service{
@@ -87,63 +85,25 @@ func NewService(cfg *Config) (*Service, error) {
 		semaphoreID:  uuid.New().String(),
 	}
 
-	svc.executor = executor.NewExecutor(svc)
+	exec, err := executor.NewExecutor(svc)
+	if err != nil {
+		return nil, fmt.Errorf("init executor failed: %w", err)
+	}
+	svc.executor = exec
+
+	go svc.cleanupTriggerTimes()
 
 	return svc, nil
 }
 
 func (s *Service) Start() error {
-	tasks, err := s.taskDAO.FindAllEnabled()
-	if err != nil {
-		return err
-	}
-
-	for _, task := range tasks {
-		if task.Cron != "" {
-			if err := s.addCronJob(task); err != nil {
-				slog.Error("add cron job failed", "taskKey", task.Key, "error", err)
-			}
-		}
-	}
-
-	s.cron.Start()
-	return nil
+	return s.startCronJobs()
 }
 
 func (s *Service) Stop() {
-	s.cron.Stop()
+	s.stopCronJobs()
 	if closer, ok := s.lock.(interface{ Close() error }); ok {
 		closer.Close()
-	}
-}
-
-func (s *Service) addCronJob(task *model.SyncTask) error {
-	s.cronMu.Lock()
-	defer s.cronMu.Unlock()
-
-	if entryID, ok := s.cronEntryIDs[task.Key]; ok {
-		s.cron.Remove(entryID)
-	}
-
-	entryID, err := s.cron.AddFunc(task.Cron, func() {
-		ctx := context.Background()
-		_ = s.RunTaskWithTrigger(ctx, task.Key, "cron")
-	})
-	if err != nil {
-		return err
-	}
-
-	s.cronEntryIDs[task.Key] = entryID
-	return nil
-}
-
-func (s *Service) removeCronJob(taskKey string) {
-	s.cronMu.Lock()
-	defer s.cronMu.Unlock()
-
-	if entryID, ok := s.cronEntryIDs[taskKey]; ok {
-		s.cron.Remove(entryID)
-		delete(s.cronEntryIDs, taskKey)
 	}
 }
 
@@ -159,33 +119,6 @@ func (s *Service) GetAPIKey() string {
 	return s.config.Server.APIKey
 }
 
-func (s *Service) TryAcquireTaskLock(ctx context.Context, taskKey string) (bool, error) {
-	lockKey := fmt.Sprintf("task:%s", taskKey)
-	ttl := time.Duration(s.config.Sync.DefaultTimeout) * time.Second
-	if ttl <= 0 {
-		ttl = 300 * time.Second
-	}
-	return s.lock.TryLockWithTTL(ctx, lockKey, ttl)
-}
-
-func (s *Service) ReleaseTaskLock(ctx context.Context, taskKey string) error {
-	lockKey := fmt.Sprintf("task:%s", taskKey)
-	return s.lock.Unlock(ctx, lockKey)
-}
-
-func (s *Service) AcquireSemaphore(ctx context.Context, taskKey string) (bool, error) {
-	if s.semaphore == nil {
-		return true, nil
-	}
-	return s.semaphore.Acquire(ctx, s.semaphoreID+":"+taskKey)
-}
-
-func (s *Service) ReleaseSemaphore(ctx context.Context, taskKey string) {
-	if s.semaphore != nil {
-		s.semaphore.Release(ctx, s.semaphoreID+":"+taskKey)
-	}
-}
-
 func (s *Service) RunDAO() executor.RunWriter {
 	return s.runDAO
 }
@@ -196,17 +129,4 @@ func (s *Service) TaskDAO() executor.TaskUpdater {
 
 func (s *Service) RepoDAO() executor.RepoReader {
 	return s.repoDAO
-}
-
-func (s *Service) CleanupOldData(maxAge time.Duration) (events int64, runs int64, err error) {
-	events, err = s.eventDAO.CleanupOlderThan(maxAge)
-	if err != nil {
-		return 0, 0, err
-	}
-	runs, err = s.runDAO.CleanupOlderThan(maxAge)
-	if err != nil {
-		return events, 0, err
-	}
-	slog.Info("data cleanup completed", "events_deleted", events, "runs_deleted", runs)
-	return events, runs, nil
 }

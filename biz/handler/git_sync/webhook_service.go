@@ -2,10 +2,11 @@ package git_sync
 
 import (
 	"context"
+	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/yi-nology/git-sync-service/internal/converter"
+	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	webhook "github.com/yi-nology/git-sync-service/biz/model/webhook"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -13,111 +14,133 @@ import (
 func ListRules(ctx context.Context, c *app.RequestContext) {
 	var req webhook.ListRulesReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.RepoKey == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "repoKey is required"})
+		response.BadRequest(c, "repoKey is required")
 		return
 	}
 
 	list, err := GetSyncService().ListRules(ctx, req.RepoKey)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.ListRulesResp{Rules: converter.ToRuleInfoList(list)})
+	response.Success(c, &webhook.ListRulesResp{Rules: converter.ToRuleInfoList(list)})
 }
 
 func GetRule(ctx context.Context, c *app.RequestContext) {
 	var req webhook.GetRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.ID <= 0 {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "id is required"})
+		response.BadRequest(c, "id is required")
 		return
 	}
 	r, err := GetSyncService().GetRule(ctx, uint(req.ID))
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.GetRuleResp{Rule: converter.ToRuleInfo(r)})
+	response.Success(c, &webhook.GetRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
 func CreateRule(ctx context.Context, c *app.RequestContext) {
 	var req webhook.CreateRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Name == "" || req.RepoKey == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "name and repoKey are required"})
+		response.BadRequest(c, "name and repoKey are required")
 		return
 	}
+
+	var taskKeys []string
+	if req.SyncTaskKeys != "" {
+		for _, key := range strings.Split(req.SyncTaskKeys, ",") {
+			key = strings.TrimSpace(key)
+			if key != "" {
+				taskKeys = append(taskKeys, key)
+			}
+		}
+	}
+
 	r, err := GetSyncService().CreateRule(ctx, &syncmodel.CreateRuleRequest{
 		Name: req.Name, RepoKey: req.RepoKey, EventType: req.EventType,
 		BranchPattern: req.BranchPattern, Action: req.Action,
-		SyncTaskKeys: req.SyncTaskKeys, MinInterval: int(req.MinInterval),
+		TaskKeys: taskKeys, MinInterval: int(req.MinInterval),
 		Enabled: req.Enabled, Description: req.Description,
 	})
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.CreateRuleResp{Rule: converter.ToRuleInfo(r)})
+	response.Created(c, &webhook.CreateRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
 func UpdateRule(ctx context.Context, c *app.RequestContext) {
 	var req webhook.UpdateRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.ID <= 0 {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "id is required"})
+		response.BadRequest(c, "id is required")
 		return
 	}
+
+	var taskKeys []string
+	if req.SyncTaskKeys != "" {
+		for _, key := range strings.Split(req.SyncTaskKeys, ",") {
+			key = strings.TrimSpace(key)
+			if key != "" {
+				taskKeys = append(taskKeys, key)
+			}
+		}
+	}
+
 	r, err := GetSyncService().UpdateRule(ctx, &syncmodel.UpdateRuleRequest{
 		ID: uint(req.ID), Name: req.Name, EventType: req.EventType,
 		BranchPattern: req.BranchPattern, Action: req.Action,
-		SyncTaskKeys: req.SyncTaskKeys, MinInterval: int(req.MinInterval),
+		TaskKeys: taskKeys, MinInterval: int(req.MinInterval),
 		Enabled: req.Enabled, Description: req.Description,
 	})
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.UpdateRuleResp{Rule: converter.ToRuleInfo(r)})
+	response.Success(c, &webhook.UpdateRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
 func DeleteRule(ctx context.Context, c *app.RequestContext) {
 	var req webhook.DeleteRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.ID <= 0 {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "id is required"})
+		response.BadRequest(c, "id is required")
 		return
 	}
 	if err := GetSyncService().DeleteRule(ctx, uint(req.ID)); err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.DeleteRuleResp{Success: true})
+	response.NoContent(c)
 }
 
 func ListEvents(ctx context.Context, c *app.RequestContext) {
 	var req webhook.ListEventsReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.RepoKey == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "repoKey is required"})
+		response.BadRequest(c, "repoKey is required")
 		return
 	}
 
@@ -127,26 +150,26 @@ func ListEvents(ctx context.Context, c *app.RequestContext) {
 	}
 	events, _, err := GetSyncService().ListEvents(ctx, req.RepoKey, 0, limit)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	c.JSON(consts.StatusOK, &webhook.ListEventsResp{Events: converter.ToEventInfoList(events)})
+	response.Success(c, &webhook.ListEventsResp{Events: converter.ToEventInfoList(events)})
 }
 
 func RetryEvent(ctx context.Context, c *app.RequestContext) {
 	var req webhook.RetryEventReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.ID <= 0 {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "id is required"})
+		response.BadRequest(c, "id is required")
 		return
 	}
 	if err := GetSyncService().RetryEvent(ctx, uint(req.ID)); err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &webhook.RetryEventResp{Success: true, Message: "event retried"})
+	response.Success(c, &webhook.RetryEventResp{Success: true, Message: "event retried"})
 }

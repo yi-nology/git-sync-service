@@ -30,6 +30,7 @@ func InitDB(driver, dsn string) (*gorm.DB, error) {
 		&SyncTask{},
 		&SyncRun{},
 		&WebhookRule{},
+		&WebhookRuleTask{},
 		&WebhookEvent{},
 	)
 	if err != nil {

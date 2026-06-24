@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -68,5 +69,46 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
 	return &cfg, nil
+}
+
+func (c *Config) Validate() error {
+	if c.Server.Host == "" {
+		c.Server.Host = "0.0.0.0"
+	}
+	if c.Server.Port <= 0 || c.Server.Port > 65535 {
+		c.Server.Port = 8890
+	}
+	if c.Database.Driver == "" {
+		return fmt.Errorf("database driver is required")
+	}
+	if c.Database.DSN == "" {
+		return fmt.Errorf("database dsn is required")
+	}
+	if c.Database.Driver != "mysql" && c.Database.Driver != "sqlite" {
+		return fmt.Errorf("unsupported database driver: %s", c.Database.Driver)
+	}
+	if c.Database.MaxIdleConns <= 0 {
+		c.Database.MaxIdleConns = 10
+	}
+	if c.Database.MaxOpenConns <= 0 {
+		c.Database.MaxOpenConns = 100
+	}
+	if c.Git.TempDir == "" {
+		c.Git.TempDir = "/tmp/git-sync"
+	}
+	if c.Sync.MaxConcurrent <= 0 {
+		c.Sync.MaxConcurrent = 5
+	}
+	if c.Sync.DefaultTimeout <= 0 {
+		c.Sync.DefaultTimeout = 300
+	}
+	if c.Sync.RetryCount <= 0 {
+		c.Sync.RetryCount = 3
+	}
+	return nil
 }
