@@ -47,6 +47,10 @@ func GetRepo(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	if r == nil {
+		response.NotFound(c, "repo not found")
+		return
+	}
 	response.Success(c, &repo.GetRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
@@ -86,6 +90,10 @@ func UpdateRepo(ctx context.Context, c *app.RequestContext) {
 		Key: req.Key, Name: req.Name, AccessToken: req.AccessToken,
 	})
 	if err != nil {
+		if err.Error() == "repo not found" {
+			response.NotFound(c, err.Error())
+			return
+		}
 		response.InternalError(c, err.Error())
 		return
 	}
