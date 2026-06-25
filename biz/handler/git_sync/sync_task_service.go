@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	sync_task "github.com/yi-nology/git-sync-service/biz/model/sync_task"
@@ -79,11 +78,11 @@ func CreateTask(ctx context.Context, c *app.RequestContext) {
 func UpdateTask(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.UpdateTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 
@@ -94,54 +93,54 @@ func UpdateTask(ctx context.Context, c *app.RequestContext) {
 		GitPrune: req.GitPrune, GitNoVerify: req.GitNoVerify, PushOptions: req.PushOptions,
 	})
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.UpdateTaskResp{Task: converter.ToTaskInfo(t)})
+	response.Success(c, &sync_task.UpdateTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
 func DeleteTask(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.DeleteTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 	if err := GetSyncService().DeleteTask(ctx, req.Key); err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.DeleteTaskResp{Success: true})
+	response.NoContent(c)
 }
 
 func RunTask(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.RunTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.Key == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "key is required"})
+		response.BadRequest(c, "key is required")
 		return
 	}
 	if err := GetSyncService().RunTask(ctx, req.Key); err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.RunTaskResp{Success: true, Message: "task started"})
+	response.Success(c, &sync_task.RunTaskResp{Success: true, Message: "task started"})
 }
 
 func PreviewSync(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.PreviewSyncReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.SourceRepoKey == "" || req.TargetRepoKey == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "sourceRepoKey and targetRepoKey are required"})
+		response.BadRequest(c, "sourceRepoKey and targetRepoKey are required")
 		return
 	}
 
@@ -150,10 +149,10 @@ func PreviewSync(ctx context.Context, c *app.RequestContext) {
 		TargetRepoKey: req.TargetRepoKey, TargetBranch: req.TargetBranch,
 	})
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
-	c.JSON(consts.StatusOK, &sync_task.PreviewSyncResp{
+	response.Success(c, &sync_task.PreviewSyncResp{
 		CanSync: result.CanSync, SourceExists: result.SourceExists,
 		TargetExists: result.TargetExists, CommitCount: int32(result.CommitCount),
 		LatestCommit: result.LatestCommit, Message: result.Message,
@@ -163,11 +162,11 @@ func PreviewSync(ctx context.Context, c *app.RequestContext) {
 func ListHistory(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.ListHistoryReq
 	if err := c.BindAndValidate(&req); err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error())
 		return
 	}
 	if req.TaskKey == "" {
-		c.JSON(consts.StatusBadRequest, map[string]interface{}{"error": "taskKey is required"})
+		response.BadRequest(c, "taskKey is required")
 		return
 	}
 
@@ -177,9 +176,9 @@ func ListHistory(ctx context.Context, c *app.RequestContext) {
 	}
 	runs, _, err := GetSyncService().ListHistory(ctx, req.TaskKey, 0, limit)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	c.JSON(consts.StatusOK, &sync_task.ListHistoryResp{Runs: converter.ToSyncRunInfoList(runs)})
+	response.Success(c, &sync_task.ListHistoryResp{Runs: converter.ToSyncRunInfoList(runs)})
 }
