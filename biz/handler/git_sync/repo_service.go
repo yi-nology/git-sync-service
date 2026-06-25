@@ -9,6 +9,7 @@ import (
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	repo "github.com/yi-nology/git-sync-service/biz/model/repo"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
+	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
 
 func ListRepos(ctx context.Context, c *app.RequestContext) {
@@ -69,6 +70,10 @@ func CreateRepo(ctx context.Context, c *app.RequestContext) {
 		Name: req.Name, RemoteURL: req.RemoteURL, AccessToken: req.AccessToken,
 	})
 	if err != nil {
+		if sdkprov.IsInvalidInput(err) {
+			response.BadRequest(c, err.Error())
+			return
+		}
 		response.InternalError(c, fmt.Sprintf("create repo failed: %v", err))
 		return
 	}

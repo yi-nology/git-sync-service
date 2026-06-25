@@ -75,7 +75,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/yi-nology/gitcode_api v0.2.0 // indirect
+	github.com/yi-nology/gitcode_api v0.3.0 // indirect
 	gitlab.com/gitlab-org/api/client-go v1.46.0 // indirect
 	go.mongodb.org/mongo-driver v1.17.6 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
@@ -92,3 +92,5 @@ require (
 )
 
 replace github.com/apache/thrift => github.com/apache/thrift v0.13.0
+
+replace github.com/yi-nology/git-platform-sdk => /opt/project/wechat_project/git-platform-sdk
