@@ -47,6 +47,10 @@ func GetTask(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	if t == nil {
+		response.NotFound(c, "task not found")
+		return
+	}
 	response.Success(c, &sync_task.GetTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
@@ -93,6 +97,10 @@ func UpdateTask(ctx context.Context, c *app.RequestContext) {
 		GitPrune: req.GitPrune, GitNoVerify: req.GitNoVerify, PushOptions: req.PushOptions,
 	})
 	if err != nil {
+		if err.Error() == "task not found" {
+			response.NotFound(c, err.Error())
+			return
+		}
 		response.InternalError(c, err.Error())
 		return
 	}

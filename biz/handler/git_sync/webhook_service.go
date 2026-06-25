@@ -45,6 +45,10 @@ func GetRule(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	if r == nil {
+		response.NotFound(c, "rule not found")
+		return
+	}
 	response.Success(c, &webhook.GetRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
@@ -110,6 +114,10 @@ func UpdateRule(ctx context.Context, c *app.RequestContext) {
 		Enabled: req.Enabled, Description: req.Description,
 	})
 	if err != nil {
+		if err.Error() == "rule not found" {
+			response.NotFound(c, err.Error())
+			return
+		}
 		response.InternalError(c, err.Error())
 		return
 	}
