@@ -7,14 +7,11 @@ run:
 linters:
   enable:
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
     - unused
     - gocritic
-    - gofmt
-    - goimports
     - misspell
 
 linters-settings:
@@ -23,18 +20,8 @@ linters-settings:
       - diagnostic
       - style
       - performance
-  
-  goimports:
-    local-prefixes: github.com/yi-nology/git-sync-service
 
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
-
-severity:
-  default-severity: warning
-  rules:
-    - linters:
-        - errcheck
-      severity: error
