@@ -27,8 +27,9 @@ func (s *Service) AcquireSemaphore(ctx context.Context, taskKey string) (bool, e
 	return s.semaphore.Acquire(ctx, s.semaphoreID+":"+taskKey)
 }
 
-func (s *Service) ReleaseSemaphore(ctx context.Context, taskKey string) {
+func (s *Service) ReleaseSemaphore(ctx context.Context, taskKey string) error {
 	if s.semaphore != nil {
-		s.semaphore.Release(ctx, s.semaphoreID+":"+taskKey)
+		return s.semaphore.Release(ctx, s.semaphoreID+":"+taskKey)
 	}
+	return nil
 }

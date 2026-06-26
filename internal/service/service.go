@@ -2,17 +2,19 @@ package service
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/executor"
 	"github.com/yi-nology/git-sync-service/internal/lock"
-	"github.com/yi-nology/git-sync-service/internal/provider"
 	"github.com/yi-nology/git-sync-service/sync/model"
+	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +28,7 @@ type Service struct {
 	runDAO          *dao.SyncRunDAO
 	ruleDAO         *dao.WebhookRuleDAO
 	eventDAO        *dao.WebhookEventDAO
-	providerMgr     *provider.ProviderManager
+	providerMgr     *sdkprov.Manager
 	cron            *cron.Cron
 	cronEntryIDs    map[string]cron.EntryID
 	cronMu          sync.RWMutex
@@ -77,7 +79,7 @@ func NewService(cfg *Config) (*Service, error) {
 		runDAO:       dao.NewSyncRunDAO(db),
 		ruleDAO:      dao.NewWebhookRuleDAO(db),
 		eventDAO:     dao.NewWebhookEventDAO(db),
-		providerMgr:  provider.NewProviderManager(),
+		providerMgr:  sdkprov.NewManager(30 * time.Minute),
 		cron:         cron.New(cron.WithSeconds()),
 		cronEntryIDs: make(map[string]cron.EntryID),
 		lock:         distLock,
@@ -103,7 +105,9 @@ func (s *Service) Start() error {
 func (s *Service) Stop() {
 	s.stopCronJobs()
 	if closer, ok := s.lock.(interface{ Close() error }); ok {
-		closer.Close()
+		if err := closer.Close(); err != nil {
+			slog.Error("failed to close lock", "error", err)
+		}
 	}
 }
 
