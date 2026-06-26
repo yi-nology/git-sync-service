@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (s *Service) CleanupOldData(maxAge time.Duration) (events int64, runs int64, err error) {
+func (s *Service) CleanupOldData(maxAge time.Duration) (events, runs int64, err error) {
 	events, err = s.eventDAO.CleanupOlderThan(maxAge)
 	if err != nil {
 		return 0, 0, err
