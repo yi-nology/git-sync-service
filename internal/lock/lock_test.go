@@ -95,7 +95,7 @@ func TestLocalLock_Concurrent(t *testing.T) {
 		acquired <- ok
 		if ok {
 			time.Sleep(50 * time.Millisecond)
-			lock.Unlock(ctx, "concurrent-key")
+			_ = lock.Unlock(ctx, "concurrent-key")
 		}
 	}()
 

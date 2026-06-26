@@ -21,7 +21,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return fmt.Errorf("repo not found")
 	}
 
-	prov, err := s.providerMgr.GetProvider(repo)
+	prov, err := s.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
 	if err != nil {
 		return err
 	}

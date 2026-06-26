@@ -70,9 +70,9 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	}
 
 	var details strings.Builder
-	details.WriteString(fmt.Sprintf("=== Sync Task: %s ===\n", task.Name))
-	details.WriteString(fmt.Sprintf("Trigger: %s\n", trigger))
-	details.WriteString(fmt.Sprintf("Time: %s\n\n", time.Now().Format(time.RFC3339)))
+	fmt.Fprintf(&details, "=== Sync Task: %s ===\n", task.Name)
+	fmt.Fprintf(&details, "Trigger: %s\n", trigger)
+	fmt.Fprintf(&details, "Time: %s\n\n", time.Now().Format(time.RFC3339))
 
 	defer func() {
 		run.EndTime = timePtr(time.Now())
@@ -150,7 +150,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	var pushErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		if attempt > 1 {
-			details.WriteString(fmt.Sprintf("\nRetry attempt %d/%d...\n", attempt, maxRetries))
+			fmt.Fprintf(&details, "\nRetry attempt %d/%d...\n", attempt, maxRetries)
 			time.Sleep(time.Duration(attempt*500) * time.Millisecond)
 		}
 
@@ -160,9 +160,9 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		}
 
 		if attempt < maxRetries {
-			details.WriteString(fmt.Sprintf("Push failed, retrying fetch...\n"))
+			details.WriteString("Push failed, retrying fetch...\n")
 			if err := e.fetchRepo(execCtx, repoDir, task, &details); err != nil {
-				details.WriteString(fmt.Sprintf("Retry fetch failed: %v\n", err))
+				fmt.Fprintf(&details, "Retry fetch failed: %v\n", err)
 			}
 		}
 	}
@@ -198,7 +198,7 @@ func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, 
 		Auth:         e.authConfig(repo),
 	})
 	if err != nil {
-		details.WriteString(fmt.Sprintf("clone error: %v\n", err))
+		fmt.Fprintf(details, "clone error: %v\n", err)
 	}
 	return err
 }
@@ -213,12 +213,12 @@ func (e *Executor) fetchRepo(ctx context.Context, dir string, task *model.SyncTa
 		Auth:     gitbackend.AuthConfig{Type: gitbackend.AuthNone},
 	})
 	if err != nil {
-		details.WriteString(fmt.Sprintf("fetch error: %v\n", err))
+		fmt.Fprintf(details, "fetch error: %v\n", err)
 		return err
 	}
 
 	if err := e.backend.Checkout(ctx, dir, task.SourceBranch); err != nil {
-		details.WriteString(fmt.Sprintf("checkout error: %v\n", err))
+		fmt.Fprintf(details, "checkout error: %v\n", err)
 		return err
 	}
 
@@ -244,7 +244,7 @@ func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, r
 		Auth:     e.authConfig(repo),
 	})
 	if err != nil {
-		details.WriteString(fmt.Sprintf("push error: %v\n", err))
+		fmt.Fprintf(details, "push error: %v\n", err)
 	}
 	return err
 }

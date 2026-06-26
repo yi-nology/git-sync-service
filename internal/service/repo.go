@@ -79,7 +79,7 @@ func (s *Service) TestConnection(ctx context.Context, repoKey string) (*model.Te
 		return &model.TestConnectionResult{Success: false, Message: "repo not found"}, nil
 	}
 
-	prov, err := s.providerMgr.GetProvider(repo)
+	prov, err := s.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
 	if err != nil {
 		return &model.TestConnectionResult{Success: false, Message: err.Error()}, nil
 	}
@@ -101,7 +101,7 @@ func (s *Service) ListBranches(ctx context.Context, repoKey string) ([]string, e
 		return nil, fmt.Errorf("repo not found")
 	}
 
-	prov, err := s.providerMgr.GetProvider(repo)
+	prov, err := s.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
 	if err != nil {
 		return nil, err
 	}
