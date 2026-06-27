@@ -91,5 +91,3 @@ require (
 )
 
 replace github.com/apache/thrift => github.com/apache/thrift v0.13.0
-
-replace github.com/yi-nology/git-platform-sdk => /opt/project/wechat_project/git-platform-sdk
