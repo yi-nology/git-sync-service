@@ -40,3 +40,6 @@ git-sync-service
 
 # Database
 data/
+
+# Environment variables (contains secrets)
+.env

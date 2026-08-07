@@ -43,6 +43,29 @@ make run
 
 ## Configuration
 
+### Environment Variables
+
+The following environment variables are required:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `ENCRYPTION_KEY` | Yes | Encryption key for credential storage (AES-256-GCM). Min 1 byte; keys shorter than 32 bytes are hashed via SHA-256. |
+
+Create a `.env` file from the example:
+
+```bash
+cp .env.example .env
+# Edit .env and set ENCRYPTION_KEY
+```
+
+Generate a secure key:
+
+```bash
+openssl rand -base64 32
+```
+
+### Config File
+
 Create a `conf/config.yaml` file with your configuration:
 
 ```yaml
