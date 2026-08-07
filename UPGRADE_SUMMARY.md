@@ -24,7 +24,7 @@ Successfully upgraded `git-platform-sdk` from v0.34.0 to v0.35.0 with all requir
 ### 4. Environment Variable Configuration (Task 4)
 - Added documentation for required `ENCRYPTION_KEY` environment variable
 - `ENCRYPTION_KEY` must be 32 bytes (64 hex characters) for AES-256 encryption
-- Created `docs/ENVIRONMENT_VARIABLES.md`
+- Created .env.example and updated README.md with environment variable documentation
 
 ### 5. Test Updates (Task 5-6)
 - Added comprehensive tests for `CryptoManager` (encrypt/decrypt roundtrip, empty string, missing key)
