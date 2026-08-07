@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
 	"github.com/yi-nology/git-platform-sdk/pkg/credential"
@@ -33,8 +32,7 @@ func setupTestService(t *testing.T) (*Service, *gorm.DB) {
 	t.Helper()
 
 	// Set encryption key for tests
-	os.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
-	t.Cleanup(func() { os.Unsetenv("ENCRYPTION_KEY") })
+	t.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
 
 	db := setupTestDB(t)
 	repoDAO := dao.NewRepoDAO(db)
@@ -173,8 +171,7 @@ func TestCreateRepo_SSHURL(t *testing.T) {
 // TestCryptoManager_Integration verifies that encryption works end-to-end
 // through the DAO layer (Create -> FindByKey should return decrypted token)
 func TestCryptoManager_Integration(t *testing.T) {
-	os.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
-	defer os.Unsetenv("ENCRYPTION_KEY")
+	t.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
 
 	db := setupTestDB(t)
 	repoDAO := dao.NewRepoDAO(db)

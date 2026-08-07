@@ -10,8 +10,7 @@ import (
 func TestCryptoManager_EncryptDecrypt_Roundtrip(t *testing.T) {
 	// Set up a test encryption key
 	key := "0123456789abcdef0123456789abcdef" // 32 bytes for AES-256
-	os.Setenv("ENCRYPTION_KEY", key)
-	defer os.Unsetenv("ENCRYPTION_KEY")
+	t.Setenv("ENCRYPTION_KEY", key)
 
 	cm, err := credential.NewCryptoManager()
 	if err != nil {
@@ -53,8 +52,7 @@ func TestCryptoManager_EncryptDecrypt_Roundtrip(t *testing.T) {
 
 func TestCryptoManager_EmptyString(t *testing.T) {
 	key := "0123456789abcdef0123456789abcdef"
-	os.Setenv("ENCRYPTION_KEY", key)
-	defer os.Unsetenv("ENCRYPTION_KEY")
+	t.Setenv("ENCRYPTION_KEY", key)
 
 	cm, err := credential.NewCryptoManager()
 	if err != nil {
@@ -80,7 +78,7 @@ func TestCryptoManager_EmptyString(t *testing.T) {
 
 func TestCryptoManager_WithoutKey(t *testing.T) {
 	// Ensure ENCRYPTION_KEY is not set
-	os.Unsetenv("ENCRYPTION_KEY")
+	_ = os.Unsetenv("ENCRYPTION_KEY")
 
 	_, err := credential.NewCryptoManager()
 	if err == nil {
