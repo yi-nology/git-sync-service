@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -22,6 +23,9 @@ func (s *Service) GetRepo(ctx context.Context, key string) (*model.Repo, error) 
 func (s *Service) CreateRepo(ctx context.Context, req *model.CreateRepoRequest) (*model.Repo, error) {
 	result, err := sdkprov.DetectPlatform(req.RemoteURL)
 	if err != nil {
+		if errors.Is(err, sdkprov.ErrPlatformNotSupported) {
+			return nil, fmt.Errorf("unsupported platform for URL %s: %w", req.RemoteURL, err)
+		}
 		return nil, fmt.Errorf("invalid remote URL: %w", err)
 	}
 
