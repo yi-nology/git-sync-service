@@ -28,10 +28,15 @@ func DefaultPagination(offset, limit int) Pagination {
 
 type RepoDAO struct {
 	db *gorm.DB
+	cm *credential.CryptoManager
 }
 
 func NewRepoDAO(db *gorm.DB) *RepoDAO {
-	return &RepoDAO{db: db}
+	cm, err := credential.NewCryptoManager()
+	if err != nil {
+		panic(err)
+	}
+	return &RepoDAO{db: db, cm: cm}
 }
 
 func (d *RepoDAO) FindAll(page Pagination) ([]*model.Repo, int64, error) {
@@ -51,7 +56,7 @@ func (d *RepoDAO) FindByKey(key string) (*model.Repo, error) {
 	if err != nil {
 		return nil, err
 	}
-	decrypted, err := credential.DecryptGCM(repo.AccessToken)
+	decrypted, err := d.cm.Decrypt(repo.AccessToken)
 	if err != nil {
 		return &repo, nil
 	}
@@ -60,7 +65,7 @@ func (d *RepoDAO) FindByKey(key string) (*model.Repo, error) {
 }
 
 func (d *RepoDAO) Create(repo *model.Repo) error {
-	encrypted, err := credential.EncryptGCM(repo.AccessToken)
+	encrypted, err := d.cm.Encrypt(repo.AccessToken)
 	if err != nil {
 		return err
 	}
@@ -70,7 +75,7 @@ func (d *RepoDAO) Create(repo *model.Repo) error {
 
 func (d *RepoDAO) Update(repo *model.Repo) error {
 	if repo.AccessToken != "" {
-		encrypted, err := credential.EncryptGCM(repo.AccessToken)
+		encrypted, err := d.cm.Encrypt(repo.AccessToken)
 		if err != nil {
 			return err
 		}
