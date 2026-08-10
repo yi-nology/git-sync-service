@@ -3,7 +3,7 @@ module github.com/yi-nology/git-sync-service
 go 1.26
 
 require (
-	github.com/apache/thrift v0.23.0
+	github.com/apache/thrift v0.13.0
 	github.com/cloudwego/hertz v0.10.5
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.21.0
@@ -58,5 +58,3 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
-
-replace github.com/apache/thrift => github.com/apache/thrift v0.13.0
