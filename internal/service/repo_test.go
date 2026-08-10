@@ -35,7 +35,10 @@ func setupTestService(t *testing.T) (*Service, *gorm.DB) {
 	t.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
 
 	db := setupTestDB(t)
-	repoDAO := dao.NewRepoDAO(db)
+	repoDAO, err := dao.NewRepoDAO(db)
+	if err != nil {
+		t.Fatalf("failed to create RepoDAO: %v", err)
+	}
 
 	svc := &Service{
 		repoDAO:     repoDAO,
@@ -174,7 +177,10 @@ func TestCryptoManager_Integration(t *testing.T) {
 	t.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
 
 	db := setupTestDB(t)
-	repoDAO := dao.NewRepoDAO(db)
+	repoDAO, err := dao.NewRepoDAO(db)
+	if err != nil {
+		t.Fatalf("failed to create RepoDAO: %v", err)
+	}
 
 	originalToken := "ghp_supersecrettoken12345"
 	repo := &model.Repo{

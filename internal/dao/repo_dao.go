@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/yi-nology/git-platform-sdk/pkg/credential"
 	"github.com/yi-nology/git-sync-service/sync/model"
@@ -31,12 +32,12 @@ type RepoDAO struct {
 	cm *credential.CryptoManager
 }
 
-func NewRepoDAO(db *gorm.DB) *RepoDAO {
+func NewRepoDAO(db *gorm.DB) (*RepoDAO, error) {
 	cm, err := credential.NewCryptoManager()
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to create CryptoManager: %w", err)
 	}
-	return &RepoDAO{db: db, cm: cm}
+	return &RepoDAO{db: db, cm: cm}, nil
 }
 
 func (d *RepoDAO) FindAll(page Pagination) ([]*model.Repo, int64, error) {

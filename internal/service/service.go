@@ -71,10 +71,15 @@ func NewService(cfg *Config) (*Service, error) {
 		distLock = lock.NewLocalLock()
 	}
 
+	repoDAO, err := dao.NewRepoDAO(db)
+	if err != nil {
+		return nil, fmt.Errorf("init repo DAO failed: %w", err)
+	}
+
 	svc := &Service{
 		config:       cfg,
 		db:           db,
-		repoDAO:      dao.NewRepoDAO(db),
+		repoDAO:      repoDAO,
 		taskDAO:      dao.NewSyncTaskDAO(db),
 		runDAO:       dao.NewSyncRunDAO(db),
 		ruleDAO:      dao.NewWebhookRuleDAO(db),
