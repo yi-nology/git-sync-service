@@ -2,12 +2,14 @@ package git_sync
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/yi-nology/git-sync-service/biz/model/webhook"
 	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
-	webhook "github.com/yi-nology/git-sync-service/biz/model/webhook"
+	"github.com/yi-nology/git-sync-service/internal/service"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
 
@@ -114,7 +116,7 @@ func UpdateRule(ctx context.Context, c *app.RequestContext) {
 		Enabled: req.Enabled, Description: req.Description,
 	})
 	if err != nil {
-		if err.Error() == "rule not found" {
+		if errors.Is(err, service.ErrRuleNotFound) {
 			response.NotFound(c, err.Error())
 			return
 		}

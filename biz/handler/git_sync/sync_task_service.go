@@ -2,12 +2,14 @@ package git_sync
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/yi-nology/git-sync-service/biz/model/sync_task"
 	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
-	sync_task "github.com/yi-nology/git-sync-service/biz/model/sync_task"
+	"github.com/yi-nology/git-sync-service/internal/service"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
 
@@ -97,7 +99,7 @@ func UpdateTask(ctx context.Context, c *app.RequestContext) {
 		GitPrune: req.GitPrune, GitNoVerify: req.GitNoVerify, PushOptions: req.PushOptions,
 	})
 	if err != nil {
-		if err.Error() == "task not found" {
+		if errors.Is(err, service.ErrTaskNotFound) {
 			response.NotFound(c, err.Error())
 			return
 		}

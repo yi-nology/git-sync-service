@@ -53,7 +53,7 @@ func (s *Service) UpdateRepo(ctx context.Context, req *model.UpdateRepoRequest) 
 		return nil, err
 	}
 	if repo == nil {
-		return nil, fmt.Errorf("repo not found")
+		return nil, ErrRepoNotFound
 	}
 
 	if req.Name != "" {
@@ -102,7 +102,7 @@ func (s *Service) ListBranches(ctx context.Context, repoKey string) ([]string, e
 		return nil, err
 	}
 	if repo == nil {
-		return nil, fmt.Errorf("repo not found")
+		return nil, ErrRepoNotFound
 	}
 
 	prov, err := s.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)

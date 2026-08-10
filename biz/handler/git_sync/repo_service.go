@@ -2,12 +2,14 @@ package git_sync
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/yi-nology/git-sync-service/biz/model/repo"
 	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
-	repo "github.com/yi-nology/git-sync-service/biz/model/repo"
+	"github.com/yi-nology/git-sync-service/internal/service"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
@@ -95,7 +97,7 @@ func UpdateRepo(ctx context.Context, c *app.RequestContext) {
 		Key: req.Key, Name: req.Name, AccessToken: req.AccessToken,
 	})
 	if err != nil {
-		if err.Error() == "repo not found" {
+		if errors.Is(err, service.ErrRepoNotFound) {
 			response.NotFound(c, err.Error())
 			return
 		}

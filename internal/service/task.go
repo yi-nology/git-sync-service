@@ -59,7 +59,7 @@ func (s *Service) UpdateTask(ctx context.Context, req *model.UpdateTaskRequest) 
 		return nil, err
 	}
 	if task == nil {
-		return nil, fmt.Errorf("task not found")
+		return nil, ErrTaskNotFound
 	}
 
 	if req.Name != "" {
@@ -114,7 +114,7 @@ func (s *Service) RunTaskWithTrigger(ctx context.Context, taskKey, trigger strin
 		return err
 	}
 	if task == nil {
-		return fmt.Errorf("task not found")
+		return ErrTaskNotFound
 	}
 
 	_, err = s.executor.Execute(ctx, task, trigger)

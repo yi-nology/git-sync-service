@@ -18,7 +18,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return err
 	}
 	if repo == nil {
-		return fmt.Errorf("repo not found")
+		return ErrRepoNotFound
 	}
 
 	prov, err := s.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
@@ -153,7 +153,7 @@ func (s *Service) UpdateRule(ctx context.Context, req *model.UpdateRuleRequest) 
 		return nil, err
 	}
 	if rule == nil {
-		return nil, fmt.Errorf("rule not found")
+		return nil, ErrRuleNotFound
 	}
 
 	if req.Name != "" {
@@ -197,7 +197,7 @@ func (s *Service) RetryEvent(ctx context.Context, eventID uint) error {
 		return err
 	}
 	if event == nil {
-		return fmt.Errorf("event not found")
+		return ErrEventNotFound
 	}
 
 	go s.safeApplyRules(context.Background(), event.RepoKey, event)
