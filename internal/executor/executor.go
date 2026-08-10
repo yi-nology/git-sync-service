@@ -109,6 +109,12 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		return run, err
 	}
 
+	defer func() {
+		if err := os.RemoveAll(workDir); err != nil {
+			slog.Error("failed to cleanup temp dir", "error", err, "dir", workDir)
+		}
+	}()
+
 	repoDir := filepath.Join(workDir, "repo")
 
 	timeout := e.service.GetConfig().Sync.DefaultTimeout
