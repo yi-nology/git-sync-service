@@ -23,6 +23,26 @@ var unlockScript = redis.NewScript(`
 	end
 `)
 
+var semaphoreAcquireScript = redis.NewScript(`
+local key = KEYS[1]
+local member = ARGV[1]
+local max = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+
+-- 清理过期的成员
+redis.call('ZREMRANGEBYSCORE', key, '-inf', now - 1)
+
+-- 检查当前数量
+local current = redis.call('ZCARD', key)
+if current >= max then
+    return 0
+end
+
+-- 添加新成员
+redis.call('ZADD', key, now, member)
+return 1
+`)
+
 type DistLock interface {
 	TryLock(ctx context.Context, key string) (bool, error)
 	TryLockWithTTL(ctx context.Context, key string, ttl time.Duration) (bool, error)
@@ -166,23 +186,12 @@ func NewSemaphore(client *redis.Client, key string, max int) *Semaphore {
 }
 
 func (s *Semaphore) Acquire(ctx context.Context, identifier string) (bool, error) {
-	now := float64(time.Now().Unix())
-	_, err := s.client.ZAdd(ctx, s.key, redis.Z{Score: now, Member: identifier}).Result()
+	now := time.Now().Unix()
+	result, err := semaphoreAcquireScript.Run(ctx, s.client, []string{s.key}, identifier, s.max, now).Int()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("semaphore acquire failed: %w", err)
 	}
-
-	rank, err := s.client.ZRank(ctx, s.key, identifier).Result()
-	if err != nil {
-		return false, err
-	}
-
-	if int(rank) < s.max {
-		return true, nil
-	}
-
-	s.client.ZRem(ctx, s.key, identifier)
-	return false, nil
+	return result == 1, nil
 }
 
 func (s *Semaphore) Release(ctx context.Context, identifier string) error {
