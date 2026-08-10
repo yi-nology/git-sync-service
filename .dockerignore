@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+
+# Build output
+output
+*.exe
+*.test
+*.prof
+
+# Documentation
+*.md
+LICENSE
+
+# Data
+data/
+
+# Environment variables
+.env
+
+# Design files
+design.pen
+designs/
+
+# Frontend
+frontend/
+
+# Scripts
+script/
+test_api.sh
+test_flow.sh
+
+# Coverage
+coverage.out
