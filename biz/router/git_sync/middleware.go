@@ -3,8 +3,26 @@
 package git_sync
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/cloudwego/hertz/pkg/app"
+	handler "github.com/yi-nology/git-sync-service/biz/handler/git_sync"
 )
+
+// AuthMiddleware returns a middleware that validates the X-API-Key header.
+// All API endpoints must pass this check before reaching the handler.
+func AuthMiddleware() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
+		apiKey := c.GetHeader("X-API-Key")
+		if string(apiKey) != handler.GetSyncService().GetAPIKey() {
+			c.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+			c.Abort()
+			return
+		}
+		c.Next(ctx)
+	}
+}
 
 func rootMw() []app.HandlerFunc {
 	// your code...
@@ -12,8 +30,7 @@ func rootMw() []app.HandlerFunc {
 }
 
 func _apiMw() []app.HandlerFunc {
-	// your code...
-	return nil
+	return []app.HandlerFunc{AuthMiddleware()}
 }
 
 func _v1Mw() []app.HandlerFunc {
