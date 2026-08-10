@@ -61,7 +61,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return err
 	}
 
-	go s.safeApplyRules(ctx, repoKey, whEvent)
+	go s.safeApplyRules(context.Background(), repoKey, whEvent)
 
 	return nil
 }
