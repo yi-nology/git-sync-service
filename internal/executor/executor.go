@@ -133,7 +133,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		}
 	} else {
 		details.WriteString("Step 1: Fetch updates from source repo...\n")
-		if err := e.fetchRepo(execCtx, repoDir, task, &details); err != nil {
+		if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo, &details); err != nil {
 			run.Status = "failed"
 			run.ErrorMessage = fmt.Sprintf("fetch failed: %v", err)
 			return run, err
@@ -167,7 +167,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 		if attempt < maxRetries {
 			details.WriteString("Push failed, retrying fetch...\n")
-			if err := e.fetchRepo(execCtx, repoDir, task, &details); err != nil {
+			if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo, &details); err != nil {
 				fmt.Fprintf(&details, "Retry fetch failed: %v\n", err)
 			}
 		}
@@ -209,14 +209,14 @@ func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, 
 	return err
 }
 
-func (e *Executor) fetchRepo(ctx context.Context, dir string, task *model.SyncTask, details *strings.Builder) error {
+func (e *Executor) fetchRepo(ctx context.Context, dir string, task *model.SyncTask, repo *model.Repo, details *strings.Builder) error {
 	_, err := e.backend.Fetch(ctx, gitbackend.FetchOptions{
 		RepoPath: dir,
 		Remote:   "origin",
 		Branches: []string{task.SourceBranch},
 		Tags:     task.GitTags,
 		Prune:    task.GitPrune,
-		Auth:     gitbackend.AuthConfig{Type: gitbackend.AuthNone},
+		Auth:     e.authConfig(repo),
 	})
 	if err != nil {
 		fmt.Fprintf(details, "fetch error: %v\n", err)
