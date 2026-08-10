@@ -40,9 +40,11 @@ func setupTestService(t *testing.T) (*Service, *gorm.DB) {
 		t.Fatalf("failed to create RepoDAO: %v", err)
 	}
 
+	providerMgr := provider.NewManager(0)
+	repoService := NewRepoService(repoDAO, providerMgr)
+
 	svc := &Service{
-		repoDAO:     repoDAO,
-		providerMgr: provider.NewManager(0),
+		repoService: repoService,
 	}
 	return svc, db
 }

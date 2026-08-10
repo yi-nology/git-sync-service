@@ -32,11 +32,12 @@ func setupTaskTestService(t *testing.T) (*Service, *gorm.DB) {
 	taskDAO := dao.NewSyncTaskDAO(db)
 	runDAO := dao.NewSyncRunDAO(db)
 
+	taskService := NewTaskService(taskDAO, runDAO, nil)
+
 	svc := &Service{
-		taskDAO:      taskDAO,
-		runDAO:       runDAO,
-		cron:         cron.New(cron.WithSeconds()),
-		cronEntryIDs: make(map[string]cron.EntryID),
+		taskService:   taskService,
+		cron:          cron.New(cron.WithSeconds()),
+		cronEntryIDs:  make(map[string]cron.EntryID),
 		config: &model.Config{
 			Sync: model.SyncConfig{
 				DefaultTimeout: 300,
@@ -328,7 +329,7 @@ func TestListHistory(t *testing.T) {
 			TriggerSource: "manual",
 			Status:        "success",
 		}
-		if err := svc.runDAO.Create(run); err != nil {
+		if err := svc.taskService.CreateRun(run); err != nil {
 			t.Fatalf("Create run failed: %v", err)
 		}
 	}
@@ -356,7 +357,7 @@ func TestDeleteHistory(t *testing.T) {
 		TriggerSource: "manual",
 		Status:        "success",
 	}
-	if err := svc.runDAO.Create(run); err != nil {
+	if err := svc.taskService.CreateRun(run); err != nil {
 		t.Fatalf("Create run failed: %v", err)
 	}
 
@@ -395,18 +396,18 @@ func TestPreviewSync_WithRepoDAO(t *testing.T) {
 		t.Fatalf("failed to create RepoDAO: %v", err)
 	}
 
+	taskService := NewTaskService(taskDAO, runDAO, repoDAO)
+
 	svc := &Service{
-		taskDAO:      taskDAO,
-		runDAO:       runDAO,
-		repoDAO:      repoDAO,
-		cron:         cron.New(cron.WithSeconds()),
-		cronEntryIDs: make(map[string]cron.EntryID),
+		taskService:   taskService,
+		cron:          cron.New(cron.WithSeconds()),
+		cronEntryIDs:  make(map[string]cron.EntryID),
 	}
 
 	ctx := context.Background()
 
 	// Create repos
-	if err := svc.repoDAO.Create(&model.Repo{
+	if err := repoDAO.Create(&model.Repo{
 		Key:      "source-repo",
 		Name:     "Source",
 		CloneURL: "https://github.com/source/repo.git",
@@ -414,7 +415,7 @@ func TestPreviewSync_WithRepoDAO(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("Create source repo failed: %v", err)
 	}
-	if err := svc.repoDAO.Create(&model.Repo{
+	if err := repoDAO.Create(&model.Repo{
 		Key:      "target-repo",
 		Name:     "Target",
 		CloneURL: "https://github.com/target/repo.git",
@@ -458,12 +459,12 @@ func TestPreviewSync_MissingRepo(t *testing.T) {
 		t.Fatalf("failed to create RepoDAO: %v", err)
 	}
 
+	taskService := NewTaskService(taskDAO, runDAO, repoDAO)
+
 	svc := &Service{
-		taskDAO:      taskDAO,
-		runDAO:       runDAO,
-		repoDAO:      repoDAO,
-		cron:         cron.New(cron.WithSeconds()),
-		cronEntryIDs: make(map[string]cron.EntryID),
+		taskService:   taskService,
+		cron:          cron.New(cron.WithSeconds()),
+		cronEntryIDs:  make(map[string]cron.EntryID),
 	}
 
 	ctx := context.Background()

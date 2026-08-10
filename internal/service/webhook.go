@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
-	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
-	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
 )
 
 func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
-	repo, err := s.repoDAO.FindByKey(repoKey)
+	repo, err := s.repoService.GetRepo(ctx, repoKey)
 	if err != nil {
 		return err
 	}
@@ -21,7 +18,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return ErrRepoNotFound
 	}
 
-	prov, err := s.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
+	prov, err := s.repoService.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
 	if err != nil {
 		return err
 	}
@@ -35,7 +32,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return fmt.Errorf("parse webhook event failed: %w", err)
 	}
 
-	existing, _ := s.eventDAO.FindByEventID(event.ID)
+	existing, _ := s.webhookService.FindEventByEventID(event.ID)
 	if existing != nil {
 		return nil
 	}
@@ -57,7 +54,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		Status:    "received",
 	}
 
-	if err := s.eventDAO.Create(whEvent); err != nil {
+	if err := s.webhookService.CreateWebhookEvent(whEvent); err != nil {
 		return err
 	}
 
@@ -76,136 +73,39 @@ func (s *Service) safeApplyRules(ctx context.Context, repoKey string, event *mod
 }
 
 func (s *Service) applyRules(ctx context.Context, repoKey string, event *model.WebhookEvent) {
-	rules, err := s.ruleDAO.FindByRepoKey(repoKey)
-	if err != nil {
-		slog.Error("find rules failed", "repoKey", repoKey, "error", err)
-		return
-	}
-
-	for _, rule := range rules {
-		if !rule.Enabled {
-			continue
-		}
-
-		if !matchEventType(rule.EventType, event.EventType) {
-			continue
-		}
-
-		if !branchfilter.New(rule.BranchPattern).Match(event.Branch) {
-			continue
-		}
-
-		if rule.Action == "sync" {
-			taskKeys := rule.GetTaskKeys()
-			for _, taskKey := range taskKeys {
-				if taskKey == "" {
-					continue
-				}
-				if rule.MinInterval > 0 {
-					key := fmt.Sprintf("%s:%s", rule.RepoKey, taskKey)
-					if lastTime, ok := s.lastTriggerTime.Load(key); ok {
-						if time.Since(lastTime.(time.Time)) < time.Duration(rule.MinInterval)*time.Second {
-							slog.Warn("skipping due to min interval", "taskKey", taskKey, "minInterval", rule.MinInterval)
-							continue
-						}
-					}
-					s.lastTriggerTime.Store(key, time.Now())
-				}
-				if err := s.RunTaskWithTrigger(ctx, taskKey, "webhook"); err != nil {
-					slog.Error("run task failed", "taskKey", taskKey, "error", err)
-				}
-			}
-		}
-	}
+	s.webhookService.ApplyRules(ctx, repoKey, event, &s.lastTriggerTime, func(ctx context.Context, taskKey, trigger string) error {
+		return s.RunTaskWithTrigger(ctx, taskKey, trigger)
+	})
 }
 
 func (s *Service) ListRules(ctx context.Context, repoKey string) ([]*model.WebhookRule, error) {
-	return s.ruleDAO.FindByRepoKey(repoKey)
+	return s.webhookService.ListRules(ctx, repoKey)
 }
 
 func (s *Service) GetRule(ctx context.Context, id uint) (*model.WebhookRule, error) {
-	return s.ruleDAO.FindByID(id)
+	return s.webhookService.GetRule(ctx, id)
 }
 
 func (s *Service) CreateRule(ctx context.Context, req *model.CreateRuleRequest) (*model.WebhookRule, error) {
-	rule := &model.WebhookRule{
-		Name:          req.Name,
-		RepoKey:       req.RepoKey,
-		EventType:     req.EventType,
-		BranchPattern: req.BranchPattern,
-		Action:        req.Action,
-		MinInterval:   req.MinInterval,
-		Enabled:       req.Enabled,
-		Description:   req.Description,
-	}
-	rule.SetTaskKeys(req.TaskKeys)
-
-	if err := s.ruleDAO.Create(rule); err != nil {
-		return nil, err
-	}
-
-	return rule, nil
+	return s.webhookService.CreateRule(ctx, req)
 }
 
 func (s *Service) UpdateRule(ctx context.Context, req *model.UpdateRuleRequest) (*model.WebhookRule, error) {
-	rule, err := s.ruleDAO.FindByID(req.ID)
-	if err != nil {
-		return nil, err
-	}
-	if rule == nil {
-		return nil, ErrRuleNotFound
-	}
-
-	if req.Name != "" {
-		rule.Name = req.Name
-	}
-	if req.EventType != "" {
-		rule.EventType = req.EventType
-	}
-	rule.BranchPattern = req.BranchPattern
-	if req.Action != "" {
-		rule.Action = req.Action
-	}
-	if req.TaskKeys != nil {
-		rule.SetTaskKeys(req.TaskKeys)
-	}
-	if req.MinInterval > 0 {
-		rule.MinInterval = req.MinInterval
-	}
-	rule.Enabled = req.Enabled
-	rule.Description = req.Description
-
-	if err := s.ruleDAO.Update(rule); err != nil {
-		return nil, err
-	}
-
-	return rule, nil
+	return s.webhookService.UpdateRule(ctx, req)
 }
 
 func (s *Service) DeleteRule(ctx context.Context, id uint) error {
-	return s.ruleDAO.Delete(id)
+	return s.webhookService.DeleteRule(ctx, id)
 }
 
 func (s *Service) ListEvents(ctx context.Context, repoKey string, offset, limit int) ([]*model.WebhookEvent, int64, error) {
-	page := dao.DefaultPagination(offset, limit)
-	return s.eventDAO.FindByRepoKey(repoKey, page)
+	return s.webhookService.ListEvents(ctx, repoKey, offset, limit)
 }
 
 func (s *Service) RetryEvent(ctx context.Context, eventID uint) error {
-	event, err := s.eventDAO.FindByID(eventID)
-	if err != nil {
-		return err
-	}
-	if event == nil {
-		return ErrEventNotFound
-	}
-
-	go s.safeApplyRules(context.Background(), event.RepoKey, event)
-
-	now := time.Now()
-	event.ProcessedAt = &now
-	event.Status = "processed"
-	return s.eventDAO.Update(event)
+	return s.webhookService.RetryEvent(ctx, eventID, func(ctx context.Context, repoKey string, event *model.WebhookEvent) {
+		s.safeApplyRules(ctx, repoKey, event)
+	})
 }
 
 func matchEventType(pattern, actual string) bool {

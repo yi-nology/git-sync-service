@@ -23,12 +23,9 @@ type Config = model.Config
 type Service struct {
 	config          *Config
 	db              *gorm.DB
-	repoDAO         *dao.RepoDAO
-	taskDAO         *dao.SyncTaskDAO
-	runDAO          *dao.SyncRunDAO
-	ruleDAO         *dao.WebhookRuleDAO
-	eventDAO        *dao.WebhookEventDAO
-	providerMgr     *sdkprov.Manager
+	repoService     *RepoService
+	taskService     *TaskService
+	webhookService  *WebhookService
 	cron            *cron.Cron
 	cronEntryIDs    map[string]cron.EntryID
 	cronMu          sync.RWMutex
@@ -76,20 +73,27 @@ func NewService(cfg *Config) (*Service, error) {
 		return nil, fmt.Errorf("init repo DAO failed: %w", err)
 	}
 
+	providerMgr := sdkprov.NewManager(30 * time.Minute)
+	taskDAO := dao.NewSyncTaskDAO(db)
+	runDAO := dao.NewSyncRunDAO(db)
+	ruleDAO := dao.NewWebhookRuleDAO(db)
+	eventDAO := dao.NewWebhookEventDAO(db)
+
+	repoService := NewRepoService(repoDAO, providerMgr)
+	taskService := NewTaskService(taskDAO, runDAO, repoDAO)
+	webhookService := NewWebhookService(ruleDAO, eventDAO, repoDAO)
+
 	svc := &Service{
-		config:       cfg,
-		db:           db,
-		repoDAO:      repoDAO,
-		taskDAO:      dao.NewSyncTaskDAO(db),
-		runDAO:       dao.NewSyncRunDAO(db),
-		ruleDAO:      dao.NewWebhookRuleDAO(db),
-		eventDAO:     dao.NewWebhookEventDAO(db),
-		providerMgr:  sdkprov.NewManager(30 * time.Minute),
-		cron:         cron.New(cron.WithSeconds()),
-		cronEntryIDs: make(map[string]cron.EntryID),
-		lock:         distLock,
-		semaphore:    sem,
-		semaphoreID:  uuid.New().String(),
+		config:         cfg,
+		db:             db,
+		repoService:    repoService,
+		taskService:    taskService,
+		webhookService: webhookService,
+		cron:           cron.New(cron.WithSeconds()),
+		cronEntryIDs:   make(map[string]cron.EntryID),
+		lock:           distLock,
+		semaphore:      sem,
+		semaphoreID:    uuid.New().String(),
 	}
 
 	exec, err := executor.NewExecutor(svc)
@@ -129,13 +133,13 @@ func (s *Service) GetAPIKey() string {
 }
 
 func (s *Service) RunDAO() executor.RunWriter {
-	return s.runDAO
+	return s.taskService.runDAO
 }
 
 func (s *Service) TaskDAO() executor.TaskUpdater {
-	return s.taskDAO
+	return s.taskService.taskDAO
 }
 
 func (s *Service) RepoDAO() executor.RepoReader {
-	return s.repoDAO
+	return s.repoService.repoDAO
 }

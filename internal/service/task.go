@@ -4,43 +4,20 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
-	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
 func (s *Service) ListTasks(ctx context.Context, repoKey string, offset, limit int) ([]*model.SyncTask, int64, error) {
-	page := dao.DefaultPagination(offset, limit)
-	if repoKey != "" {
-		return s.taskDAO.FindByRepoKey(repoKey, page)
-	}
-	return s.taskDAO.FindAll(page)
+	return s.taskService.ListTasks(ctx, repoKey, offset, limit)
 }
 
 func (s *Service) GetTask(ctx context.Context, key string) (*model.SyncTask, error) {
-	return s.taskDAO.FindByKey(key)
+	return s.taskService.GetTask(ctx, key)
 }
 
 func (s *Service) CreateTask(ctx context.Context, req *model.CreateTaskRequest) (*model.SyncTask, error) {
-	task := &model.SyncTask{
-		Key:           uuid.New().String(),
-		Name:          req.Name,
-		SourceRepoKey: req.SourceRepoKey,
-		SourceBranch:  req.SourceBranch,
-		TargetRepoKey: req.TargetRepoKey,
-		TargetBranch:  req.TargetBranch,
-		SyncMode:      req.SyncMode,
-		Cron:          req.Cron,
-		WebhookToken:  uuid.New().String(),
-		Enabled:       true,
-		GitTags:       req.GitTags,
-		GitForce:      req.GitForce,
-		GitPrune:      req.GitPrune,
-		GitNoVerify:   req.GitNoVerify,
-		PushOptions:   req.PushOptions,
-	}
-
-	if err := s.taskDAO.Create(task); err != nil {
+	task, err := s.taskService.CreateTask(ctx, req)
+	if err != nil {
 		return nil, err
 	}
 
@@ -54,37 +31,8 @@ func (s *Service) CreateTask(ctx context.Context, req *model.CreateTaskRequest) 
 }
 
 func (s *Service) UpdateTask(ctx context.Context, req *model.UpdateTaskRequest) (*model.SyncTask, error) {
-	task, err := s.taskDAO.FindByKey(req.Key)
+	task, err := s.taskService.UpdateTask(ctx, req)
 	if err != nil {
-		return nil, err
-	}
-	if task == nil {
-		return nil, ErrTaskNotFound
-	}
-
-	if req.Name != "" {
-		task.Name = req.Name
-	}
-	if req.SourceBranch != "" {
-		task.SourceBranch = req.SourceBranch
-	}
-	if req.TargetBranch != "" {
-		task.TargetBranch = req.TargetBranch
-	}
-	if req.SyncMode != "" {
-		task.SyncMode = req.SyncMode
-	}
-	if req.Cron != "" {
-		task.Cron = req.Cron
-	}
-	task.Enabled = req.Enabled
-	task.GitTags = req.GitTags
-	task.GitForce = req.GitForce
-	task.GitPrune = req.GitPrune
-	task.GitNoVerify = req.GitNoVerify
-	task.PushOptions = req.PushOptions
-
-	if err := s.taskDAO.Update(task); err != nil {
 		return nil, err
 	}
 
@@ -101,7 +49,7 @@ func (s *Service) UpdateTask(ctx context.Context, req *model.UpdateTaskRequest) 
 
 func (s *Service) DeleteTask(ctx context.Context, key string) error {
 	s.removeCronJob(key)
-	return s.taskDAO.Delete(key)
+	return s.taskService.DeleteTask(ctx, key)
 }
 
 func (s *Service) RunTask(ctx context.Context, taskKey string) error {
@@ -109,7 +57,7 @@ func (s *Service) RunTask(ctx context.Context, taskKey string) error {
 }
 
 func (s *Service) RunTaskWithTrigger(ctx context.Context, taskKey, trigger string) error {
-	task, err := s.taskDAO.FindByKey(taskKey)
+	task, err := s.taskService.FindTaskByKey(taskKey)
 	if err != nil {
 		return err
 	}
@@ -122,36 +70,13 @@ func (s *Service) RunTaskWithTrigger(ctx context.Context, taskKey, trigger strin
 }
 
 func (s *Service) PreviewSync(ctx context.Context, req *model.PreviewSyncRequest) (*model.PreviewSyncResult, error) {
-	sourceRepo, err := s.repoDAO.FindByKey(req.SourceRepoKey)
-	if err != nil {
-		return nil, err
-	}
-	targetRepo, err := s.repoDAO.FindByKey(req.TargetRepoKey)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &model.PreviewSyncResult{
-		SourceExists: sourceRepo != nil,
-		TargetExists: targetRepo != nil,
-	}
-
-	if sourceRepo == nil || targetRepo == nil {
-		result.CanSync = false
-		result.Message = "source or target repo not found"
-		return result, nil
-	}
-
-	result.CanSync = true
-	result.Message = "sync preview ready"
-	return result, nil
+	return s.taskService.PreviewSync(ctx, req)
 }
 
 func (s *Service) ListHistory(ctx context.Context, taskKey string, offset, limit int) ([]*model.SyncRun, int64, error) {
-	page := dao.DefaultPagination(offset, limit)
-	return s.runDAO.FindByTaskKey(taskKey, page)
+	return s.taskService.ListHistory(ctx, taskKey, offset, limit)
 }
 
 func (s *Service) DeleteHistory(ctx context.Context, id uint) error {
-	return s.runDAO.Delete(id)
+	return s.taskService.DeleteHistory(ctx, id)
 }

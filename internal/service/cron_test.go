@@ -29,11 +29,13 @@ func setupCronTestService(t *testing.T) (*Service, *gorm.DB) {
 	db := setupCronTestDB(t)
 	taskDAO := dao.NewSyncTaskDAO(db)
 
+	taskService := NewTaskService(taskDAO, nil, nil)
+
 	return &Service{
-		taskDAO:      taskDAO,
-		cron:         cron.New(cron.WithSeconds()),
-		cronEntryIDs: make(map[string]cron.EntryID),
-		cronMu:       sync.RWMutex{},
+		taskService:   taskService,
+		cron:          cron.New(cron.WithSeconds()),
+		cronEntryIDs:  make(map[string]cron.EntryID),
+		cronMu:        sync.RWMutex{},
 	}, db
 }
 
@@ -139,23 +141,23 @@ func TestStartCronJobs(t *testing.T) {
 	svc, _ := setupCronTestService(t)
 
 	// Create tasks in the database
-	tasks := []*model.SyncTask{
-		{
-			Key:         "task-1",
-			Cron:        "* * * * * *",
-			Enabled:     true,
-			WebhookToken: "token-1",
-		},
-		{
-			Key:         "task-2",
-			Cron:        "*/2 * * * * *",
-			Enabled:     true,
-			WebhookToken: "token-2",
-		},
+	tasks := []struct {
+		key  string
+		cron string
+	}{
+		{"task-1", "* * * * * *"},
+		{"task-2", "*/2 * * * * *"},
 	}
 
-	for _, task := range tasks {
-		if err := svc.taskDAO.Create(task); err != nil {
+	for _, tt := range tasks {
+		if _, err := svc.taskService.CreateTask(nil, &model.CreateTaskRequest{
+			Name:          tt.key,
+			SourceRepoKey: "source",
+			SourceBranch:  "main",
+			TargetRepoKey: "target",
+			TargetBranch:  "main",
+			Cron:          tt.cron,
+		}); err != nil {
 			t.Fatalf("Create task failed: %v", err)
 		}
 	}
@@ -178,28 +180,30 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 	svc, db := setupCronTestService(t)
 
 	// Create tasks with some disabled
-	task1 := &model.SyncTask{
-		Key:         "task-1",
-		Cron:        "* * * * * *",
-		Enabled:     true,
-		WebhookToken: "token-disabled-1",
-	}
-	task2 := &model.SyncTask{
-		Key:         "task-2",
-		Cron:        "*/2 * * * * *",
-		Enabled:     false, // Disabled
-		WebhookToken: "token-disabled-2",
-	}
-
-	if err := svc.taskDAO.Create(task1); err != nil {
+	task1, err := svc.taskService.CreateTask(nil, &model.CreateTaskRequest{
+		Name: "task-1", Cron: "* * * * * *",
+		SourceRepoKey: "source", SourceBranch: "main",
+		TargetRepoKey: "target", TargetBranch: "main",
+	})
+	if err != nil {
 		t.Fatalf("Create task1 failed: %v", err)
 	}
-	if err := svc.taskDAO.Create(task2); err != nil {
+	task2, err := svc.taskService.CreateTask(nil, &model.CreateTaskRequest{
+		Name: "task-2", Cron: "*/2 * * * * *",
+		SourceRepoKey: "source", SourceBranch: "main",
+		TargetRepoKey: "target", TargetBranch: "main",
+	})
+	if err != nil {
 		t.Fatalf("Create task2 failed: %v", err)
 	}
 
-	// Update task2 to set enabled=false (SQLite default handling issue)
-	db.Model(&model.SyncTask{}).Where("`key` = ?", "task-2").Update("enabled", false)
+	// Update task2 to set enabled=false using the actual key
+	if _, err := svc.taskService.UpdateTask(nil, &model.UpdateTaskRequest{
+		Key:     task2.Key,
+		Enabled: false,
+	}); err != nil {
+		t.Fatalf("Update task2 failed: %v", err)
+	}
 
 	// Debug: check what's in the database
 	var allTasks []*model.SyncTask
@@ -209,11 +213,12 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 		t.Logf("  Task %s: enabled=%v, cron=%q", task.Key, task.Enabled, task.Cron)
 	}
 
-	enabled, err := svc.taskDAO.FindAllEnabled()
+	enabled, err := svc.taskService.FindAllEnabledTasks()
 	if err != nil {
 		t.Fatalf("FindAllEnabled failed: %v", err)
 	}
 	t.Logf("Enabled tasks: %d", len(enabled))
+	t.Logf("Task1 key: %s, Task2 key: %s", task1.Key, task2.Key)
 
 	err = svc.startCronJobs()
 	if err != nil {
@@ -233,19 +238,12 @@ func TestStartCronJobs_WithTasksWithoutCron(t *testing.T) {
 	svc, _ := setupCronTestService(t)
 
 	// Create tasks without cron
-	tasks := []*model.SyncTask{
-		{
-			Key:         "task-1",
-			Cron:        "", // No cron
-			Enabled:     true,
-			WebhookToken: "token-no-cron",
-		},
-	}
-
-	for _, task := range tasks {
-		if err := svc.taskDAO.Create(task); err != nil {
-			t.Fatalf("Create task failed: %v", err)
-		}
+	if _, err := svc.taskService.CreateTask(nil, &model.CreateTaskRequest{
+		Name: "task-1", Cron: "",
+		SourceRepoKey: "source", SourceBranch: "main",
+		TargetRepoKey: "target", TargetBranch: "main",
+	}); err != nil {
+		t.Fatalf("Create task failed: %v", err)
 	}
 
 	err := svc.startCronJobs()
