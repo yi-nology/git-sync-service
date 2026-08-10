@@ -71,7 +71,7 @@ Create a `conf/config.yaml` file with your configuration:
 ```yaml
 server:
   host: "0.0.0.0"
-  port: 8080
+  port: 8890
 
 database:
   driver: sqlite
@@ -96,7 +96,7 @@ golangci-lint run
 
 ## API Documentation
 
-Once the server is running, access the API at `http://localhost:8080`.
+Once the server is running, access the API at `http://localhost:8890`.
 
 ## Contributing
 
