@@ -31,7 +31,9 @@ type DistLock interface {
 }
 
 type RedisLock struct {
-	client *redis.Client
+	client     *redis.Client
+	mu         sync.Mutex
+	lockValues map[string]string
 }
 
 func NewRedisLock(addr, password string, db int) *RedisLock {
@@ -41,7 +43,10 @@ func NewRedisLock(addr, password string, db int) *RedisLock {
 		DB:       db,
 	})
 
-	return &RedisLock{client: client}
+	return &RedisLock{
+		client:     client,
+		lockValues: make(map[string]string),
+	}
 }
 
 func generateLockValue() string {
@@ -62,21 +67,13 @@ func (l *RedisLock) TryLockWithTTL(ctx context.Context, key string, ttl time.Dur
 		return false, fmt.Errorf("redis setnx failed: %w", err)
 	}
 	if ok {
-		ctx2 := context.WithValue(ctx, lockValueKey{}, value)
-		*lockValueFromContext(ctx2) = value
+		l.mu.Lock()
+		l.lockValues[key] = value
+		l.mu.Unlock()
 	}
 	return ok, nil
 }
 
-type lockValueKey struct{}
-
-func lockValueFromContext(ctx context.Context) *string {
-	val := ctx.Value(lockValueKey{})
-	if val == nil {
-		return new(string)
-	}
-	return val.(*string)
-}
 
 func (l *RedisLock) LockWithTTL(ctx context.Context, key string, ttl time.Duration) (bool, string, error) {
 	lockKey := "git-sync:lock:" + key
@@ -115,16 +112,22 @@ func (l *RedisLock) Lock(ctx context.Context, key string) error {
 }
 
 func (l *RedisLock) Unlock(ctx context.Context, key string) error {
-	lockKey := "git-sync:lock:" + key
-	value := lockValueFromContext(ctx)
-	if *value == "" {
+	l.mu.Lock()
+	value, exists := l.lockValues[key]
+	if exists {
+		delete(l.lockValues, key)
+	}
+	l.mu.Unlock()
+
+	if !exists || value == "" {
+		lockKey := "git-sync:lock:" + key
 		_, err := l.client.Del(ctx, lockKey).Result()
 		if err != nil {
 			return fmt.Errorf("redis del failed: %w", err)
 		}
 		return nil
 	}
-	return l.UnlockWithValue(ctx, key, *value)
+	return l.UnlockWithValue(ctx, key, value)
 }
 
 func (l *RedisLock) ExtendLock(ctx context.Context, key string, ttl time.Duration) error {
