@@ -23,6 +23,33 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Configure logger based on config
+	var logLevel slog.Level
+	switch cfg.Log.Level {
+	case "debug":
+		logLevel = slog.LevelDebug
+	case "info":
+		logLevel = slog.LevelInfo
+	case "warn":
+		logLevel = slog.LevelWarn
+	case "error":
+		logLevel = slog.LevelError
+	default:
+		logLevel = slog.LevelInfo
+	}
+
+	var handler slog.Handler
+	if cfg.Log.Format == "text" {
+		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: logLevel,
+		})
+	} else {
+		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: logLevel,
+		})
+	}
+	slog.SetDefault(slog.New(handler))
+
 	syncSvc, err = sync.NewService(cfg)
 	if err != nil {
 		slog.Error("init sync service failed", "error", err)
