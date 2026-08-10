@@ -12,6 +12,6 @@ import (
 func customizedRegister(r *server.Hertz) {
 	r.GET("/ping", handler.Ping)
 
-	// Webhook 接收端点
-	r.POST("/api/webhook/receive/:repoKey", git_sync.ReceiveWebhook)
+	// Webhook 接收端点（带速率限制）
+	r.POST("/api/webhook/receive/:repoKey", git_sync.RateLimitMiddleware(), git_sync.ReceiveWebhook)
 }
