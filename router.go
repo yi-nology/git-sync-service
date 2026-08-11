@@ -18,4 +18,7 @@ func customizedRegister(r *server.Hertz) {
 
 	// Webhook 接收端点（带速率限制，不走 API 鉴权）
 	r.POST("/api/webhook/receive/:repoKey", git_sync.RateLimitMiddleware(), git_sync.ReceiveWebhook)
+
+	// POST /api/v1/repos/batch -> BatchRepos
+	r.POST("/api/v1/repos/batch", git_sync.BatchRepos)
 }
