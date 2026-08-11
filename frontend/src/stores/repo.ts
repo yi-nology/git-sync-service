@@ -1,15 +1,23 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repoApi } from '@/api'
-import type { Repo, CreateRepoRequest, UpdateRepoRequest, TestConnectionResp, Pagination } from '@/types'
+import type { Repo, CreateRepoRequest, UpdateRepoRequest, TestConnectionResp } from '@/types'
 import { message } from 'ant-design-vue'
+
+export interface RepoListParams {
+  page?: number
+  page_size?: number
+  search?: string
+  platform?: string
+  status?: string
+}
 
 export const useRepoStore = defineStore('repo', () => {
   const repos = ref<Repo[]>([])
   const total = ref(0)
   const loading = ref(false)
 
-  async function fetchRepos(params?: Pagination) {
+  async function fetchRepos(params?: RepoListParams) {
     loading.value = true
     try {
       const data = await repoApi.list(params)
