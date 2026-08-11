@@ -1,0 +1,24 @@
+@import './variables.scss';
+
+@mixin card-style {
+  background: $bg-primary;
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
