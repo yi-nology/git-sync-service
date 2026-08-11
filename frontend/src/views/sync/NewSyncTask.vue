@@ -1,86 +1,221 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <h1 class="page-title">新建同步任务</h1>
+    <div class="page-header-bar">
+      <div>
+        <h1 class="page-title">新建同步任务</h1>
+        <p class="page-subtitle">配置源仓库和目标仓库之间的同步规则</p>
+      </div>
+      <a-button @click="router.push('/sync')">返回列表</a-button>
     </div>
 
-    <div class="steps-bar">
-      <div class="step" :class="{active: step===1, done: step>1}"><span class="step-num">1</span><span class="step-label">基本配置</span></div>
-      <div class="step-line" :class="{active: step>1}"></div>
-      <div class="step" :class="{active: step===2, done: step>2}"><span class="step-num">2</span><span class="step-label">同步规则</span></div>
-      <div class="step-line" :class="{active: step>2}"></div>
-      <div class="step" :class="{active: step===3}"><span class="step-num">3</span><span class="step-label">高级选项</span></div>
-    </div>
+    <!-- Steps -->
+    <a-steps :current="step" class="steps-bar" size="small">
+      <a-step title="基本配置" description="选择仓库和模式" />
+      <a-step title="同步规则" description="分支和定时设置" />
+      <a-step title="高级选项" description="Git 同步参数" />
+    </a-steps>
 
+    <!-- Form Card -->
     <div class="form-card">
       <div class="form-body">
-        <div v-if="step===1">
-          <div class="form-item">
-            <label>任务名称</label>
-            <a-input v-model:value="form.name" placeholder="请输入任务名称"/>
-          </div>
-          <div class="form-item">
-            <label>源仓库 Key</label>
-            <a-input v-model:value="form.source_repo_key" placeholder="请输入源仓库 Key"/>
-          </div>
-          <div class="form-item">
-            <label>目标仓库 Key</label>
-            <a-input v-model:value="form.target_repo_key" placeholder="请输入目标仓库 Key"/>
-          </div>
-          <div class="form-item">
-            <label>同步模式</label>
-            <a-radio-group v-model:value="form.sync_mode">
-              <a-radio value="single">单分支同步</a-radio>
-              <a-radio value="all">全分支同步</a-radio>
-            </a-radio-group>
-          </div>
+        <!-- Step 1: Basic Config -->
+        <div v-show="step === 1">
+          <a-form layout="vertical">
+            <a-form-item label="任务名称" required>
+              <a-input
+                v-model:value="form.name"
+                placeholder="请输入任务名称，例如: prod-sync"
+                :maxlength="64"
+                show-count
+              />
+            </a-form-item>
+
+            <a-form-item label="同步模式" required>
+              <a-radio-group v-model:value="form.sync_mode">
+                <a-radio-button value="single">单分支同步</a-radio-button>
+                <a-radio-button value="all">全分支同步</a-radio-button>
+              </a-radio-group>
+              <div class="form-tip">
+                <InfoCircleOutlined />
+                单分支同步：仅同步指定分支；全分支同步：同步所有分支
+              </div>
+            </a-form-item>
+
+            <a-row :gutter="16">
+              <a-col :span="12">
+                <a-form-item label="源仓库" required>
+                  <a-select
+                    v-model:value="form.source_repo_key"
+                    placeholder="选择源仓库"
+                    show-search
+                    :filter-option="filterRepoOption"
+                    style="width: 100%"
+                    size="large"
+                  >
+                    <a-select-option v-for="repo in repoStore.repos" :key="repo.key" :value="repo.key">
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>{{ repo.name }}</span>
+                        <span style="color: #8C8C8C; font-size: 12px;">{{ repo.platform }}</span>
+                      </div>
+                    </a-select-option>
+                  </a-select>
+                </a-form-item>
+              </a-col>
+              <a-col :span="12">
+                <a-form-item label="目标仓库" required>
+                  <a-select
+                    v-model:value="form.target_repo_key"
+                    placeholder="选择目标仓库"
+                    show-search
+                    :filter-option="filterRepoOption"
+                    style="width: 100%"
+                    size="large"
+                  >
+                    <a-select-option v-for="repo in repoStore.repos" :key="repo.key" :value="repo.key">
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>{{ repo.name }}</span>
+                        <span style="color: #8C8C8C; font-size: 12px;">{{ repo.platform }}</span>
+                      </div>
+                    </a-select-option>
+                  </a-select>
+                </a-form-item>
+              </a-col>
+            </a-row>
+
+            <!-- Preview -->
+            <a-alert
+              v-if="form.source_repo_key && form.target_repo_key"
+              type="info"
+              show-icon
+              style="margin-top: 8px;"
+            >
+              <template #message>
+                <span>
+                  将从 <strong>{{ getRepoName(form.source_repo_key) }}</strong>
+                  同步到 <strong>{{ getRepoName(form.target_repo_key) }}</strong>
+                  （{{ form.sync_mode === 'all' ? '全分支' : '单分支' }}模式）
+                </span>
+              </template>
+            </a-alert>
+          </a-form>
         </div>
 
-        <div v-if="step===2">
-          <div class="form-item">
-            <label>源分支</label>
-            <a-input v-model:value="form.source_branch" placeholder="main"/>
-          </div>
-          <div class="form-item">
-            <label>目标分支</label>
-            <a-input v-model:value="form.target_branch" placeholder="main"/>
-          </div>
-          <div class="form-item">
-            <label>Cron 表达式（可选）</label>
-            <a-input v-model:value="form.cron" placeholder="如 0 */5 * * * *"/>
-          </div>
+        <!-- Step 2: Sync Rules -->
+        <div v-show="step === 2">
+          <a-form layout="vertical">
+            <a-row :gutter="16">
+              <a-col :span="12">
+                <a-form-item label="源分支">
+                  <a-input v-model:value="form.source_branch" placeholder="main" />
+                  <div class="form-tip">
+                    <InfoCircleOutlined /> 仅在单分支模式下生效
+                  </div>
+                </a-form-item>
+              </a-col>
+              <a-col :span="12">
+                <a-form-item label="目标分支">
+                  <a-input v-model:value="form.target_branch" placeholder="main" />
+                  <div class="form-tip">
+                    <InfoCircleOutlined /> 仅在单分支模式下生效
+                  </div>
+                </a-form-item>
+              </a-col>
+            </a-row>
+
+            <a-form-item label="定时同步 (Cron 表达式)">
+              <a-input v-model:value="form.cron" placeholder="可选，如 0 */5 * * * *" />
+              <div class="cron-presets">
+                <span class="preset-label">常用表达式:</span>
+                <a-tag
+                  v-for="preset in cronPresets"
+                  :key="preset.value"
+                  class="cron-preset-tag"
+                  @click="form.cron = preset.value"
+                >
+                  {{ preset.label }}
+                </a-tag>
+              </div>
+              <div class="form-tip">
+                <InfoCircleOutlined /> 留空表示仅通过 Webhook 或手动触发同步
+              </div>
+            </a-form-item>
+          </a-form>
         </div>
 
-        <div v-if="step===3">
-          <div class="form-item">
-            <a-checkbox v-model:checked="form.git_tags">同步 Tags</a-checkbox>
-          </div>
-          <div class="form-item">
-            <a-checkbox v-model:checked="form.git_force">强制推送</a-checkbox>
-          </div>
-          <div class="form-item">
-            <a-checkbox v-model:checked="form.git_prune">Prune 远程已删除分支</a-checkbox>
-          </div>
+        <!-- Step 3: Advanced Options -->
+        <div v-show="step === 3">
+          <a-form layout="vertical">
+            <a-form-item label="Git 同步选项">
+              <a-space direction="vertical" :size="12" style="width: 100%">
+                <div class="option-item">
+                  <a-checkbox v-model:checked="form.git_tags">同步 Tags</a-checkbox>
+                  <div class="option-desc">同时推送 git tags 到目标仓库</div>
+                </div>
+                <div class="option-item">
+                  <a-checkbox v-model:checked="form.git_force">强制推送</a-checkbox>
+                  <div class="option-desc">使用 --force 推送，会覆盖目标分支的历史（谨慎使用）</div>
+                </div>
+                <div class="option-item">
+                  <a-checkbox v-model:checked="form.git_prune">Prune 远程分支</a-checkbox>
+                  <div class="option-desc">清理目标仓库中已被源仓库删除的远程分支</div>
+                </div>
+              </a-space>
+            </a-form-item>
+
+            <!-- Summary -->
+            <a-divider />
+            <div class="summary-section">
+              <h4 style="margin-bottom: 12px;">任务摘要</h4>
+              <a-descriptions :column="1" size="small" bordered>
+                <a-descriptions-item label="任务名称">{{ form.name || '-' }}</a-descriptions-item>
+                <a-descriptions-item label="源仓库">{{ getRepoName(form.source_repo_key) || '-' }}</a-descriptions-item>
+                <a-descriptions-item label="目标仓库">{{ getRepoName(form.target_repo_key) || '-' }}</a-descriptions-item>
+                <a-descriptions-item label="同步模式">{{ form.sync_mode === 'all' ? '全分支同步' : '单分支同步' }}</a-descriptions-item>
+                <a-descriptions-item label="分支">{{ form.source_branch }} → {{ form.target_branch }}</a-descriptions-item>
+                <a-descriptions-item label="定时">{{ form.cron || '手动/Webhook 触发' }}</a-descriptions-item>
+              </a-descriptions>
+            </div>
+          </a-form>
         </div>
       </div>
 
+      <!-- Footer -->
       <div class="form-footer">
-        <a-button v-if="step > 1" @click="step--">上一步</a-button>
-        <a-button v-if="step < 3" type="primary" @click="step++">下一步</a-button>
-        <a-button v-if="step === 3" type="primary" @click="submit" :loading="submitting">创建任务</a-button>
+        <a-button v-if="step > 1" @click="step--">
+          <template #icon><LeftOutlined /></template>
+          上一步
+        </a-button>
+        <div style="flex: 1;" />
+        <a-button @click="router.push('/sync')">取消</a-button>
+        <a-button v-if="step < 3" type="primary" @click="nextStep">
+          下一步
+          <template #icon><RightOutlined /></template>
+        </a-button>
+        <a-button v-if="step === 3" type="primary" @click="submit" :loading="submitting">
+          <template #icon><CheckOutlined /></template>
+          创建任务
+        </a-button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import {
+  InfoCircleOutlined,
+  LeftOutlined,
+  RightOutlined,
+  CheckOutlined,
+} from '@ant-design/icons-vue'
 import { useSyncTaskStore } from '@/stores/syncTask'
+import { useRepoStore } from '@/stores/repo'
 
 const router = useRouter()
 const taskStore = useSyncTaskStore()
+const repoStore = useRepoStore()
 const step = ref(1)
 const submitting = ref(false)
 
@@ -97,6 +232,47 @@ const form = reactive({
   git_prune: false,
 })
 
+const cronPresets = [
+  { label: '每5分钟', value: '*/5 * * * *' },
+  { label: '每小时', value: '0 * * * *' },
+  { label: '每天凌晨', value: '0 0 * * *' },
+  { label: '每周一', value: '0 0 * * 1' },
+]
+
+function filterRepoOption(input: string, option: any) {
+  const repo = repoStore.repos.find(r => r.key === option.value)
+  if (!repo) return false
+  const search = input.toLowerCase()
+  return repo.name.toLowerCase().includes(search) || repo.key.toLowerCase().includes(search)
+}
+
+function getRepoName(key: string) {
+  return repoStore.repos.find(r => r.key === key)?.name || key
+}
+
+function nextStep() {
+  // Validate current step
+  if (step.value === 1) {
+    if (!form.name) {
+      message.warning('请输入任务名称')
+      return
+    }
+    if (!form.source_repo_key) {
+      message.warning('请选择源仓库')
+      return
+    }
+    if (!form.target_repo_key) {
+      message.warning('请选择目标仓库')
+      return
+    }
+    if (form.source_repo_key === form.target_repo_key) {
+      message.warning('源仓库和目标仓库不能相同')
+      return
+    }
+  }
+  step.value++
+}
+
 async function submit() {
   if (!form.name || !form.source_repo_key || !form.target_repo_key) {
     message.warning('请填写必填字段')
@@ -109,23 +285,125 @@ async function submit() {
     router.push('/sync')
   }
 }
+
+onMounted(() => {
+  repoStore.fetchRepos()
+})
 </script>
 
 <style scoped lang="scss">
-.page-container { background: #f0f2f5; min-height: 100%; padding: 24px; }
-.page-header { margin-bottom: 24px; }
-.page-title { font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0; }
-.steps-bar { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 24px; }
-.step { display: flex; align-items: center; gap: 8px; }
-.step-num { width: 32px; height: 32px; border-radius: 50%; background: #f5f5f5; border: 2px solid #d9d9d9; color: #8c8c8c; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
-.step.active .step-num { background: #1890ff; border-color: #1890ff; color: #fff; }
-.step.done .step-num { background: #52c41a; border-color: #52c41a; color: #fff; }
-.step-label { font-size: 14px; color: #8c8c8c; }
-.step.active .step-label { color: #1890ff; font-weight: 500; }
-.step-line { width: 60px; height: 2px; background: #d9d9d9; margin: 0 8px; }
-.step-line.active { background: #52c41a; }
-.form-card { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; }
-.form-body { padding: 24px; }
-.form-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: center; gap: 12px; }
-.form-item { margin-bottom: 24px; label { display: block; font-size: 14px; font-weight: 500; color: #262626; margin-bottom: 8px; } }
+@import '@/styles/variables.scss';
+
+.page-container {
+  background: $background-color;
+  min-height: 100%;
+}
+
+.page-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-lg;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: $text-secondary;
+  margin: 4px 0 0 0;
+}
+
+.steps-bar {
+  margin-bottom: $spacing-lg;
+  padding: $spacing-lg $spacing-xl;
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+}
+
+.form-card {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+}
+
+.form-body {
+  padding: $spacing-lg $spacing-xl;
+  min-height: 320px;
+}
+
+.form-footer {
+  padding: 16px $spacing-xl;
+  border-top: 1px solid $border-color;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: $text-secondary;
+  margin-top: 4px;
+
+  .anticon {
+    margin-right: 4px;
+  }
+}
+
+.option-item {
+  padding: 12px 16px;
+  background: #FAFAFA;
+  border-radius: $border-radius-md;
+  border: 1px solid $border-color;
+
+  .ant-checkbox-wrapper {
+    font-weight: 500;
+  }
+}
+
+.option-desc {
+  font-size: 12px;
+  color: $text-secondary;
+  margin-top: 4px;
+  padding-left: 24px;
+}
+
+// Cron presets
+.cron-presets {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preset-label {
+  font-size: 12px;
+  color: $text-secondary;
+}
+
+.cron-preset-tag {
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+
+  &:hover {
+    color: $primary-color;
+    border-color: $primary-color;
+  }
+}
+
+.summary-section {
+  :deep(.ant-descriptions-item-label) {
+    width: 100px;
+  }
+}
 </style>

@@ -23,11 +23,12 @@ var _ executor.Service = (*Service)(nil)
 type Config = model.Config
 
 type Service struct {
-	config *Config
-	db     *gorm.DB
-	repos    *RepoService
-	tasks    *TaskService
-	webhooks *WebhookService
+	config    *Config
+	db        *gorm.DB
+	repos     *RepoService
+	tasks     *TaskService
+	webhooks  *WebhookService
+	platforms *PlatformService
 	cron            *cron.Cron
 	cronEntryIDs    map[string]cron.EntryID
 	cronMu          sync.RWMutex
@@ -67,10 +68,12 @@ func NewService(cfg *Config) (*Service, error) {
 	runStepDAO := dao.NewSyncRunStepDAO(db)
 	ruleDAO := dao.NewWebhookRuleDAO(db)
 	eventDAO := dao.NewWebhookEventDAO(db)
+	platformDAO := dao.NewPlatformDAO(db)
 
 	repoService := NewRepoService(repoDAO, providerMgr)
 	taskService := NewTaskService(taskDAO, runDAO, runStepDAO, repoDAO)
 	webhookService := NewWebhookService(ruleDAO, eventDAO, repoDAO)
+	platformService := NewPlatformService(platformDAO, repoDAO, providerMgr)
 
 	bgCtx, bgCancel := context.WithCancel(context.Background())
 
@@ -80,6 +83,7 @@ func NewService(cfg *Config) (*Service, error) {
 		repos:          repoService,
 		tasks:          taskService,
 		webhooks:       webhookService,
+		platforms:      platformService,
 		cron:           cron.New(cron.WithSeconds()),
 		cronEntryIDs:   make(map[string]cron.EntryID),
 		cleanupDone:    make(chan struct{}),
@@ -189,4 +193,61 @@ func (s *Service) HealthCheck() map[string]string {
 	}
 
 	return status
+}
+
+// Platform related methods
+
+// CreatePlatform 创建平台
+func (s *Service) CreatePlatform(ctx context.Context, platform *model.Platform) error {
+	return s.platforms.CreatePlatform(ctx, platform)
+}
+
+// GetPlatform 获取平台
+func (s *Service) GetPlatform(ctx context.Context, key string) (*model.Platform, error) {
+	return s.platforms.GetPlatform(ctx, key)
+}
+
+// ListPlatforms 列出所有平台
+func (s *Service) ListPlatforms(ctx context.Context) ([]*model.Platform, error) {
+	return s.platforms.ListPlatforms(ctx)
+}
+
+// UpdatePlatform 更新平台
+func (s *Service) UpdatePlatform(ctx context.Context, platform *model.Platform) error {
+	return s.platforms.UpdatePlatform(ctx, platform)
+}
+
+// DeletePlatform 删除平台
+func (s *Service) DeletePlatform(ctx context.Context, key string) error {
+	return s.platforms.DeletePlatform(ctx, key)
+}
+
+// SetDefaultPlatform 设置默认平台
+func (s *Service) SetDefaultPlatform(ctx context.Context, key string) error {
+	return s.platforms.SetDefaultPlatform(ctx, key)
+}
+
+// UpdatePlatformStatus 更新平台状态
+func (s *Service) UpdatePlatformStatus(ctx context.Context, key, status, testResult string) error {
+	return s.platforms.UpdatePlatformStatus(ctx, key, status, testResult)
+}
+
+// TestPlatformConnection 测试平台连接
+func (s *Service) TestPlatformConnection(ctx context.Context, key string) (*sdkprov.TestConnectionResult, error) {
+	return s.platforms.TestPlatformConnection(ctx, key)
+}
+
+// ListPlatformRepos 列出平台上的仓库
+func (s *Service) ListPlatformRepos(ctx context.Context, key, page, perPage string) ([]*sdkprov.PlatformRepo, error) {
+	return s.platforms.ListPlatformRepos(ctx, key, page, perPage)
+}
+
+// SyncPlatformRepos 同步平台仓库到本地
+func (s *Service) SyncPlatformRepos(ctx context.Context, key string) (int, error) {
+	return s.platforms.SyncPlatformRepos(ctx, key)
+}
+
+// ListReposByPlatform 列出平台下的仓库
+func (s *Service) ListReposByPlatform(ctx context.Context, platformKey string) ([]*model.Repo, error) {
+	return s.platforms.ListReposByPlatform(ctx, platformKey)
 }

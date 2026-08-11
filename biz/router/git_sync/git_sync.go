@@ -61,6 +61,18 @@ func Register(r *server.Hertz) {
 					_event.POST("/retry", append(_retryeventMw(), git_sync.RetryEvent)...)
 				}
 			}
+			{
+				_platform := _v1.Group("/platform", _platformMw()...)
+				_platform.GET("", append(_getplatformMw(), git_sync.GetPlatform)...)
+				_platform.POST("", append(_createplatformMw(), git_sync.CreatePlatform)...)
+				_platform.PUT("", append(_updateplatformMw(), git_sync.UpdatePlatform)...)
+				_platform.DELETE("", append(_deleteplatformMw(), git_sync.DeletePlatform)...)
+				_platform.POST("/test", append(_testplatformconnectionMw(), git_sync.TestPlatformConnection)...)
+				_platform.POST("/set-default", append(_setdefaultplatformMw(), git_sync.SetDefaultPlatform)...)
+				_platform.GET("/repos", append(_listplatformreposMw(), git_sync.ListPlatformRepos)...)
+				_platform.POST("/sync-repos", append(_syncplatformreposMw(), git_sync.SyncPlatformRepos)...)
+			}
+			_v1.GET("/platforms", append(_listplatformsMw(), git_sync.ListPlatforms)...)
 		}
 	}
 }

@@ -1,93 +1,145 @@
 <template>
   <div class="page-container">
-    <div v-if="loading" class="loading-state">加载中...</div>
-    <template v-else-if="repo">
-      <div class="repo-header">
-        <div class="repo-left">
-          <div class="repo-icon-lg">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-              <polyline points="13 2 13 9 20 9"/>
-            </svg>
-          </div>
-          <div class="repo-info-lg">
-            <div class="repo-name-lg">{{ repo.name }}</div>
-            <div class="repo-url-lg">{{ repo.clone_url }}</div>
-          </div>
-          <span class="badge" :class="repo.status">{{ repo.status === 'active' ? '活跃' : '停用' }}</span>
-        </div>
-        <div class="header-actions">
-          <button class="btn-default" @click="refresh">刷新</button>
-          <button class="btn-primary" @click="syncNow">立即同步</button>
-        </div>
-      </div>
-
-      <div class="tabs-bar">
-        <button class="tab-btn" :class="{active: activeTab === 'tasks'}" @click="changeTab('tasks')">同步任务</button>
-        <button class="tab-btn" :class="{active: activeTab === 'history'}" @click="changeTab('history')">同步历史</button>
-        <button class="tab-btn" :class="{active: activeTab === 'webhook'}" @click="changeTab('webhook')">Webhook</button>
-      </div>
-
-      <div v-if="activeTab === 'tasks'" class="config-card">
-        <div class="card-title">同步任务列表</div>
-        <div v-if="tasks.length === 0" class="empty-text">暂无同步任务</div>
-        <div v-else class="task-list">
-          <div class="task-item" v-for="task in tasks" :key="task.key">
-            <div class="task-info">
-              <div class="task-name">{{ task.name }}</div>
-              <div class="task-meta">
-                <span>{{ task.source_branch }}</span>
-                <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-                <span>{{ task.target_branch }}</span>
+    <a-spin :spinning="loading" tip="加载中...">
+      <template v-if="repo">
+        <!-- Repo Header -->
+        <div class="repo-header">
+          <div class="repo-left">
+            <div class="repo-icon-lg">
+              <FolderOutlined style="font-size: 24px;" />
+            </div>
+            <div class="repo-info-lg">
+              <div class="repo-name-lg">{{ repo.name }}</div>
+              <div class="repo-url-lg">
+                <a-tooltip :title="repo.clone_url">{{ repo.clone_url }}</a-tooltip>
               </div>
             </div>
-            <div class="task-tags">
-              <span class="tag" :class="task.last_status || 'idle'">{{ statusText(task.last_status) }}</span>
-            </div>
-            <div class="task-actions">
-              <button class="action-btn run" @click="runTask(task.key)">运行</button>
-              <button class="action-btn edit" @click="editTask(task.key)">编辑</button>
-            </div>
+            <a-badge :status="repo.status === 'active' ? 'success' : 'default'" :text="repo.status === 'active' ? '活跃' : '停用'" />
+          </div>
+          <div class="header-actions">
+            <a-button @click="refresh">
+              <template #icon><ReloadOutlined /></template>
+              刷新
+            </a-button>
+            <a-button type="primary" @click="syncNow">
+              <template #icon><SyncOutlined /></template>
+              立即同步
+            </a-button>
+            <a-button @click="router.push(`/repos/config/${repoKey}`)">
+              <template #icon><SettingOutlined /></template>
+              配置
+            </a-button>
           </div>
         </div>
-      </div>
 
-      <div v-if="activeTab === 'history'" class="config-card">
-        <div class="card-title">同步历史</div>
-        <div v-if="history.length === 0" class="empty-text">暂无历史记录</div>
-        <div v-else class="history-list">
-          <div class="history-item" v-for="run in history" :key="run.id">
-            <div class="history-icon" :class="run.status">
-              <svg v-if="run.status === 'success'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
-              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-              </svg>
-            </div>
-            <div class="history-info">
-              <div class="history-task">{{ run.task_key }}</div>
-              <div class="history-meta">{{ run.trigger_source }} | {{ run.start_time }}</div>
-            </div>
-            <span class="status-badge" :class="run.status">{{ statusText(run.status) }}</span>
-          </div>
-        </div>
-      </div>
+        <!-- Tabs -->
+        <a-tabs v-model:activeKey="activeTab" class="detail-tabs" @change="handleTabChange">
+          <a-tab-pane key="tasks" tab="同步任务" />
+          <a-tab-pane key="history" tab="同步历史" />
+          <a-tab-pane key="webhook" tab="Webhook" />
+        </a-tabs>
 
-      <div v-if="activeTab === 'webhook'" class="config-card">
-        <div class="card-title">Webhook 配置</div>
-        <div class="webhook-info">
-          <label>Webhook 地址</label>
-          <div class="url-input-group">
-            <input type="text" readonly :value="webhookUrl" class="url-input"/>
-            <button class="copy-btn" @click="copyUrl">复制</button>
+        <!-- Tasks Tab -->
+        <div v-if="activeTab === 'tasks'">
+          <div v-if="tasks.length === 0" class="empty-card">
+            <a-empty description="暂无同步任务">
+              <a-button type="primary" @click="router.push('/sync/new')">
+                <template #icon><PlusOutlined /></template>
+                创建同步任务
+              </a-button>
+            </a-empty>
+          </div>
+          <div v-else class="task-cards">
+            <div class="task-card-item" v-for="task in tasks" :key="task.key">
+              <div class="task-card-header">
+                <span class="task-card-name">{{ task.name }}</span>
+                <StatusBadge :status="task.last_status || 'idle'" />
+              </div>
+              <div class="task-card-body">
+                <div class="task-card-meta">
+                  <span class="branch-tag">{{ task.source_branch }}</span>
+                  <ArrowRightOutlined style="color: #BFBFBF; font-size: 12px; margin: 0 6px;" />
+                  <span class="branch-tag">{{ task.target_branch }}</span>
+                </div>
+                <div class="task-card-info">
+                  <span v-if="task.cron" class="info-item">
+                    <ClockCircleOutlined /> {{ task.cron }}
+                  </span>
+                  <span v-if="task.last_run_at" class="info-item">
+                    <HistoryOutlined /> {{ task.last_run_at }}
+                  </span>
+                </div>
+              </div>
+              <div class="task-card-actions">
+                <a-button size="small" type="primary" @click="runTask(task.key)">
+                  <template #icon><PlayCircleOutlined /></template>
+                  运行
+                </a-button>
+                <a-button size="small" @click="editTask(task.key)">
+                  <template #icon><EditOutlined /></template>
+                  编辑
+                </a-button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </template>
-    <div v-else class="empty-state">仓库不存在</div>
+
+        <!-- History Tab -->
+        <div v-if="activeTab === 'history'">
+          <div v-if="history.length === 0" class="empty-card">
+            <a-empty description="暂无同步历史" />
+          </div>
+          <a-timeline v-else class="history-timeline">
+            <a-timeline-item
+              v-for="run in history"
+              :key="run.id"
+              :color="run.status === 'success' ? 'green' : run.status === 'failed' ? 'red' : 'blue'"
+            >
+              <div class="timeline-item">
+                <div class="timeline-header">
+                  <span class="timeline-task">{{ run.task_key }}</span>
+                  <StatusBadge :status="run.status" />
+                </div>
+                <div class="timeline-meta">
+                  <a-tag size="small" :color="triggerColor(run.trigger_source)">
+                    {{ triggerLabel(run.trigger_source) }}
+                  </a-tag>
+                  <span class="timeline-time">{{ run.start_time }}</span>
+                </div>
+                <div v-if="run.error_message" class="timeline-error">
+                  <ExclamationCircleOutlined /> {{ run.error_message }}
+                </div>
+              </div>
+            </a-timeline-item>
+          </a-timeline>
+        </div>
+
+        <!-- Webhook Tab -->
+        <div v-if="activeTab === 'webhook'">
+          <div class="webhook-card">
+            <h4 style="margin-bottom: 12px;">Webhook 地址</h4>
+            <a-input-group compact>
+              <a-input
+                :value="webhookUrl"
+                readonly
+                style="width: calc(100% - 80px);"
+              />
+              <a-button type="primary" @click="copyUrl" style="width: 80px;">
+                <template #icon><CopyOutlined /></template>
+                复制
+              </a-button>
+            </a-input-group>
+            <div class="form-tip" style="margin-top: 8px;">
+              <InfoCircleOutlined /> 将此地址配置到源仓库的 Webhook 设置中，即可实现推送自动同步
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <a-empty v-else-if="!loading" description="仓库不存在">
+        <a-button @click="router.push('/repos')">返回仓库列表</a-button>
+      </a-empty>
+    </a-spin>
   </div>
 </template>
 
@@ -95,9 +147,25 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import {
+  FolderOutlined,
+  ReloadOutlined,
+  SyncOutlined,
+  SettingOutlined,
+  PlusOutlined,
+  ArrowRightOutlined,
+  ClockCircleOutlined,
+  HistoryOutlined,
+  PlayCircleOutlined,
+  EditOutlined,
+  CopyOutlined,
+  InfoCircleOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons-vue'
 import { useRepoStore } from '@/stores/repo'
 import { useSyncTaskStore } from '@/stores/syncTask'
-import { statusText, copyToClipboard } from '@/utils'
+import { copyToClipboard } from '@/utils'
+import StatusBadge from '@/components/common/StatusBadge.vue'
 import type { Repo, SyncTask, SyncRun } from '@/types'
 
 const route = useRoute()
@@ -114,6 +182,16 @@ const activeTab = ref('tasks')
 const repoKey = computed(() => route.params.id as string)
 const webhookUrl = computed(() => `${window.location.origin}/api/v1/webhook/receive/${repoKey.value}`)
 
+const triggerColor = (trigger: string) => {
+  const map: Record<string, string> = { manual: 'green', cron: 'blue', webhook: 'purple' }
+  return map[trigger] || 'default'
+}
+
+const triggerLabel = (trigger: string) => {
+  const map: Record<string, string> = { manual: '手动', cron: '定时', webhook: 'Webhook' }
+  return map[trigger] || trigger
+}
+
 onMounted(async () => {
   try {
     repo.value = await repoStore.getRepo(repoKey.value)
@@ -129,9 +207,23 @@ onMounted(async () => {
   }
 })
 
-function changeTab(tab: string) {
-  activeTab.value = tab
+function handleTabChange(tab: string) {
   router.replace({ query: { tab } })
+  if (tab === 'history' && history.value.length === 0) {
+    loadHistory()
+  }
+}
+
+async function loadHistory() {
+  for (const task of tasks.value) {
+    try {
+      await taskStore.fetchHistory(task.key, 20)
+      history.value.push(...taskStore.history.map(h => ({ ...h })))
+    } catch {
+      // ignore
+    }
+  }
+  history.value.sort((a, b) => new Date(b.start_time || 0).getTime() - new Date(a.start_time || 0).getTime())
 }
 
 function refresh() {
@@ -161,40 +253,204 @@ function copyUrl() {
 </script>
 
 <style scoped lang="scss">
-.page-container { background: #f0f2f5; min-height: 100%; padding: 24px; }
-.loading-state, .empty-state { text-align: center; padding: 48px; color: #8c8c8c; font-size: 14px; background: #fff; border-radius: 8px; }
-.repo-header { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.repo-left { display: flex; align-items: center; gap: 12px; }
-.repo-icon-lg { width: 56px; height: 56px; border-radius: 8px; background: #e6f7ff; color: #1890ff; display: flex; align-items: center; justify-content: center; }
-.repo-info-lg .repo-name-lg { font-size: 18px; font-weight: 600; color: #262626; }
-.repo-info-lg .repo-url-lg { font-size: 13px; color: #8c8c8c; margin-top: 4px; }
-.badge { padding: 4px 12px; border-radius: 4px; font-size: 12px; background: #f5f5f5; color: #8c8c8c; margin-left: 8px; &.active { background: #f6ffed; color: #52c41a; } }
-.header-actions { display: flex; gap: 12px; }
-.btn-default { padding: 7px 14px; border-radius: 6px; background: #fff; border: 1px solid #d9d9d9; color: #595959; font-size: 13px; cursor: pointer; &:hover { color: #1890ff; border-color: #1890ff; } }
-.btn-primary { padding: 7px 14px; border-radius: 6px; background: #1890ff; border: none; color: #fff; font-size: 13px; cursor: pointer; &:hover { background: #40a9ff; } }
-.tabs-bar { display: flex; gap: 4px; margin-bottom: 16px; background: #fff; border-radius: 8px; padding: 4px; border: 1px solid #f0f0f0; }
-.tab-btn { padding: 8px 20px; border: none; background: transparent; border-radius: 6px; font-size: 14px; color: #595959; cursor: pointer; transition: all 0.2s; &:hover { color: #1890ff; } &.active { background: #1890ff; color: #fff; } }
-.config-card { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; padding: 20px 24px; margin-bottom: 16px; }
-.card-title { font-size: 15px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
-.empty-text { font-size: 13px; color: #8c8c8c; text-align: center; padding: 24px; }
-.task-list { display: flex; flex-direction: column; gap: 12px; }
-.task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #fafafa; border-radius: 6px; }
-.task-info .task-name { font-size: 14px; font-weight: 500; color: #262626; }
-.task-info .task-meta { font-size: 12px; color: #8c8c8c; margin-top: 4px; display: flex; gap: 8px; align-items: center; }
-.arrow-icon { color: #bfbfbf; }
-.task-tags { display: flex; gap: 8px; margin-right: 16px; }
-.tag { padding: 4px 10px; border-radius: 4px; font-size: 12px; &.success { background: #f6ffed; color: #52c41a; } &.running { background: #e6f7ff; color: #1890ff; } &.failed { background: #fff2f0; color: #ff4d4f; } &.idle { background: #f5f5f5; color: #8c8c8c; } }
-.task-actions { display: flex; gap: 8px; }
-.action-btn { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; transition: all 0.2s; &.run { background: #e6f7ff; color: #1890ff; &:hover { background: #bae7ff; } } &.edit { background: #f6ffed; color: #52c41a; &:hover { background: #d9f7be; } } }
-.history-list { display: flex; flex-direction: column; gap: 12px; }
-.history-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #fafafa; border-radius: 6px; }
-.history-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; &.success { background: #f6ffed; color: #52c41a; } &.failed { background: #fff2f0; color: #ff4d4f; } &.running { background: #e6f7ff; color: #1890ff; } }
-.history-info { flex: 1; }
-.history-task { font-size: 14px; font-weight: 500; color: #262626; }
-.history-meta { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
-.status-badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; &.success { background: #f6ffed; color: #52c41a; } &.running { background: #e6f7ff; color: #1890ff; } &.failed { background: #fff2f0; color: #ff4d4f; } }
-.webhook-info { label { display: block; font-size: 13px; font-weight: 500; color: #595959; margin-bottom: 8px; } }
-.url-input-group { display: flex; gap: 8px; }
-.url-input { flex: 1; height: 36px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; color: #8c8c8c; background: #fafafa; }
-.copy-btn { padding: 0 16px; height: 36px; border-radius: 6px; background: #fff; border: 1px solid #d9d9d9; color: #595959; font-size: 13px; cursor: pointer; &:hover { color: #1890ff; border-color: #1890ff; } }
+@import '@/styles/variables.scss';
+
+.page-container {
+  background: $background-color;
+  min-height: 100%;
+}
+
+// Repo Header
+.repo-header {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.repo-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.repo-icon-lg {
+  width: 52px;
+  height: 52px;
+  border-radius: $border-radius-md;
+  background: #E6F7FF;
+  color: $primary-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.repo-info-lg {
+  .repo-name-lg {
+    font-size: 18px;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  .repo-url-lg {
+    font-size: 13px;
+    color: $text-secondary;
+    margin-top: 4px;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+// Tabs
+.detail-tabs {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+  padding: 4px 16px 0;
+  margin-bottom: $spacing-md;
+}
+
+// Tasks
+.task-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: $spacing-md;
+}
+
+.task-card-item {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+  padding: 18px 20px;
+  border: 1px solid $border-color;
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+    border-color: #E6F7FF;
+  }
+}
+
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.task-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.task-card-body {
+  margin-bottom: 14px;
+}
+
+.task-card-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.task-card-info {
+  display: flex;
+  gap: 16px;
+
+  .info-item {
+    font-size: 12px;
+    color: $text-secondary;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.task-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid $border-color;
+}
+
+// History
+.empty-card {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+  padding: 48px 24px;
+}
+
+.history-timeline {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+  padding: 24px;
+}
+
+.timeline-item {
+  .timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .timeline-task {
+    font-weight: 500;
+    color: $text-primary;
+  }
+
+  .timeline-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .timeline-time {
+    font-size: 12px;
+    color: $text-secondary;
+  }
+
+  .timeline-error {
+    font-size: 12px;
+    color: $error-color;
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #FFF2F0;
+    border-radius: $border-radius-sm;
+  }
+}
+
+// Webhook
+.webhook-card {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+  padding: 24px;
+  max-width: 600px;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: $text-secondary;
+  margin-top: 4px;
+
+  .anticon {
+    margin-right: 4px;
+  }
+}
 </style>

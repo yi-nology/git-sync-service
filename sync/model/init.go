@@ -26,6 +26,7 @@ func InitDB(driver, dsn string) (*gorm.DB, error) {
 	}
 
 	err = db.AutoMigrate(
+		&Platform{},
 		&Repo{},
 		&SyncTask{},
 		&SyncRun{},

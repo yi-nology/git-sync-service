@@ -1,37 +1,67 @@
 <template>
   <div class="page-container">
-    <PageHeader title="事件日志">
-      <template #actions>
-        <a-input
+    <div class="page-header-bar">
+      <div>
+        <h1 class="page-title">事件日志</h1>
+        <p class="page-subtitle">查看 Webhook 接收和处理的事件记录</p>
+      </div>
+      <a-space>
+        <a-select
           v-model:value="repoKey"
-          placeholder="输入仓库 Key"
-          style="width: 200px;"
-          @pressEnter="loadEvents"
+          placeholder="选择仓库"
+          style="width: 220px"
+          show-search
+          :filter-option="filterRepoOption"
+          @change="loadEvents"
         >
-          <template #prefix>
-            <SearchOutlined />
-          </template>
-        </a-input>
+          <a-select-option v-for="repo in repoStore.repos" :key="repo.key" :value="repo.key">
+            {{ repo.name }}
+          </a-select-option>
+        </a-select>
+        <a-tooltip :title="autoRefresh ? '关闭自动刷新' : '开启自动刷新'">
+          <a-button :type="autoRefresh ? 'primary' : 'default'" @click="toggleAutoRefresh">
+            <template #icon><ClockCircleOutlined /></template>
+            {{ autoRefresh ? '自动刷新中' : '自动刷新' }}
+          </a-button>
+        </a-tooltip>
         <a-button @click="loadEvents">
           <template #icon><ReloadOutlined /></template>
           刷新
         </a-button>
-      </template>
-    </PageHeader>
+      </a-space>
+    </div>
 
-    <a-tabs v-model:activeKey="activeTab" style="margin-bottom: 16px;">
-      <a-tab-pane key="all" tab="全部" />
-      <a-tab-pane key="received" tab="已接收" />
-      <a-tab-pane key="processed" tab="已处理" />
+    <!-- Tabs -->
+    <a-tabs v-model:activeKey="activeTab" class="event-tabs">
+      <a-tab-pane key="all">
+        <template #tab>
+          <span>全部 <a-badge :count="webhookStore.events.length" :overflow-count="99" :number-style="{ fontSize: '11px' }" /></span>
+        </template>
+      </a-tab-pane>
+      <a-tab-pane key="received">
+        <template #tab>
+          <span>已接收 <a-badge :count="receivedCount" :overflow-count="99" :number-style="{ fontSize: '11px', backgroundColor: '#1677FF' }" /></span>
+        </template>
+      </a-tab-pane>
+      <a-tab-pane key="processed">
+        <template #tab>
+          <span>已处理 <a-badge :count="processedCount" :overflow-count="99" :number-style="{ fontSize: '11px', backgroundColor: '#52C41A' }" /></span>
+        </template>
+      </a-tab-pane>
+      <a-tab-pane key="failed">
+        <template #tab>
+          <span>失败 <a-badge :count="failedCount" :overflow-count="99" :number-style="{ fontSize: '11px', backgroundColor: '#FF4D4F' }" /></span>
+        </template>
+      </a-tab-pane>
     </a-tabs>
 
+    <!-- Table -->
     <a-table
       :columns="columns"
       :data-source="filteredEvents"
       :loading="webhookStore.loading"
       row-key="id"
-      :pagination="false"
-      size="middle"
+      :pagination="pagination"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'event_id'">
@@ -40,7 +70,7 @@
           </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'event_type'">
-          <a-tag color="blue">{{ record.event_type }}</a-tag>
+          <a-tag :color="eventTypeColor(record.event_type)">{{ record.event_type }}</a-tag>
         </template>
         <template v-if="column.dataIndex === 'source'">
           <span>{{ record.source || record.repo_key || '-' }}</span>
@@ -49,16 +79,16 @@
           <span>{{ record.actor_name || '-' }}</span>
         </template>
         <template v-if="column.dataIndex === 'branch'">
-          <span>{{ record.branch || '-' }}</span>
+          <span class="branch-tag">{{ record.branch || '-' }}</span>
         </template>
         <template v-if="column.dataIndex === 'status'">
           <StatusBadge :status="record.status" />
         </template>
         <template v-if="column.dataIndex === 'processed_at'">
-          <span style="color: #8c8c8c;">{{ record.processed_at || record.created_at || '-' }}</span>
+          <span class="time-text">{{ record.processed_at || record.created_at || '-' }}</span>
         </template>
         <template v-if="column.dataIndex === 'action'">
-          <a-space>
+          <a-space :size="4">
             <a-button type="link" size="small" @click="showDetail(record)">详情</a-button>
             <a-button
               v-if="record.status === 'failed' || record.status === 'received'"
@@ -71,48 +101,43 @@
           </a-space>
         </template>
       </template>
+      <template #emptyText>
+        <a-empty :description="repoKey ? '该仓库暂无事件记录' : '请选择一个仓库查看事件'" />
+      </template>
     </a-table>
 
+    <!-- Detail Modal -->
     <a-modal
       v-model:open="detailVisible"
       title="事件详情"
-      :width="600"
+      :width="640"
       :footer="null"
     >
       <a-descriptions
         v-if="currentEvent"
-        :column="1"
+        :column="2"
         bordered
         size="small"
       >
-        <a-descriptions-item label="事件 ID">
-          <span>{{ currentEvent.event_id }}</span>
+        <a-descriptions-item label="事件 ID" :span="2">
+          <span style="font-family: monospace; font-size: 12px;">{{ currentEvent.event_id }}</span>
         </a-descriptions-item>
-        <a-descriptions-item label="触发时间">
-          {{ currentEvent.created_at }}
-        </a-descriptions-item>
+        <a-descriptions-item label="触发时间">{{ currentEvent.created_at }}</a-descriptions-item>
         <a-descriptions-item label="事件类型">
-          <a-tag color="blue">{{ currentEvent.event_type }}</a-tag>
+          <a-tag :color="eventTypeColor(currentEvent.event_type)">{{ currentEvent.event_type }}</a-tag>
         </a-descriptions-item>
-        <a-descriptions-item label="仓库">
-          {{ currentEvent.repo_key }}
-        </a-descriptions-item>
-        <a-descriptions-item label="来源">
-          {{ currentEvent.source || '-' }}
-        </a-descriptions-item>
-        <a-descriptions-item label="分支">
-          {{ currentEvent.branch || '-' }}
-        </a-descriptions-item>
-        <a-descriptions-item label="触发者">
-          {{ currentEvent.actor_name || '-' }}
-        </a-descriptions-item>
+        <a-descriptions-item label="仓库">{{ currentEvent.repo_key }}</a-descriptions-item>
+        <a-descriptions-item label="来源">{{ currentEvent.source || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="分支">{{ currentEvent.branch || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="触发者">{{ currentEvent.actor_name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="Commit">
-          {{ currentEvent.commit_sha || '-' }}
+          <span style="font-family: monospace; font-size: 12px;">{{ currentEvent.commit_sha || '-' }}</span>
         </a-descriptions-item>
         <a-descriptions-item label="状态">
           <StatusBadge :status="currentEvent.status" />
         </a-descriptions-item>
-        <a-descriptions-item v-if="currentEvent.error_message" label="错误信息">
+        <a-descriptions-item label="处理时间">{{ currentEvent.processed_at || '-' }}</a-descriptions-item>
+        <a-descriptions-item v-if="currentEvent.error_message" label="错误信息" :span="2">
           <a-typography-text type="danger">{{ currentEvent.error_message }}</a-typography-text>
         </a-descriptions-item>
       </a-descriptions>
@@ -124,34 +149,61 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
-import { SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { onMounted, ref, computed, onUnmounted } from 'vue'
+import { ReloadOutlined, ClockCircleOutlined } from '@ant-design/icons-vue'
 import { useWebhookStore } from '@/stores/webhook'
-import PageHeader from '@/components/common/PageHeader.vue'
+import { useRepoStore } from '@/stores/repo'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import type { WebhookEvent } from '@/types'
 
 const webhookStore = useWebhookStore()
+const repoStore = useRepoStore()
 const repoKey = ref('')
 const activeTab = ref('all')
 const detailVisible = ref(false)
 const currentEvent = ref<WebhookEvent | null>(null)
+const autoRefresh = ref(false)
+let refreshTimer: ReturnType<typeof setInterval> | null = null
 
 const columns = [
-  { title: '事件 ID', dataIndex: 'event_id', width: 180 },
-  { title: '事件类型', dataIndex: 'event_type', width: 120 },
-  { title: '来源', dataIndex: 'source', width: 120 },
+  { title: '事件 ID', dataIndex: 'event_id', width: 160, ellipsis: true },
+  { title: '类型', dataIndex: 'event_type', width: 120, align: 'center' as const },
+  { title: '来源', dataIndex: 'source', width: 120, ellipsis: true },
   { title: '操作者', dataIndex: 'actor_name', width: 100 },
   { title: '分支', dataIndex: 'branch', width: 120 },
-  { title: '状态', dataIndex: 'status', width: 100 },
-  { title: '处理时间', dataIndex: 'processed_at', width: 160 },
-  { title: '操作', dataIndex: 'action', width: 120, align: 'center' as const },
+  { title: '状态', dataIndex: 'status', width: 90, align: 'center' as const },
+  { title: '处理时间', dataIndex: 'processed_at', width: 140 },
+  { title: '操作', dataIndex: 'action', width: 100, align: 'center' as const },
 ]
+
+const pagination = {
+  pageSize: 20,
+  showSizeChanger: true,
+  showTotal: (total: number) => `共 ${total} 条事件`,
+}
+
+const receivedCount = computed(() => webhookStore.events.filter(e => e.status === 'received').length)
+const processedCount = computed(() => webhookStore.events.filter(e => e.status === 'processed').length)
+const failedCount = computed(() => webhookStore.events.filter(e => e.status === 'failed').length)
 
 const filteredEvents = computed(() => {
   if (activeTab.value === 'all') return webhookStore.events
   return webhookStore.events.filter(e => e.status === activeTab.value)
 })
+
+function filterRepoOption(input: string, option: any) {
+  const repo = repoStore.repos.find(r => r.key === option.value)
+  return repo?.name.toLowerCase().includes(input.toLowerCase()) || false
+}
+
+const eventTypeColor = (type: string) => {
+  const map: Record<string, string> = {
+    push: 'green',
+    merge_request: 'blue',
+    tag: 'purple',
+  }
+  return map[type] || 'default'
+}
 
 function loadEvents() {
   if (repoKey.value) {
@@ -159,9 +211,30 @@ function loadEvents() {
   }
 }
 
-onMounted(() => {
-  repoKey.value = 'default'
-  loadEvents()
+function toggleAutoRefresh() {
+  autoRefresh.value = !autoRefresh.value
+  if (autoRefresh.value) {
+    refreshTimer = setInterval(loadEvents, 10000) // refresh every 10s
+  } else {
+    if (refreshTimer) {
+      clearInterval(refreshTimer)
+      refreshTimer = null
+    }
+  }
+}
+
+onMounted(async () => {
+  await repoStore.fetchRepos()
+  if (repoStore.repos.length > 0) {
+    repoKey.value = repoStore.repos[0].key
+    loadEvents()
+  }
+})
+
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+  }
 })
 
 function showDetail(e: WebhookEvent) {
@@ -181,15 +254,50 @@ async function handleRetry(id: number) {
 .page-container {
   background: $background-color;
   min-height: 100%;
-  padding: $spacing-lg;
+}
+
+.page-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-lg;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: $text-secondary;
+  margin: 4px 0 0 0;
+}
+
+.event-tabs {
+  margin-bottom: $spacing-md;
+  background: $card-background;
+  border-radius: $border-radius-md;
+  padding: 4px $spacing-md 0;
+  box-shadow: $shadow-card;
 }
 
 .truncated-id {
-  max-width: 160px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-block;
   vertical-align: middle;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.time-text {
+  color: $text-secondary;
+  font-size: 13px;
 }
 </style>

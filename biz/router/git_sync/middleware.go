@@ -203,3 +203,53 @@ func _retryeventMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _platformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _createplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _updateplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deleteplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _testplatformconnectionMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _setdefaultplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _listplatformsMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _listplatformreposMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _syncplatformreposMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

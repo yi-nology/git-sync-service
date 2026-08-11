@@ -2,106 +2,52 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Redesign the Git Sync Service frontend with a modern SaaS-style UI using Ant Design Vue, replacing Element Plus.
+**Goal:** Complete frontend redesign of Git Sync Service to achieve modern SaaS-style UI with improved usability, including dashboard, sync management, repo management, trigger config, logging, and platform management.
 
-**Architecture:** Replace Element Plus with Ant Design Vue, update all components to use Ant Design's design system, and implement a collapsible sidebar with light theme and blue accents.
+**Architecture:** Vue 3 + Composition API + Ant Design Vue 4.x frontend with Go + Hertz backend API restructuring for unified response format, pagination, filtering, and batch operations.
 
-**Tech Stack:** Vue 3.4, TypeScript, Vite 5.1, Ant Design Vue 4.x, Pinia 2.1, Vue Router 4.3, Axios 1.6, Sass 1.72
+**Tech Stack:** Vue 3, TypeScript, Ant Design Vue 4.x, Pinia, Axios, Go, Hertz, GORM
 
 ## Global Constraints
 
-- All pages must use Ant Design Vue components
-- Color scheme: Light with blue accents (#1677FF primary)
-- Sidebar: Collapsible (240px expanded / 80px collapsed)
-- No new features - visual refresh only
-- Preserve all existing functionality
-- Desktop-first (1280px+)
+- Design System: Use colors (#1677FF primary, #52C41A success, #FAAD14 warning, #FF4D4F error)
+- Spacing: 4px base unit (xs: 4px, sm: 8px, md: 16px, lg: 24px, xl: 32px)
+- Border Radius: sm: 4px, md: 8px, lg: 12px, xl: 16px
+- Layout: Remove sidebar, use top navigation (56px height)
+- Components: Ant Design Vue 4.x with consistent styling
+- API Response Format: Unified `{code, message, data, timestamp}` format
+- Pagination: `{page, page_size, total, total_pages}` in response
 
 ---
 
-## File Structure
+## Phase 1: Foundation (Week 1-2)
 
-### Files to Modify
-
-| File | Responsibility |
-|------|----------------|
-| `frontend/package.json` | Update dependencies (remove Element Plus, add Ant Design Vue) |
-| `frontend/src/main.ts` | Register Ant Design Vue plugin |
-| `frontend/src/App.vue` | Root component |
-| `frontend/src/components/layout/AppLayout.vue` | Main layout with collapsible sidebar |
-| `frontend/src/views/dashboard/Dashboard.vue` | Dashboard page |
-| `frontend/src/views/sync/SyncTaskList.vue` | Sync task list page |
-| `frontend/src/views/sync/SyncHistory.vue` | Sync history page |
-| `frontend/src/views/sync/NewSyncTask.vue` | New sync task form |
-| `frontend/src/views/webhook/WebhookRules.vue` | Webhook rules page |
-| `frontend/src/views/webhook/WebhookEvents.vue` | Webhook events page |
-| `frontend/src/views/repos/RepoList.vue` | Repo list page |
-| `frontend/src/views/repos/RepoUnifiedConfig.vue` | Repo config page |
-| `frontend/src/views/repos/LocalRepoDetail.vue` | Local repo detail page |
-| `frontend/src/views/settings/Settings.vue` | Settings page |
-| `frontend/src/views/settings/AdvancedSettings.vue` | Advanced settings page |
-| `frontend/src/components/DeleteConfirmModal.vue` | Delete confirmation modal |
-| `frontend/src/components/EditTaskModal.vue` | Edit task modal |
-
-### Files to Create
-
-| File | Responsibility |
-|------|----------------|
-| `frontend/src/components/common/StatusBadge.vue` | Reusable status badge component |
-| `frontend/src/components/common/PageHeader.vue` | Reusable page header component |
-| `frontend/src/styles/variables.scss` | Design system variables |
-| `frontend/src/styles/global.scss` | Global styles |
-
----
-
-## Task 1: Setup Ant Design Vue
+### Task 1: Design System Setup
 
 **Files:**
-- Modify: `frontend/package.json`
-- Modify: `frontend/src/main.ts`
-- Create: `frontend/src/styles/variables.scss`
+- Modify: `frontend/src/styles/variables.scss`
+- Create: `frontend/src/styles/mixins.scss`
 - Create: `frontend/src/styles/global.scss`
 
 **Interfaces:**
-- Produces: Ant Design Vue registered globally, design system variables available
+- Produces: Design tokens (colors, spacing, typography, shadows)
 
-- [ ] **Step 1: Update package.json**
+- [ ] **Step 1: Update variables.scss with design tokens**
 
-```json
-{
-  "dependencies": {
-    "ant-design-vue": "^4.0.0",
-    "@ant-design/icons-vue": "^7.0.0",
-    "axios": "^1.6.0",
-    "echarts": "^5.5.0",
-    "pinia": "^2.1.7",
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.0"
-  }
-}
-```
-
-Remove: `element-plus`, `@element-plus/icons-vue`
-
-- [ ] **Step 2: Run npm install**
-
-Run: `cd frontend && npm install`
-Expected: Dependencies installed successfully
-
-- [ ] **Step 3: Create design system variables**
-
-Create `frontend/src/styles/variables.scss`:
 ```scss
-// Color Palette
-$primary-color: #1677FF;
-$background-color: #F5F5F5;
-$card-background: #FFFFFF;
-$text-primary: #141414;
+// Colors
+$primary: #1677FF;
+$success: #52C41A;
+$warning: #FAAD14;
+$error: #FF4D4F;
+
+$text-primary: #1F1F1F;
 $text-secondary: #8C8C8C;
-$border-color: #F0F0F0;
-$success-color: #52C41A;
-$warning-color: #FAAD14;
-$error-color: #FF4D4F;
+$text-tertiary: #BFBFBF;
+
+$bg-primary: #FFFFFF;
+$bg-secondary: #F5F5F5;
+$border: #E8E8E8;
 
 // Spacing
 $spacing-xs: 4px;
@@ -111,31 +57,48 @@ $spacing-lg: 24px;
 $spacing-xl: 32px;
 
 // Border Radius
-$border-radius-sm: 4px;
-$border-radius-md: 8px;
-$border-radius-lg: 12px;
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
 
 // Shadows
 $shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
 $shadow-card-hover: 0 6px 16px 0 rgba(0, 0, 0, 0.08);
-$shadow-modal: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
-
-// Sidebar
-$sidebar-width-expanded: 240px;
-$sidebar-width-collapsed: 80px;
-
-// Header
-$header-height: 56px;
-
-// Font
-$font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 ```
 
-- [ ] **Step 4: Create global styles**
+- [ ] **Step 2: Create mixins.scss with reusable patterns**
 
-Create `frontend/src/styles/global.scss`:
+```scss
+@mixin card-style {
+  background: $bg-primary;
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+  transition: box-shadow 0.2s ease;
+  
+  &:hover {
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+```
+
+- [ ] **Step 3: Create global.scss with base styles**
+
 ```scss
 @import './variables.scss';
+@import './mixins.scss';
 
 * {
   margin: 0;
@@ -144,2007 +107,1120 @@ Create `frontend/src/styles/global.scss`:
 }
 
 body {
-  font-family: $font-family;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: $text-primary;
-  background-color: $background-color;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background: $bg-secondary;
 }
 
-// Status badges
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: $border-radius-sm;
-  font-size: 12px;
-  font-weight: 500;
-  
-  &.success {
-    background: #F6FFED;
-    color: $success-color;
-  }
-  
-  &.running {
-    background: #E6F7FF;
-    color: $primary-color;
-  }
-  
-  &.failed {
-    background: #FFF2F0;
-    color: $error-color;
-  }
-  
-  &.idle {
-    background: #F5F5F5;
-    color: $text-secondary;
-  }
-}
-
-// Branch tags
-.branch-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  background: #F5F5F5;
-  border-radius: $border-radius-sm;
-  font-size: 12px;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-}
-
-// Page container
 .page-container {
+  background: $bg-secondary;
+  min-height: 100vh;
   padding: $spacing-lg;
-  background: $background-color;
-  min-height: 100%;
 }
 
-// Page header
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-}
-
-// Stats row
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-}
-
-// Stat card
-.stat-card {
-  background: $card-background;
-  border-radius: $border-radius-md;
-  padding: $spacing-lg;
-  box-shadow: $shadow-card;
-  transition: box-shadow 0.2s ease;
   
-  &:hover {
-    box-shadow: $shadow-card-hover;
-  }
-}
-
-// Content card
-.content-card {
-  background: $card-background;
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-card;
-  overflow: hidden;
-  
-  .card-header {
-    padding: $spacing-md $spacing-lg;
-    border-bottom: 1px solid $border-color;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .page-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0;
+    line-height: 1.3;
   }
   
-  .card-body {
-    padding: $spacing-lg;
+  .page-subtitle {
+    font-size: 14px;
+    color: $text-secondary;
+    margin: 4px 0 0 0;
   }
-}
-
-// Empty state
-.empty-state {
-  text-align: center;
-  padding: 48px 24px;
-  color: $text-secondary;
-}
-
-// Loading state
-.loading-state {
-  text-align: center;
-  padding: 48px 24px;
-  color: $text-secondary;
 }
 ```
 
-- [ ] **Step 5: Update main.ts**
+- [ ] **Step 4: Verify styles compile**
 
-Update `frontend/src/main.ts`:
-```typescript
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import Antd from 'ant-design-vue'
-import 'ant-design-vue/dist/reset.css'
-import App from './App.vue'
-import router from './router'
-import './styles/global.scss'
+Run: `cd frontend && npm run dev`
+Expected: No compilation errors
 
-const app = createApp(App)
-app.use(createPinia())
-app.use(router)
-app.use(Antd)
-app.mount('#app')
-```
-
-- [ ] **Step 6: Verify build**
-
-Run: `cd frontend && npm run build`
-Expected: Build succeeds without errors
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 5: Commit design system**
 
 ```bash
-git add frontend/package.json frontend/package-lock.json frontend/src/main.ts frontend/src/styles/
-git commit -m "feat: setup Ant Design Vue and design system"
+git add frontend/src/styles/
+git commit -m "feat: add design system with variables, mixins, and global styles"
 ```
 
 ---
 
-## Task 2: Redesign AppLayout with Collapsible Sidebar
+### Task 2: Top Navigation Layout
 
 **Files:**
 - Modify: `frontend/src/components/layout/AppLayout.vue`
+- Create: `frontend/src/components/layout/TopNav.vue`
 
 **Interfaces:**
-- Consumes: Vue Router `$route` for active state
-- Produces: Collapsible sidebar layout with header
+- Consumes: Vue Router routes
+- Produces: Top navigation component with logo, menu, and user actions
 
-- [ ] **Step 1: Redesign AppLayout**
+- [ ] **Step 1: Create TopNav.vue component**
 
-Replace `frontend/src/components/layout/AppLayout.vue`:
 ```vue
 <template>
-  <a-layout class="app-layout">
-    <a-layout-sider
-      v-model:collapsed="collapsed"
-      :trigger="null"
-      collapsible
-      :width="240"
-      :collapsed-width="80"
-      class="app-sidebar"
-    >
-      <div class="sidebar-logo">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo" @click="router.push('/dashboard')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
         </svg>
-        <span v-if="!collapsed" class="logo-text">Git Sync</span>
+        <span class="logo-text">Git Sync</span>
       </div>
       
       <a-menu
         v-model:selectedKeys="selectedKeys"
-        mode="inline"
-        theme="light"
+        mode="horizontal"
         @click="handleMenuClick"
       >
         <a-menu-item key="/dashboard">
-          <template #icon>
-            <DashboardOutlined />
-          </template>
+          <DashboardOutlined />
           <span>仪表盘</span>
         </a-menu-item>
         
         <a-sub-menu key="sync">
-          <template #icon>
-            <SyncOutlined />
-          </template>
-          <template #title>同步管理</template>
+          <template #title><SyncOutlined /> 同步管理</template>
           <a-menu-item key="/sync">同步任务</a-menu-item>
           <a-menu-item key="/sync/history">同步历史</a-menu-item>
+          <a-menu-item key="/sync/new">新建任务</a-menu-item>
         </a-sub-menu>
         
+        <a-menu-item key="/repos">
+          <FolderOutlined />
+          <span>仓库管理</span>
+        </a-menu-item>
+        
         <a-sub-menu key="webhook">
-          <template #icon>
-            <ApiOutlined />
-          </template>
-          <template #title>触发配置</template>
+          <template #title><ApiOutlined /> 触发配置</template>
           <a-menu-item key="/webhook/rules">Webhook 规则</a-menu-item>
           <a-menu-item key="/webhook/events">事件日志</a-menu-item>
         </a-sub-menu>
         
-        <a-menu-item key="/repos">
-          <template #icon>
-            <FolderOutlined />
-          </template>
-          <span>仓库管理</span>
-        </a-menu-item>
+        <a-sub-menu key="logs">
+          <template #title><FileTextOutlined /> 日志管理</template>
+          <a-menu-item key="/logs/operations">操作日志</a-menu-item>
+          <a-menu-item key="/logs/sync">同步执行日志</a-menu-item>
+          <a-menu-item key="/logs/system">系统运行日志</a-menu-item>
+        </a-sub-menu>
         
-        <a-sub-menu key="settings">
-          <template #icon>
-            <SettingOutlined />
-          </template>
-          <template #title>系统</template>
+        <a-sub-menu key="system">
+          <template #title><SettingOutlined /> 系统</template>
           <a-menu-item key="/settings">系统设置</a-menu-item>
+          <a-menu-item key="/settings/platforms">平台管理</a-menu-item>
           <a-menu-item key="/settings/advanced">高级配置</a-menu-item>
         </a-sub-menu>
       </a-menu>
-      
-      <div class="sidebar-trigger" @click="collapsed = !collapsed">
-        <MenuFoldOutlined v-if="!collapsed" />
-        <MenuUnfoldOutlined v-else />
-      </div>
-    </a-layout-sider>
+    </div>
     
-    <a-layout class="main-layout">
-      <a-layout-header class="app-header">
-        <div class="header-left">
-          <a-breadcrumb>
-            <a-breadcrumb-item v-for="item in breadcrumbs" :key="item.path">
-              <router-link v-if="item.path" :to="item.path">{{ item.name }}</router-link>
-              <span v-else>{{ item.name }}</span>
-            </a-breadcrumb-item>
-          </a-breadcrumb>
-        </div>
-        <div class="header-right">
-          <a-button type="text" @click="handleRefresh">
-            <template #icon><ReloadOutlined /></template>
-          </a-button>
-        </div>
-      </a-layout-header>
-      
-      <a-layout-content class="app-content">
-        <router-view />
-      </a-layout-content>
-    </a-layout>
-  </a-layout>
+    <div class="nav-right">
+      <a-tooltip title="刷新页面">
+        <a-button type="text" @click="handleRefresh">
+          <ReloadOutlined />
+        </a-button>
+      </a-tooltip>
+    </div>
+  </header>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   DashboardOutlined,
   SyncOutlined,
-  ApiOutlined,
   FolderOutlined,
+  ApiOutlined,
+  FileTextOutlined,
   SettingOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
   ReloadOutlined,
 } from '@ant-design/icons-vue'
 
-const router = useRouter()
 const route = useRoute()
+const router = useRouter()
 
-const collapsed = ref(false)
-const selectedKeys = ref<string[]>([route.path])
+const selectedKeys = ref<string[]>([])
 
-// Update selected keys when route changes
 watch(() => route.path, (path) => {
-  selectedKeys.value = [path]
-})
-
-// Breadcrumbs
-const breadcrumbs = computed(() => {
-  const path = route.path
-  const items: { name: string; path?: string }[] = [{ name: '首页', path: '/dashboard' }]
-  
-  if (path === '/dashboard') {
-    items.push({ name: '仪表盘' })
-  } else if (path.startsWith('/sync')) {
-    items.push({ name: '同步管理' })
-    if (path === '/sync') {
-      items.push({ name: '同步任务' })
-    } else if (path === '/sync/history') {
-      items.push({ name: '同步历史' })
-    } else if (path === '/sync/new') {
-      items.push({ name: '创建任务' })
-    }
-  } else if (path.startsWith('/webhook')) {
-    items.push({ name: '触发配置' })
-    if (path === '/webhook/rules') {
-      items.push({ name: 'Webhook 规则' })
-    } else if (path === '/webhook/events') {
-      items.push({ name: '事件日志' })
-    }
-  } else if (path.startsWith('/repos')) {
-    items.push({ name: '仓库管理' })
-  } else if (path.startsWith('/settings')) {
-    items.push({ name: '系统' })
-    if (path === '/settings') {
-      items.push({ name: '系统设置' })
-    } else if (path === '/settings/advanced') {
-      items.push({ name: '高级配置' })
-    }
+  let highlightPath = path
+  if (path.startsWith('/repos/config/') || path.startsWith('/local-repos/')) {
+    highlightPath = '/repos'
   }
-  
-  return items
-})
+  selectedKeys.value = [highlightPath]
+}, { immediate: true })
 
-function handleMenuClick({ key }: { key: string }) {
+const handleMenuClick = ({ key }: { key: string }) => {
   router.push(key)
 }
 
-function handleRefresh() {
-  window.location.reload()
+const handleRefresh = () => {
+  router.go(0)
 }
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/variables.scss';
+.top-nav {
+  height: 56px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #F0F0F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
 
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #1677FF;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>
+```
+
+- [ ] **Step 2: Update AppLayout.vue to use TopNav**
+
+```vue
+<template>
+  <a-layout class="app-layout">
+    <TopNav />
+    <a-layout-content class="app-content">
+      <router-view v-slot="{ Component }">
+        <transition name="page-fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </a-layout-content>
+  </a-layout>
+</template>
+
+<script setup lang="ts">
+import TopNav from './TopNav.vue'
+</script>
+
+<style scoped lang="scss">
 .app-layout {
   min-height: 100vh;
 }
 
-.app-sidebar {
-  background: $card-background !important;
-  border-right: 1px solid $border-color;
-  box-shadow: 2px 0 8px 0 rgba(0, 0, 0, 0.05);
-  
-  :deep(.ant-layout-sider-children) {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  :deep(.ant-menu) {
-    border-right: none;
-    flex: 1;
-  }
-  
-  :deep(.ant-menu-item) {
-    margin: 4px 8px;
-    border-radius: $border-radius-md;
-    
-    &.ant-menu-item-selected {
-      background: #E6F7FF;
-      color: $primary-color;
-    }
-  }
-  
-  :deep(.ant-menu-submenu-title) {
-    margin: 4px 8px;
-    border-radius: $border-radius-md;
-  }
-}
-
-.sidebar-logo {
-  height: $header-height;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 0 16px;
-  border-bottom: 1px solid $border-color;
-  color: $primary-color;
-  
-  .logo-text {
-    font-size: 16px;
-    font-weight: 700;
-    color: $text-primary;
-    white-space: nowrap;
-  }
-}
-
-.sidebar-trigger {
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border-top: 1px solid $border-color;
-  color: $text-secondary;
-  transition: all 0.2s;
-  
-  &:hover {
-    color: $primary-color;
-    background: #E6F7FF;
-  }
-}
-
-.main-layout {
-  background: $background-color;
-}
-
-.app-header {
-  background: $card-background !important;
-  padding: 0 $spacing-lg !important;
-  height: $header-height;
-  line-height: $header-height;
-  border-bottom: 1px solid $border-color;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  
-  .header-left {
-    display: flex;
-    align-items: center;
-  }
-  
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-  }
-}
-
 .app-content {
-  margin: $spacing-lg;
-  padding: $spacing-lg;
-  background: $card-background;
-  border-radius: $border-radius-md;
-  min-height: 280px;
+  padding: 24px;
+  min-height: calc(100vh - 56px);
+}
+
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.page-fade-enter-from,
+.page-fade-leave-to {
+  opacity: 0;
 }
 </style>
 ```
 
-- [ ] **Step 2: Verify build**
+- [ ] **Step 3: Test navigation works**
 
-Run: `cd frontend && npm run build`
-Expected: Build succeeds without errors
+Run: `cd frontend && npm run dev`
+Expected: Top navigation displays correctly, menu items navigate to correct routes
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit layout changes**
 
 ```bash
-git add frontend/src/components/layout/AppLayout.vue
-git commit -m "feat: redesign AppLayout with collapsible sidebar"
+git add frontend/src/components/layout/
+git commit -m "feat: implement top navigation layout replacing sidebar"
 ```
 
 ---
 
-## Task 3: Create Common Components
+### Task 3: Router Updates for New Pages
 
 **Files:**
-- Create: `frontend/src/components/common/StatusBadge.vue`
-- Create: `frontend/src/components/common/PageHeader.vue`
+- Modify: `frontend/src/router/index.ts`
 
 **Interfaces:**
-- Produces: StatusBadge component with props: `status: string`
-- Produces: PageHeader component with props: `title: string`, slots: `actions`
+- Produces: Routes for all new pages including logs
 
-- [ ] **Step 1: Create StatusBadge component**
+- [ ] **Step 1: Add log routes to router**
 
-Create `frontend/src/components/common/StatusBadge.vue`:
-```vue
-<template>
-  <span class="status-badge" :class="statusClass">
-    <span class="status-dot" :class="statusClass"></span>
-    {{ statusText }}
-  </span>
-</template>
+```typescript
+import { createRouter, createWebHistory } from 'vue-router'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import { useAuthStore } from '@/stores/auth'
 
-<script setup lang="ts">
-import { computed } from 'vue'
-
-const props = defineProps<{
-  status: string | undefined
-}>()
-
-const statusClass = computed(() => {
-  const status = props.status || 'idle'
-  const classMap: Record<string, string> = {
-    success: 'success',
-    running: 'running',
-    failed: 'failed',
-    received: 'running',
-    processed: 'success',
-    active: 'success',
-    idle: 'idle',
-    stopped: 'idle',
+const routes = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/login/Login.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/',
+    component: AppLayout,
+    redirect: '/dashboard',
+    meta: { requiresAuth: true },
+    children: [
+      { path: '/dashboard', component: () => import('@/views/dashboard/Dashboard.vue') },
+      
+      // Sync Management
+      { path: '/sync', component: () => import('@/views/sync/SyncTaskList.vue') },
+      { path: '/sync/history', component: () => import('@/views/sync/SyncHistory.vue') },
+      { path: '/sync/new', component: () => import('@/views/sync/NewSyncTask.vue') },
+      
+      // Repo Management
+      { path: '/repos', component: () => import('@/views/repos/RepoList.vue') },
+      { path: '/repos/config/:id', component: () => import('@/views/repos/RepoUnifiedConfig.vue') },
+      { path: '/local-repos/:id', component: () => import('@/views/repos/LocalRepoDetail.vue') },
+      
+      // Trigger Config
+      { path: '/webhook/rules', component: () => import('@/views/webhook/WebhookRules.vue') },
+      { path: '/webhook/events', component: () => import('@/views/webhook/WebhookEvents.vue') },
+      
+      // Logs (NEW)
+      { path: '/logs/operations', component: () => import('@/views/logs/OperationLogs.vue') },
+      { path: '/logs/sync', component: () => import('@/views/logs/SyncLogs.vue') },
+      { path: '/logs/system', component: () => import('@/views/logs/SystemLogs.vue') },
+      
+      // System
+      { path: '/settings', component: () => import('@/views/settings/Settings.vue') },
+      { path: '/settings/platforms', component: () => import('@/views/settings/PlatformSettings.vue') },
+      { path: '/settings/advanced', component: () => import('@/views/settings/AdvancedSettings.vue') },
+    ]
   }
-  return classMap[status] || 'idle'
+]
+
+const router = createRouter({ history: createWebHistory(), routes })
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth !== false)
+
+  if (requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+  } else if (to.path === '/login' && authStore.isAuthenticated) {
+    next('/dashboard')
+  } else {
+    next()
+  }
 })
 
-const statusText = computed(() => {
-  const status = props.status || 'idle'
-  const textMap: Record<string, string> = {
-    success: '成功',
-    running: '运行中',
-    failed: '失败',
-    received: '已接收',
-    processed: '已处理',
-    active: '活跃',
-    idle: '未运行',
-    stopped: '已停止',
-  }
-  return textMap[status] || status || '-'
-})
-</script>
-
-<style scoped lang="scss">
-@import '@/styles/variables.scss';
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 10px;
-  border-radius: $border-radius-sm;
-  font-size: 12px;
-  font-weight: 500;
-  
-  &.success {
-    background: #F6FFED;
-    color: $success-color;
-  }
-  
-  &.running {
-    background: #E6F7FF;
-    color: $primary-color;
-  }
-  
-  &.failed {
-    background: #FFF2F0;
-    color: $error-color;
-  }
-  
-  &.idle {
-    background: #F5F5F5;
-    color: $text-secondary;
-  }
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  
-  &.success { background: $success-color; }
-  &.running { background: $primary-color; }
-  &.failed { background: $error-color; }
-  &.idle { background: $text-secondary; }
-}
-</style>
+export default router
 ```
 
-- [ ] **Step 2: Create PageHeader component**
+- [ ] **Step 2: Verify routes compile**
 
-Create `frontend/src/components/common/PageHeader.vue`:
-```vue
-<template>
-  <div class="page-header">
-    <h1 class="page-title">{{ title }}</h1>
-    <div class="header-actions">
-      <slot name="actions" />
-    </div>
-  </div>
-</template>
+Run: `cd frontend && npm run dev`
+Expected: No TypeScript errors
 
-<script setup lang="ts">
-defineProps<{
-  title: string
-}>()
-</script>
-
-<style scoped lang="scss">
-@import '@/styles/variables.scss';
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  gap: $spacing-sm;
-  align-items: center;
-}
-</style>
-```
-
-- [ ] **Step 3: Verify build**
-
-Run: `cd frontend && npm run build`
-Expected: Build succeeds without errors
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit router updates**
 
 ```bash
-git add frontend/src/components/common/
-git commit -m "feat: add common StatusBadge and PageHeader components"
+git add frontend/src/router/index.ts
+git commit -m "feat: add routes for log management pages"
 ```
 
 ---
 
-## Task 4: Redesign Dashboard Page
+## Phase 2: Backend API Restructuring (Week 2-3)
+
+### Task 4: Unified API Response Format
+
+**Files:**
+- Modify: `internal/pkg/response/response.go`
+- Create: `internal/pkg/response/types.go`
+
+**Interfaces:**
+- Produces: Unified response format `{code, message, data, timestamp}`
+
+- [ ] **Step 1: Create response types**
+
+```go
+package response
+
+import (
+	"time"
+)
+
+// Response 统一响应格式
+type Response struct {
+	Code      int         `json:"code"`
+	Message   string      `json:"message"`
+	Data      interface{} `json:"data"`
+	Timestamp int64       `json:"timestamp"`
+}
+
+// PaginatedData 分页数据
+type PaginatedData struct {
+	List       interface{} `json:"list"`
+	Pagination Pagination  `json:"pagination"`
+}
+
+// Pagination 分页信息
+type Pagination struct {
+	Page       int   `json:"page"`
+	PageSize   int   `json:"page_size"`
+	Total      int64 `json:"total"`
+	TotalPages int   `json:"total_pages"`
+}
+
+// BatchResponse 批量操作响应
+type BatchResponse struct {
+	Total   int      `json:"total"`
+	Success int      `json:"success"`
+	Failed  int      `json:"failed"`
+	Errors  []string `json:"errors,omitempty"`
+}
+```
+
+- [ ] **Step 2: Update response helpers**
+
+```go
+package response
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/cloudwego/hertz/pkg/app"
+)
+
+func Success(c *app.RequestContext, data interface{}) {
+	c.JSON(http.StatusOK, Response{
+		Code:      0,
+		Message:   "success",
+		Data:      data,
+		Timestamp: time.Now().Unix(),
+	})
+}
+
+func Created(c *app.RequestContext, data interface{}) {
+	c.JSON(http.StatusCreated, Response{
+		Code:      0,
+		Message:   "created",
+		Data:      data,
+		Timestamp: time.Now().Unix(),
+	})
+}
+
+func BadRequest(c *app.RequestContext, message string) {
+	c.JSON(http.StatusBadRequest, Response{
+		Code:      400,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now().Unix(),
+	})
+}
+
+func NotFound(c *app.RequestContext, message string) {
+	c.JSON(http.StatusNotFound, Response{
+		Code:      404,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now().Unix(),
+	})
+}
+
+func InternalError(c *app.RequestContext, message string) {
+	c.JSON(http.StatusInternalServerError, Response{
+		Code:      500,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now().Unix(),
+	})
+}
+
+func Paginated(c *app.RequestContext, list interface{}, total int64, page, pageSize int) {
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
+	c.JSON(http.StatusOK, Response{
+		Code:    0,
+		Message: "success",
+		Data: PaginatedData{
+			List: list,
+			Pagination: Pagination{
+				Page:       page,
+				PageSize:   pageSize,
+				Total:      total,
+				TotalPages: totalPages,
+			},
+		},
+		Timestamp: time.Now().Unix(),
+	})
+}
+```
+
+- [ ] **Step 3: Test response format**
+
+Run: `go build ./...`
+Expected: No compilation errors
+
+- [ ] **Step 4: Commit response format**
+
+```bash
+git add internal/pkg/response/
+git commit -m "feat: implement unified API response format with pagination"
+```
+
+---
+
+### Task 5: Repo API with Pagination and Filtering
+
+**Files:**
+- Modify: `biz/handler/git_sync/repo_service.go`
+- Modify: `internal/service/repo.go`
+- Modify: `internal/dao/repo_dao.go`
+
+**Interfaces:**
+- Consumes: `ListReposRequest{page, page_size, search, platform, status, sort_by, sort_order}`
+- Produces: Paginated repo list with filtering
+
+- [ ] **Step 1: Add ListReposRequest struct**
+
+```go
+// biz/handler/git_sync/repo_service.go
+
+type ListReposRequest struct {
+	Page      int    `query:"page" default:"1"`
+	PageSize  int    `query:"page_size" default:"10"`
+	Search    string `query:"search"`
+	Platform  string `query:"platform"`
+	Status    string `query:"status"`
+	SortBy    string `query:"sort_by" default:"created_at"`
+	SortOrder string `query:"sort_order" default:"desc"`
+}
+```
+
+- [ ] **Step 2: Update ListRepos handler**
+
+```go
+func ListRepos(ctx context.Context, c *app.RequestContext) {
+	var req ListReposRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	if req.Page < 1 {
+		req.Page = 1
+	}
+	if req.PageSize < 1 || req.PageSize > 100 {
+		req.PageSize = 10
+	}
+
+	repos, total, err := GetSyncService().ListReposWithFilter(ctx, req.Page, req.PageSize, req.Search, req.Platform, req.Status, req.SortBy, req.SortOrder)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Paginated(c, repos, total, req.Page, req.PageSize)
+}
+```
+
+- [ ] **Step 3: Add DAO method with filtering**
+
+```go
+// internal/dao/repo_dao.go
+
+func (d *RepoDAO) ListWithFilter(page, pageSize int, search, platform, status, sortBy, sortOrder string) ([]*model.Repo, int64, error) {
+	var repos []*model.Repo
+	var total int64
+
+	query := d.db.Model(&model.Repo{})
+
+	if search != "" {
+		query = query.Where("name LIKE ? OR clone_url LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+	if platform != "" {
+		query = query.Where("platform = ?", platform)
+	}
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).Order(sortBy + " " + sortOrder).Find(&repos).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return repos, total, nil
+}
+```
+
+- [ ] **Step 4: Test API**
+
+Run: `go build ./...`
+Expected: No compilation errors
+
+- [ ] **Step 5: Commit repo API changes**
+
+```bash
+git add biz/handler/git_sync/repo_service.go internal/service/repo.go internal/dao/repo_dao.go
+git commit -m "feat: add pagination and filtering to repo list API"
+```
+
+---
+
+### Task 6: Batch Operations API
+
+**Files:**
+- Modify: `biz/handler/git_sync/repo_service.go`
+- Create: `biz/handler/git_sync/batch_service.go`
+
+**Interfaces:**
+- Consumes: `BatchRequest{action, keys}`
+- Produces: `BatchResponse{total, success, failed, errors}`
+
+- [ ] **Step 1: Create batch service handler**
+
+```go
+// biz/handler/git_sync/batch_service.go
+
+package git_sync
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/yi-nology/git-sync-service/internal/pkg/response"
+)
+
+type BatchRequest struct {
+	Action string   `json:"action" vd:"required"`
+	Keys   []string `json:"keys" vd:"required"`
+}
+
+func BatchRepos(ctx context.Context, c *app.RequestContext) {
+	var req BatchRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	result := &response.BatchResponse{
+		Total: len(req.Keys),
+	}
+
+	for _, key := range req.Keys {
+		var err error
+		switch req.Action {
+		case "delete":
+			err = GetSyncService().DeleteRepo(ctx, key)
+		default:
+			err = fmt.Errorf("unsupported action: %s", req.Action)
+		}
+
+		if err != nil {
+			result.Failed++
+			result.Errors = append(result.Errors, fmt.Sprintf("%s: %s", key, err.Error()))
+		} else {
+			result.Success++
+		}
+	}
+
+	response.Success(c, result)
+}
+```
+
+- [ ] **Step 2: Register batch route**
+
+```go
+// biz/handler/git_sync/init.go
+
+// Add to route registration
+// POST /api/v1/repos/batch -> BatchRepos
+```
+
+- [ ] **Step 3: Test compilation**
+
+Run: `go build ./...`
+Expected: No compilation errors
+
+- [ ] **Step 4: Commit batch operations**
+
+```bash
+git add biz/handler/git_sync/batch_service.go
+git commit -m "feat: add batch operations API for repos"
+```
+
+---
+
+## Phase 3: Frontend Core Modules (Week 3-5)
+
+### Task 7: Dashboard Redesign
 
 **Files:**
 - Modify: `frontend/src/views/dashboard/Dashboard.vue`
 
 **Interfaces:**
-- Consumes: `useRepoStore`, `useSyncTaskStore`
-- Produces: Dashboard page with stats and tables
+- Consumes: `repoApi.list()`, `syncTaskApi.list()`, `systemApi.status()`
+- Produces: Dashboard with stats, quick actions, recent tasks/repos, system status
 
-- [ ] **Step 1: Redesign Dashboard**
+- [ ] **Step 1: Create system API**
 
-Replace `frontend/src/views/dashboard/Dashboard.vue`:
-```vue
-<template>
-  <div class="page-container">
-    <PageHeader title="仪表盘" />
-    
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon blue">
-          <FolderOutlined />
-        </div>
-        <div class="stat-content">
-          <div class="stat-num">{{ repoStore.total }}</div>
-          <div class="stat-name">仓库总数</div>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon green">
-          <SyncOutlined />
-        </div>
-        <div class="stat-content">
-          <div class="stat-num">{{ taskStore.total }}</div>
-          <div class="stat-name">同步任务</div>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon orange">
-          <PlayCircleOutlined />
-        </div>
-        <div class="stat-content">
-          <div class="stat-num">{{ runningCount }}</div>
-          <div class="stat-name">运行中</div>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon red">
-          <CloseCircleOutlined />
-        </div>
-        <div class="stat-content">
-          <div class="stat-num">{{ failedCount }}</div>
-          <div class="stat-name">失败任务</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="grid-row">
-      <div class="content-card">
-        <div class="card-header">
-          <span class="card-title">最近同步任务</span>
-          <router-link to="/sync">
-            <a-button type="link">查看全部</a-button>
-          </router-link>
-        </div>
-        <div class="card-body">
-          <a-table
-            :columns="taskColumns"
-            :data-source="recentTasks"
-            :pagination="false"
-            size="small"
-            :loading="taskStore.loading"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'status'">
-                <StatusBadge :status="record.last_status" />
-              </template>
-              <template v-if="column.key === 'branches'">
-                <span class="branch-tag">{{ record.source_branch }}</span>
-                <span class="branch-arrow">→</span>
-                <span class="branch-tag">{{ record.target_branch }}</span>
-              </template>
-            </template>
-          </a-table>
-        </div>
-      </div>
-      
-      <div class="content-card">
-        <div class="card-header">
-          <span class="card-title">仓库列表</span>
-          <router-link to="/repos">
-            <a-button type="link">查看全部</a-button>
-          </router-link>
-        </div>
-        <div class="card-body">
-          <a-table
-            :columns="repoColumns"
-            :data-source="recentRepos"
-            :pagination="false"
-            size="small"
-            :loading="repoStore.loading"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'status'">
-                <StatusBadge :status="record.status" />
-              </template>
-              <template v-if="column.key === 'platform'">
-                <a-tag color="blue">{{ record.platform }}</a-tag>
-              </template>
-            </template>
-          </a-table>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
+```typescript
+// frontend/src/api/index.ts
 
-<script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useRepoStore } from '@/stores/repo'
-import { useSyncTaskStore } from '@/stores/syncTask'
-import PageHeader from '@/components/common/PageHeader.vue'
-import StatusBadge from '@/components/common/StatusBadge.vue'
-import {
-  FolderOutlined,
-  SyncOutlined,
-  PlayCircleOutlined,
-  CloseCircleOutlined,
-} from '@ant-design/icons-vue'
-
-const repoStore = useRepoStore()
-const taskStore = useSyncTaskStore()
-
-const runningCount = computed(() => taskStore.tasks.filter(t => t.last_status === 'running').length)
-const failedCount = computed(() => taskStore.tasks.filter(t => t.last_status === 'failed').length)
-const recentTasks = computed(() => taskStore.tasks.slice(0, 5))
-const recentRepos = computed(() => repoStore.repos.slice(0, 5))
-
-const taskColumns = [
-  { title: '任务名称', dataIndex: 'name', key: 'name' },
-  { title: '分支', key: 'branches' },
-  { title: '状态', key: 'status', width: 100 },
-]
-
-const repoColumns = [
-  { title: '仓库名称', dataIndex: 'name', key: 'name' },
-  { title: '平台', key: 'platform', width: 100 },
-  { title: '状态', key: 'status', width: 100 },
-]
-
-onMounted(() => {
-  repoStore.fetchRepos()
-  taskStore.fetchTasks()
-})
-</script>
-
-<style scoped lang="scss">
-@import '@/styles/variables.scss';
-
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
+export const systemApi = {
+  status: () =>
+    api.get<any, SystemStatusResp>('/system/status'),
+  health: () =>
+    api.get<any, HealthResp>('/system/health'),
 }
 
-.stat-card {
-  background: $card-background;
-  border-radius: $border-radius-md;
-  padding: $spacing-lg;
-  box-shadow: $shadow-card;
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  transition: box-shadow 0.2s ease;
-  
-  &:hover {
-    box-shadow: $shadow-card-hover;
+export interface SystemStatusResp {
+  status: string
+  version: string
+  uptime: number
+  repoCount: number
+  taskCount: number
+  runningTask: number
+  lastSyncAt: string
+}
+
+export interface HealthResp {
+  status: string
+  database: {
+    status: string
+    size: number
   }
 }
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: $border-radius-lg;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  
-  &.blue {
-    background: #E6F7FF;
-    color: $primary-color;
-  }
-  
-  &.green {
-    background: #F6FFED;
-    color: $success-color;
-  }
-  
-  &.orange {
-    background: #FFF7E6;
-    color: $warning-color;
-  }
-  
-  &.red {
-    background: #FFF2F0;
-    color: $error-color;
-  }
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-num {
-  font-size: 28px;
-  font-weight: 700;
-  color: $text-primary;
-}
-
-.stat-name {
-  font-size: 13px;
-  color: $text-secondary;
-  margin-top: 4px;
-}
-
-.grid-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-md;
-}
-
-.card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: $text-primary;
-}
-
-.branch-arrow {
-  margin: 0 8px;
-  color: $text-secondary;
-}
-</style>
 ```
 
-- [ ] **Step 2: Verify build**
+- [ ] **Step 2: Update Dashboard.vue with new design**
 
-Run: `cd frontend && npm run build`
-Expected: Build succeeds without errors
+[Include full implementation as designed in spec section 4]
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Test dashboard**
+
+Run: `cd frontend && npm run dev`
+Expected: Dashboard displays with stats, quick actions, recent tasks/repos, system status
+
+- [ ] **Step 4: Commit dashboard**
 
 ```bash
-git add frontend/src/views/dashboard/Dashboard.vue
-git commit -m "feat: redesign Dashboard page with Ant Design"
+git add frontend/src/views/dashboard/Dashboard.vue frontend/src/api/index.ts
+git commit -m "feat: redesign dashboard with modern SaaS style and system status"
 ```
 
 ---
 
-## Task 5: Redesign Sync Task List Page
+### Task 8: Operation Logs Page
+
+**Files:**
+- Create: `frontend/src/views/logs/OperationLogs.vue`
+- Modify: `frontend/src/api/index.ts`
+
+**Interfaces:**
+- Consumes: `logApi.listOperations()`
+- Produces: Operation logs list with filtering
+
+- [ ] **Step 1: Add log API**
+
+```typescript
+// frontend/src/api/index.ts
+
+export const logApi = {
+  listOperations: (params?: OperationLogRequest) =>
+    api.get<any, OperationLogResp>('/logs/operations', { params }),
+  listSync: (params?: SyncLogRequest) =>
+    api.get<any, SyncLogResp>('/logs/sync', { params }),
+  listSystem: (params?: SystemLogRequest) =>
+    api.get<any, SystemLogResp>('/logs/system', { params }),
+}
+
+export interface OperationLogRequest {
+  page?: number
+  page_size?: number
+  search?: string
+  action?: string
+  user?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface OperationLog {
+  id: number
+  time: string
+  user: string
+  action: string
+  resource: string
+  details: string
+  ip: string
+}
+
+export interface OperationLogResp {
+  list: OperationLog[]
+  pagination: Pagination
+}
+
+export interface SyncLogRequest {
+  page?: number
+  page_size?: number
+  task_key?: string
+  status?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface SyncLog {
+  id: number
+  taskName: string
+  trigger: string
+  status: string
+  startTime: string
+  endTime: string
+  duration: number
+  sourceRepo: string
+  targetRepo: string
+  commits: number
+  error?: string
+}
+
+export interface SyncLogResp {
+  list: SyncLog[]
+  pagination: Pagination
+}
+
+export interface SystemLogRequest {
+  page?: number
+  page_size?: number
+  level?: string
+  module?: string
+  search?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface SystemLog {
+  id: number
+  time: string
+  level: string
+  module: string
+  message: string
+  details?: string
+  stack?: string
+}
+
+export interface SystemLogResp {
+  list: SystemLog[]
+  pagination: Pagination
+}
+```
+
+- [ ] **Step 2: Create OperationLogs.vue**
+
+[Include full implementation as designed in spec section 8.2]
+
+- [ ] **Step 3: Test logs page**
+
+Run: `cd frontend && npm run dev`
+Expected: Operation logs page displays with filtering and pagination
+
+- [ ] **Step 4: Commit logs page**
+
+```bash
+git add frontend/src/views/logs/OperationLogs.vue frontend/src/api/index.ts
+git commit -m "feat: add operation logs page with filtering and pagination"
+```
+
+---
+
+### Task 9: Sync Execution Logs Page
+
+**Files:**
+- Create: `frontend/src/views/logs/SyncLogs.vue`
+
+**Interfaces:**
+- Consumes: `logApi.listSync()`
+- Produces: Sync execution logs with status and details
+
+- [ ] **Step 1: Create SyncLogs.vue**
+
+[Include full implementation as designed in spec section 8.3]
+
+- [ ] **Step 2: Test sync logs page**
+
+Run: `cd frontend && npm run dev`
+Expected: Sync logs page displays with filtering, pagination, and detail drawer
+
+- [ ] **Step 3: Commit sync logs**
+
+```bash
+git add frontend/src/views/logs/SyncLogs.vue
+git commit -m "feat: add sync execution logs page with detail drawer"
+```
+
+---
+
+### Task 10: System Logs Page
+
+**Files:**
+- Create: `frontend/src/views/logs/SystemLogs.vue`
+
+**Interfaces:**
+- Consumes: `logApi.listSystem()`
+- Produces: System logs with level filtering and auto-refresh
+
+- [ ] **Step 1: Create SystemLogs.vue**
+
+[Include full implementation as designed in spec section 8.4]
+
+- [ ] **Step 2: Test system logs page**
+
+Run: `cd frontend && npm run dev`
+Expected: System logs page displays with level filtering, auto-refresh, and detail drawer
+
+- [ ] **Step 3: Commit system logs**
+
+```bash
+git add frontend/src/views/logs/SystemLogs.vue
+git commit -m "feat: add system logs page with auto-refresh and level filtering"
+```
+
+---
+
+## Phase 4: Remaining Modules (Week 5-6)
+
+### Task 11: Sync Task List Redesign
 
 **Files:**
 - Modify: `frontend/src/views/sync/SyncTaskList.vue`
 
 **Interfaces:**
-- Consumes: `useSyncTaskStore`
-- Produces: Sync task list page with table and actions
+- Consumes: `syncTaskApi.list()` with pagination and filtering
+- Produces: Redesigned sync task list with search, filter, batch operations
 
-- [ ] **Step 1: Redesign SyncTaskList**
+- [ ] **Step 1: Update SyncTaskList.vue with new design**
 
-Replace `frontend/src/views/sync/SyncTaskList.vue`:
-```vue
-<template>
-  <div class="page-container">
-    <PageHeader title="同步任务">
-      <template #actions>
-        <a-button type="primary" @click="openCreate">
-          <template #icon><PlusOutlined /></template>
-          创建任务
-        </a-button>
-      </template>
-    </PageHeader>
-    
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-num blue">{{ taskStore.total }}</div>
-        <div class="stat-name">总任务数</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num green">{{ taskStore.tasks.filter(t => t.last_status === 'success').length }}</div>
-        <div class="stat-name">成功</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num orange">{{ taskStore.tasks.filter(t => t.last_status === 'running').length }}</div>
-        <div class="stat-name">运行中</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num red">{{ taskStore.tasks.filter(t => t.last_status === 'failed').length }}</div>
-        <div class="stat-name">失败</div>
-      </div>
-    </div>
-    
-    <div class="content-card">
-      <div class="card-body">
-        <a-table
-          :columns="columns"
-          :data-source="taskStore.tasks"
-          :loading="taskStore.loading"
-          :pagination="pagination"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'name'">
-              <span class="task-name">{{ record.name }}</span>
-            </template>
-            <template v-if="column.key === 'branches'">
-              <span class="branch-tag">{{ record.source_branch }}</span>
-              <span class="branch-arrow">→</span>
-              <span class="branch-tag">{{ record.target_branch }}</span>
-            </template>
-            <template v-if="column.key === 'mode'">
-              <a-tag>{{ record.sync_mode || 'single' }}</a-tag>
-            </template>
-            <template v-if="column.key === 'status'">
-              <StatusBadge :status="record.last_status" />
-            </template>
-            <template v-if="column.key === 'last_run'">
-              {{ record.last_run_at || '未运行' }}
-            </template>
-            <template v-if="column.key === 'actions'">
-              <a-space>
-                <a-button type="link" size="small" @click="handleRun(record.key)">
-                  运行
-                </a-button>
-                <a-button type="link" size="small" @click="openEdit(record)">
-                  编辑
-                </a-button>
-                <a-popconfirm
-                  title="确定要删除该任务吗？"
-                  @confirm="handleDelete(record.key)"
-                >
-                  <a-button type="link" size="small" danger>
-                    删除
-                  </a-button>
-                </a-popconfirm>
-              </a-space>
-            </template>
-          </template>
-        </a-table>
-      </div>
-    </div>
-    
-    <a-modal
-      v-model:open="dialogVisible"
-      :title="dialogTitle"
-      @ok="handleSubmit"
-      @cancel="dialogVisible = false"
-    >
-      <a-form :model="formData" layout="vertical">
-        <a-form-item label="任务名称" required>
-          <a-input v-model:value="formData.name" placeholder="请输入任务名称" />
-        </a-form-item>
-        <a-row :gutter="16">
-          <a-col :span="12">
-            <a-form-item label="源仓库 Key" required>
-              <a-input v-model:value="formData.source_repo_key" placeholder="请输入源仓库 Key" />
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="源分支">
-              <a-input v-model:value="formData.source_branch" placeholder="main" />
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row :gutter="16">
-          <a-col :span="12">
-            <a-form-item label="目标仓库 Key" required>
-              <a-input v-model:value="formData.target_repo_key" placeholder="请输入目标仓库 Key" />
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="目标分支">
-              <a-input v-model:value="formData.target_branch" placeholder="main" />
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-form-item label="Cron 表达式">
-          <a-input v-model:value="formData.cron" placeholder="可选，如 0 */5 * * * *" />
-        </a-form-item>
-        <a-form-item label="同步模式">
-          <a-select v-model:value="formData.sync_mode">
-            <a-select-option value="single">单分支</a-select-option>
-            <a-select-option value="all">全分支</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="选项">
-          <a-space>
-            <a-checkbox v-model:checked="formData.git_tags">同步 Tags</a-checkbox>
-            <a-checkbox v-model:checked="formData.git_force">强制推送</a-checkbox>
-            <a-checkbox v-model:checked="formData.git_prune">Prune</a-checkbox>
-          </a-space>
-        </a-form-item>
-      </a-form>
-    </a-modal>
-  </div>
-</template>
+[Include full implementation as designed in spec section 5.1]
 
-<script setup lang="ts">
-import { onMounted, ref, reactive } from 'vue'
-import { message } from 'ant-design-vue'
-import { useSyncTaskStore } from '@/stores/syncTask'
-import PageHeader from '@/components/common/PageHeader.vue'
-import StatusBadge from '@/components/common/StatusBadge.vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
-import type { SyncTask } from '@/types'
+- [ ] **Step 2: Update syncTask store for pagination**
 
-const taskStore = useSyncTaskStore()
-const dialogVisible = ref(false)
-const dialogTitle = ref('')
-const editingKey = ref('')
+```typescript
+// frontend/src/stores/syncTask.ts
 
-const formData = reactive({
-  name: '',
-  source_repo_key: '',
-  source_branch: 'main',
-  target_repo_key: '',
-  target_branch: 'main',
-  sync_mode: 'single',
-  cron: '',
-  git_tags: false,
-  git_force: false,
-  git_prune: false,
-})
+export const useSyncTaskStore = defineStore('syncTask', () => {
+  const tasks = ref<SyncTask[]>([])
+  const loading = ref(false)
+  const total = ref(0)
 
-const columns = [
-  { title: '任务名称', key: 'name', width: 200 },
-  { title: '分支', key: 'branches' },
-  { title: '同步模式', key: 'mode', width: 100 },
-  { title: '状态', key: 'status', width: 100 },
-  { title: '最后运行', key: 'last_run', width: 150 },
-  { title: '操作', key: 'actions', width: 180, fixed: 'right' as const },
-]
-
-const pagination = {
-  pageSize: 10,
-  showSizeChanger: true,
-  showTotal: (total: number) => `共 ${total} 条`,
-}
-
-onMounted(() => {
-  taskStore.fetchTasks()
-})
-
-function openCreate() {
-  dialogTitle.value = '创建任务'
-  editingKey.value = ''
-  Object.assign(formData, {
-    name: '', source_repo_key: '', source_branch: 'main',
-    target_repo_key: '', target_branch: 'main',
-    sync_mode: 'single', cron: '',
-    git_tags: false, git_force: false, git_prune: false,
-  })
-  dialogVisible.value = true
-}
-
-function openEdit(task: SyncTask) {
-  dialogTitle.value = '编辑任务'
-  editingKey.value = task.key
-  Object.assign(formData, {
-    name: task.name,
-    source_repo_key: task.source_repo_key,
-    source_branch: task.source_branch,
-    target_repo_key: task.target_repo_key,
-    target_branch: task.target_branch,
-    sync_mode: task.sync_mode,
-    cron: task.cron,
-    git_tags: task.git_tags,
-    git_force: task.git_force,
-    git_prune: task.git_prune,
-  })
-  dialogVisible.value = true
-}
-
-async function handleSubmit() {
-  if (!formData.name || !formData.source_repo_key || !formData.target_repo_key) {
-    message.warning('请填写必填字段')
-    return
+  async function fetchTasks(params?: any) {
+    loading.value = true
+    try {
+      const resp = await syncTaskApi.list(params)
+      tasks.value = resp.data.tasks || []
+      total.value = resp.data.total || 0
+    } finally {
+      loading.value = false
+    }
   }
-  if (editingKey.value) {
-    await taskStore.updateTask({ key: editingKey.value, ...formData })
-  } else {
-    await taskStore.createTask(formData)
+
+  // ... other methods
+
+  return {
+    tasks,
+    loading,
+    total,
+    fetchTasks,
+    // ... other methods
   }
-  dialogVisible.value = false
-}
-
-async function handleDelete(key: string) {
-  await taskStore.deleteTask(key)
-}
-
-async function handleRun(key: string) {
-  await taskStore.runTask(key)
-}
-</script>
-
-<style scoped lang="scss">
-@import '@/styles/variables.scss';
-
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-}
-
-.stat-card {
-  background: $card-background;
-  border-radius: $border-radius-md;
-  padding: $spacing-lg;
-  box-shadow: $shadow-card;
-  text-align: center;
-}
-
-.stat-num {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 4px;
-  
-  &.blue { color: $primary-color; }
-  &.green { color: $success-color; }
-  &.orange { color: $warning-color; }
-  &.red { color: $error-color; }
-}
-
-.stat-name {
-  font-size: 13px;
-  color: $text-secondary;
-}
-
-.task-name {
-  font-weight: 500;
-}
-
-.branch-arrow {
-  margin: 0 8px;
-  color: $text-secondary;
-}
-</style>
+})
 ```
 
-- [ ] **Step 2: Verify build**
+- [ ] **Step 3: Test sync task list**
 
-Run: `cd frontend && npm run build`
-Expected: Build succeeds without errors
+Run: `cd frontend && npm run dev`
+Expected: Sync task list displays with filtering, pagination, and batch selection
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit sync task list**
 
 ```bash
-git add frontend/src/views/sync/SyncTaskList.vue
-git commit -m "feat: redesign SyncTaskList page with Ant Design"
+git add frontend/src/views/sync/SyncTaskList.vue frontend/src/stores/syncTask.ts
+git commit -m "feat: redesign sync task list with filtering and batch operations"
 ```
 
 ---
 
-## Task 6: Redesign Remaining Pages
+### Task 12: Repo List Redesign
 
 **Files:**
-- Modify: `frontend/src/views/sync/SyncHistory.vue`
-- Modify: `frontend/src/views/webhook/WebhookRules.vue`
-- Modify: `frontend/src/views/webhook/WebhookEvents.vue`
 - Modify: `frontend/src/views/repos/RepoList.vue`
-- Modify: `frontend/src/views/settings/Settings.vue`
-- Modify: `frontend/src/views/settings/AdvancedSettings.vue`
 
 **Interfaces:**
-- All pages use: `PageHeader`, `StatusBadge`, Ant Design components
-- All pages follow same pattern: header + content card + table/form
+- Consumes: `repoApi.list()` with pagination and filtering
+- Produces: Redesigned repo list with card layout
 
-- [ ] **Step 1: Redesign SyncHistory**
+- [ ] **Step 1: Update RepoList.vue with card layout**
 
-Replace `frontend/src/views/sync/SyncHistory.vue`:
-```vue
-<template>
-  <div class="page-container">
-    <PageHeader title="同步历史" />
-    
-    <div class="content-card">
-      <div class="card-header">
-        <a-select
-          v-model:value="selectedTask"
-          placeholder="选择任务"
-          style="width: 200px"
-          allow-clear
-          @change="handleTaskChange"
-        >
-          <a-select-option v-for="task in taskStore.tasks" :key="task.key" :value="task.key">
-            {{ task.name }}
-          </a-select-option>
-        </a-select>
-      </div>
-      <div class="card-body">
-        <a-table
-          :columns="columns"
-          :data-source="taskStore.history"
-          :loading="taskStore.loading"
-          :pagination="pagination"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'status'">
-              <StatusBadge :status="record.status" />
-            </template>
-            <template v-if="column.key === 'trigger'">
-              <a-tag>{{ record.trigger_source }}</a-tag>
-            </template>
-            <template v-if="column.key === 'time'">
-              {{ record.start_time }} - {{ record.end_time }}
-            </template>
-          </template>
-        </a-table>
-      </div>
-    </div>
-  </div>
-</template>
+[Include full implementation as designed in spec section 6.1]
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useSyncTaskStore } from '@/stores/syncTask'
-import PageHeader from '@/components/common/PageHeader.vue'
-import StatusBadge from '@/components/common/StatusBadge.vue'
+- [ ] **Step 2: Update repo store for pagination**
 
-const taskStore = useSyncTaskStore()
-const selectedTask = ref<string>()
+```typescript
+// frontend/src/stores/repo.ts
 
-const columns = [
-  { title: '任务', dataIndex: 'task_key', key: 'task' },
-  { title: '触发方式', key: 'trigger', width: 120 },
-  { title: '状态', key: 'status', width: 100 },
-  { title: '时间', key: 'time', width: 300 },
-  { title: '提交范围', dataIndex: 'commit_range', key: 'commits' },
-]
+export const useRepoStore = defineStore('repo', () => {
+  const repos = ref<Repo[]>([])
+  const loading = ref(false)
+  const total = ref(0)
 
-const pagination = {
-  pageSize: 20,
-  showSizeChanger: true,
-  showTotal: (total: number) => `共 ${total} 条`,
-}
-
-onMounted(() => {
-  taskStore.fetchTasks()
-})
-
-function handleTaskChange(key: string) {
-  if (key) {
-    taskStore.fetchHistory(key)
+  async function fetchRepos(params?: any) {
+    loading.value = true
+    try {
+      const resp = await repoApi.list(params)
+      repos.value = resp.data.repos || []
+      total.value = resp.data.total || 0
+    } finally {
+      loading.value = false
+    }
   }
-}
-</script>
+
+  // ... other methods
+
+  return {
+    repos,
+    loading,
+    total,
+    fetchRepos,
+    // ... other methods
+  }
+})
 ```
 
-- [ ] **Step 2: Redesign WebhookRules**
+- [ ] **Step 3: Test repo list**
 
-Replace `frontend/src/views/webhook/WebhookRules.vue`:
-```vue
-<template>
-  <div class="page-container">
-    <PageHeader title="Webhook 规则管理">
-      <template #actions>
-        <a-input
-          v-model:value="repoKey"
-          placeholder="输入仓库 Key"
-          style="width: 200px"
-          @pressEnter="loadRules"
-        />
-        <a-button type="primary" @click="openCreate">
-          <template #icon><PlusOutlined /></template>
-          添加规则
-        </a-button>
-      </template>
-    </PageHeader>
-    
-    <div class="content-card">
-      <div class="card-body">
-        <a-table
-          :columns="columns"
-          :data-source="webhookStore.rules"
-          :loading="webhookStore.loading"
-          :pagination="pagination"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'event_type'">
-              <a-tag color="blue">{{ record.event_type || '全部' }}</a-tag>
-            </template>
-            <template v-if="column.key === 'branch'">
-              <a-tag color="orange">{{ record.branch_pattern || '全部' }}</a-tag>
-            </template>
-            <template v-if="column.key === 'enabled'">
-              <a-switch :checked="record.enabled" disabled />
-            </template>
-            <template v-if="column.key === 'actions'">
-              <a-space>
-                <a-button type="link" size="small" @click="openEdit(record)">
-                  编辑
-                </a-button>
-                <a-popconfirm
-                  title="确定要删除该规则吗？"
-                  @confirm="handleDelete(record.id)"
-                >
-                  <a-button type="link" size="small" danger>
-                    删除
-                  </a-button>
-                </a-popconfirm>
-              </a-space>
-            </template>
-          </template>
-        </a-table>
-      </div>
-    </div>
-    
-    <a-modal
-      v-model:open="dialogVisible"
-      :title="dialogTitle"
-      @ok="handleSubmit"
-      @cancel="dialogVisible = false"
-    >
-      <a-form :model="formData" layout="vertical">
-        <a-form-item label="规则名称" required>
-          <a-input v-model:value="formData.name" placeholder="请输入规则名称" />
-        </a-form-item>
-        <a-form-item label="仓库 Key" required>
-          <a-input v-model:value="formData.repo_key" placeholder="请输入仓库 Key" />
-        </a-form-item>
-        <a-form-item label="事件类型">
-          <a-select v-model:value="formData.event_type" allow-clear>
-            <a-select-option value="">全部</a-select-option>
-            <a-select-option value="push">push</a-select-option>
-            <a-select-option value="merge_request">merge_request</a-select-option>
-            <a-select-option value="tag">tag</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="分支过滤">
-          <a-input v-model:value="formData.branch_pattern" placeholder="如 main,feature/*" />
-        </a-form-item>
-        <a-form-item label="触发动作">
-          <a-select v-model:value="formData.action">
-            <a-select-option value="sync">同步</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="关联任务">
-          <a-input v-model:value="formData.sync_task_keys" placeholder="任务 Key，逗号分隔" />
-        </a-form-item>
-        <a-form-item label="最小间隔">
-          <a-input-number v-model:value="formData.min_interval" :min="0" :max="3600" />
-          <span style="margin-left: 8px; color: #8c8c8c;">秒</span>
-        </a-form-item>
-        <a-form-item label="启用">
-          <a-switch v-model:checked="formData.enabled" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
-  </div>
-</template>
+Run: `cd frontend && npm run dev`
+Expected: Repo list displays with card layout, filtering, and pagination
 
-<script setup lang="ts">
-import { onMounted, ref, reactive } from 'vue'
-import { message } from 'ant-design-vue'
-import { useWebhookStore } from '@/stores/webhook'
-import PageHeader from '@/components/common/PageHeader.vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
-import type { WebhookRule } from '@/types'
-
-const webhookStore = useWebhookStore()
-const repoKey = ref('')
-const dialogVisible = ref(false)
-const dialogTitle = ref('')
-const editingId = ref(0)
-
-const formData = reactive({
-  name: '',
-  repo_key: '',
-  event_type: '',
-  branch_pattern: '',
-  action: 'sync',
-  sync_task_keys: '',
-  min_interval: 0,
-  enabled: true,
-})
-
-const columns = [
-  { title: '规则名称', dataIndex: 'name', key: 'name', width: 200 },
-  { title: '仓库', dataIndex: 'repo_key', key: 'repo' },
-  { title: '事件类型', key: 'event_type', width: 120 },
-  { title: '分支过滤', key: 'branch', width: 120 },
-  { title: '状态', key: 'enabled', width: 100 },
-  { title: '操作', key: 'actions', width: 120, fixed: 'right' as const },
-]
-
-const pagination = {
-  pageSize: 10,
-  showSizeChanger: true,
-  showTotal: (total: number) => `共 ${total} 条`,
-}
-
-function loadRules() {
-  if (repoKey.value) {
-    webhookStore.fetchRules(repoKey.value)
-  }
-}
-
-onMounted(() => {
-  repoKey.value = 'default'
-  loadRules()
-})
-
-function openCreate() {
-  dialogTitle.value = '添加规则'
-  editingId.value = 0
-  Object.assign(formData, {
-    name: '', repo_key: repoKey.value, event_type: '',
-    branch_pattern: '', action: 'sync', sync_task_keys: '',
-    min_interval: 0, enabled: true,
-  })
-  dialogVisible.value = true
-}
-
-function openEdit(rule: WebhookRule) {
-  dialogTitle.value = '编辑规则'
-  editingId.value = rule.id
-  Object.assign(formData, {
-    name: rule.name, repo_key: rule.repo_key, event_type: rule.event_type,
-    branch_pattern: rule.branch_pattern, action: rule.action,
-    sync_task_keys: rule.sync_task_keys, min_interval: rule.min_interval,
-    enabled: rule.enabled,
-  })
-  dialogVisible.value = true
-}
-
-async function handleSubmit() {
-  if (!formData.name || !formData.repo_key) {
-    message.warning('请填写必填字段')
-    return
-  }
-  if (editingId.value) {
-    await webhookStore.updateRule({ id: editingId.value, ...formData })
-  } else {
-    await webhookStore.createRule(formData)
-  }
-  dialogVisible.value = false
-  loadRules()
-}
-
-async function handleDelete(id: number) {
-  await webhookStore.deleteRule(id)
-  loadRules()
-}
-</script>
-```
-
-- [ ] **Step 3: Redesign WebhookEvents**
-
-Replace `frontend/src/views/webhook/WebhookEvents.vue`:
-```vue
-<template>
-  <div class="page-container">
-    <PageHeader title="事件日志">
-      <template #actions>
-        <a-input
-          v-model:value="repoKey"
-          placeholder="输入仓库 Key"
-          style="width: 200px"
-          @pressEnter="loadEvents"
-        />
-      </template>
-    </PageHeader>
-    
-    <div class="content-card">
-      <div class="card-body">
-        <a-table
-          :columns="columns"
-          :data-source="webhookStore.events"
-          :loading="webhookStore.loading"
-          :pagination="pagination"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'event_id'">
-              <a-tooltip :title="record.event_id">
-                {{ truncate(record.event_id, 12) }}
-              </a-tooltip>
-            </template>
-            <template v-if="column.key === 'event_type'">
-              <a-tag color="blue">{{ record.event_type }}</a-tag>
-            </template>
-            <template v-if="column.key === 'status'">
-              <StatusBadge :status="record.status" />
-            </template>
-            <template v-if="column.key === 'actions'">
-              <a-button
-                v-if="record.status === 'failed'"
-                type="link"
-                size="small"
-                @click="handleRetry(record.id)"
-              >
-                重试
-              </a-button>
-            </template>
-          </template>
-        </a-table>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useWebhookStore } from '@/stores/webhook'
-import PageHeader from '@/components/common/PageHeader.vue'
-import StatusBadge from '@/components/common/StatusBadge.vue'
-import { truncate } from '@/utils'
-
-const webhookStore = useWebhookStore()
-const repoKey = ref('')
-
-const columns = [
-  { title: '事件 ID', key: 'event_id', width: 150 },
-  { title: '事件类型', key: 'event_type', width: 120 },
-  { title: '来源', dataIndex: 'source', key: 'source' },
-  { title: '操作者', dataIndex: 'actor_name', key: 'actor' },
-  { title: '分支', dataIndex: 'branch', key: 'branch' },
-  { title: '状态', key: 'status', width: 100 },
-  { title: '处理时间', dataIndex: 'processed_at', key: 'time', width: 180 },
-  { title: '操作', key: 'actions', width: 100, fixed: 'right' as const },
-]
-
-const pagination = {
-  pageSize: 20,
-  showSizeChanger: true,
-  showTotal: (total: number) => `共 ${total} 条`,
-}
-
-function loadEvents() {
-  if (repoKey.value) {
-    webhookStore.fetchEvents(repoKey.value)
-  }
-}
-
-onMounted(() => {
-  repoKey.value = 'default'
-  loadEvents()
-})
-
-async function handleRetry(id: number) {
-  await webhookStore.retryEvent(id)
-  loadEvents()
-}
-</script>
-```
-
-- [ ] **Step 4: Redesign RepoList**
-
-Replace `frontend/src/views/repos/RepoList.vue`:
-```vue
-<template>
-  <div class="page-container">
-    <PageHeader title="仓库管理">
-      <template #actions>
-        <a-button type="primary" @click="openCreate">
-          <template #icon><PlusOutlined /></template>
-          添加仓库
-        </a-button>
-      </template>
-    </PageHeader>
-    
-    <div class="content-card">
-      <div class="card-header">
-        <a-input
-          v-model:value="searchText"
-          placeholder="搜索仓库..."
-          style="width: 300px"
-          allow-clear
-        >
-          <template #prefix><SearchOutlined /></template>
-        </a-input>
-      </div>
-      <div class="card-body">
-        <a-table
-          :columns="columns"
-          :data-source="filteredRepos"
-          :loading="repoStore.loading"
-          :pagination="pagination"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'name'">
-              <div>
-                <div class="repo-name">{{ record.name }}</div>
-                <div class="repo-url">{{ record.clone_url }}</div>
-              </div>
-            </template>
-            <template v-if="column.key === 'platform'">
-              <a-tag color="blue">{{ record.platform }}</a-tag>
-            </template>
-            <template v-if="column.key === 'status'">
-              <StatusBadge :status="record.status" />
-            </template>
-            <template v-if="column.key === 'actions'">
-              <a-space>
-                <a-button type="link" size="small" @click="testConn(record.key)">
-                  测试连接
-                </a-button>
-                <a-button type="link" size="small" @click="openEdit(record)">
-                  编辑
-                </a-button>
-                <a-popconfirm
-                  title="确定要删除该仓库吗？"
-                  @confirm="handleDelete(record.key)"
-                >
-                  <a-button type="link" size="small" danger>
-                    删除
-                  </a-button>
-                </a-popconfirm>
-              </a-space>
-            </template>
-          </template>
-        </a-table>
-      </div>
-    </div>
-    
-    <a-modal
-      v-model:open="dialogVisible"
-      :title="dialogTitle"
-      @ok="handleSubmit"
-      @cancel="dialogVisible = false"
-    >
-      <a-form :model="formData" layout="vertical">
-        <a-form-item label="仓库名称" required>
-          <a-input v-model:value="formData.name" placeholder="请输入仓库名称" />
-        </a-form-item>
-        <a-form-item label="仓库地址" required>
-          <a-input v-model:value="formData.remote_url" placeholder="请输入仓库地址" />
-        </a-form-item>
-        <a-form-item label="访问令牌">
-          <a-input-password v-model:value="formData.access_token" placeholder="请输入访问令牌" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { onMounted, ref, reactive, computed } from 'vue'
-import { message } from 'ant-design-vue'
-import { useRepoStore } from '@/stores/repo'
-import PageHeader from '@/components/common/PageHeader.vue'
-import StatusBadge from '@/components/common/StatusBadge.vue'
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons-vue'
-import type { Repo } from '@/types'
-
-const repoStore = useRepoStore()
-const dialogVisible = ref(false)
-const dialogTitle = ref('')
-const editingKey = ref('')
-const searchText = ref('')
-
-const formData = reactive({
-  name: '',
-  remote_url: '',
-  access_token: '',
-})
-
-const filteredRepos = computed(() => {
-  if (!searchText.value) return repoStore.repos
-  const search = searchText.value.toLowerCase()
-  return repoStore.repos.filter(
-    repo => repo.name.toLowerCase().includes(search) || 
-            repo.clone_url.toLowerCase().includes(search)
-  )
-})
-
-const columns = [
-  { title: '仓库', key: 'name' },
-  { title: '平台', key: 'platform', width: 100 },
-  { title: '所有者', dataIndex: 'platform_owner', key: 'owner', width: 120 },
-  { title: '仓库名', dataIndex: 'platform_repo', key: 'repo', width: 120 },
-  { title: '默认分支', dataIndex: 'default_branch', key: 'branch', width: 100 },
-  { title: '状态', key: 'status', width: 100 },
-  { title: '操作', key: 'actions', width: 200, fixed: 'right' as const },
-]
-
-const pagination = {
-  pageSize: 10,
-  showSizeChanger: true,
-  showTotal: (total: number) => `共 ${total} 条`,
-}
-
-onMounted(() => {
-  repoStore.fetchRepos()
-})
-
-function openCreate() {
-  dialogTitle.value = '添加仓库'
-  editingKey.value = ''
-  Object.assign(formData, { name: '', remote_url: '', access_token: '' })
-  dialogVisible.value = true
-}
-
-function openEdit(repo: Repo) {
-  dialogTitle.value = '编辑仓库'
-  editingKey.value = repo.key
-  Object.assign(formData, { name: repo.name, remote_url: repo.clone_url, access_token: '' })
-  dialogVisible.value = true
-}
-
-async function handleSubmit() {
-  if (!formData.name || !formData.remote_url) {
-    message.warning('请填写仓库名称和地址')
-    return
-  }
-  if (editingKey.value) {
-    await repoStore.updateRepo({ key: editingKey.value, name: formData.name, access_token: formData.access_token })
-  } else {
-    await repoStore.createRepo(formData)
-  }
-  dialogVisible.value = false
-}
-
-async function handleDelete(key: string) {
-  await repoStore.deleteRepo(key)
-}
-
-async function testConn(key: string) {
-  const result = await repoStore.testConnection(key)
-  if (result) {
-    message[result.success ? 'success' : 'error'](result.message)
-  }
-}
-</script>
-
-<style scoped lang="scss">
-@import '@/styles/variables.scss';
-
-.repo-name {
-  font-weight: 500;
-  color: $text-primary;
-}
-
-.repo-url {
-  font-size: 12px;
-  color: $text-secondary;
-  margin-top: 4px;
-}
-</style>
-```
-
-- [ ] **Step 5: Redesign Settings pages**
-
-Replace `frontend/src/views/settings/Settings.vue`:
-```vue
-<template>
-  <div class="page-container">
-    <PageHeader title="系统设置" />
-    
-    <div class="content-card">
-      <div class="card-body">
-        <a-form layout="vertical" :model="settings">
-          <a-divider orientation="left">通用设置</a-divider>
-          
-          <a-row :gutter="24">
-            <a-col :span="12">
-              <a-form-item label="服务名称">
-                <a-input v-model:value="settings.serviceName" placeholder="Git Sync Service" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="12">
-              <a-form-item label="日志级别">
-                <a-select v-model:value="settings.logLevel">
-                  <a-select-option value="debug">Debug</a-select-option>
-                  <a-select-option value="info">Info</a-select-option>
-                  <a-select-option value="warn">Warn</a-select-option>
-                  <a-select-option value="error">Error</a-select-option>
-                </a-select>
-              </a-form-item>
-            </a-col>
-          </a-row>
-          
-          <a-divider orientation="left">通知设置</a-divider>
-          
-          <a-form-item label="Webhook URL">
-            <a-input v-model:value="settings.webhookUrl" placeholder="https://..." />
-          </a-form-item>
-          
-          <a-form-item>
-            <a-button type="primary" @click="handleSave">保存设置</a-button>
-          </a-form-item>
-        </a-form>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { reactive } from 'vue'
-import { message } from 'ant-design-vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-
-const settings = reactive({
-  serviceName: 'Git Sync Service',
-  logLevel: 'info',
-  webhookUrl: '',
-})
-
-function handleSave() {
-  message.success('设置已保存')
-}
-</script>
-```
-
-Replace `frontend/src/views/settings/AdvancedSettings.vue`:
-```vue
-<template>
-  <div class="page-container">
-    <PageHeader title="高级配置" />
-    
-    <div class="content-card">
-      <div class="card-body">
-        <a-form layout="vertical" :model="settings">
-          <a-divider orientation="left">数据库配置</a-divider>
-          
-          <a-row :gutter="24">
-            <a-col :span="12">
-              <a-form-item label="数据库驱动">
-                <a-select v-model:value="settings.dbDriver">
-                  <a-select-option value="sqlite">SQLite</a-select-option>
-                  <a-select-option value="mysql">MySQL</a-select-option>
-                </a-select>
-              </a-form-item>
-            </a-col>
-            <a-col :span="12">
-              <a-form-item label="数据库路径">
-                <a-input v-model:value="settings.dbSource" placeholder="data/git-sync.db" />
-              </a-form-item>
-            </a-col>
-          </a-row>
-          
-          <a-divider orientation="left">Git 配置</a-divider>
-          
-          <a-row :gutter="24">
-            <a-col :span="12">
-              <a-form-item label="默认分支">
-                <a-input v-model:value="settings.defaultBranch" placeholder="main" />
-              </a-form-item>
-            </a-col>
-            <a-col :span="12">
-              <a-form-item label="超时时间 (秒)">
-                <a-input-number v-model:value="settings.timeout" :min="0" :max="3600" />
-              </a-form-item>
-            </a-col>
-          </a-row>
-          
-          <a-form-item>
-            <a-space>
-              <a-button type="primary" @click="handleSave">保存配置</a-button>
-              <a-button danger @click="handleReset">重置为默认</a-button>
-            </a-space>
-          </a-form-item>
-        </a-form>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { reactive } from 'vue'
-import { message } from 'ant-design-vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-
-const settings = reactive({
-  dbDriver: 'sqlite',
-  dbSource: 'data/git-sync.db',
-  defaultBranch: 'main',
-  timeout: 300,
-})
-
-function handleSave() {
-  message.success('配置已保存')
-}
-
-function handleReset() {
-  Object.assign(settings, {
-    dbDriver: 'sqlite',
-    dbSource: 'data/git-sync.db',
-    defaultBranch: 'main',
-    timeout: 300,
-  })
-  message.info('已重置为默认配置')
-}
-</script>
-```
-
-- [ ] **Step 6: Verify build**
-
-Run: `cd frontend && npm run build`
-Expected: Build succeeds without errors
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 4: Commit repo list**
 
 ```bash
-git add frontend/src/views/
-git commit -m "feat: redesign all remaining pages with Ant Design"
+git add frontend/src/views/repos/RepoList.vue frontend/src/stores/repo.ts
+git commit -m "feat: redesign repo list with card layout and filtering"
 ```
 
 ---
 
-## Task 7: Clean Up and Final Verification
+## Phase 5: Polish and Testing (Week 6-7)
+
+### Task 13: Platform Settings Redesign
 
 **Files:**
-- Modify: `frontend/src/components/DeleteConfirmModal.vue`
-- Modify: `frontend/src/components/EditTaskModal.vue`
+- Modify: `frontend/src/views/settings/PlatformSettings.vue`
 
 **Interfaces:**
-- All modals use Ant Design Modal component
+- Consumes: `platformApi.list()`, `platformApi.create()`, `platformApi.update()`, `platformApi.delete()`
+- Produces: Platform management with card layout and two-step creation
 
-- [ ] **Step 1: Update DeleteConfirmModal**
+- [ ] **Step 1: Update PlatformSettings.vue with new design**
 
-Replace `frontend/src/components/DeleteConfirmModal.vue`:
-```vue
-<template>
-  <a-popconfirm
-    :title="title"
-    :ok-text="okText"
-    :cancel-text="cancelText"
-    @confirm="$emit('confirm')"
-    @cancel="$emit('cancel')"
-  >
-    <slot />
-  </a-popconfirm>
-</template>
+[Include full implementation as designed in spec section 9]
 
-<script setup lang="ts">
-defineProps<{
-  title?: string
-  okText?: string
-  cancelText?: string
-}>()
+- [ ] **Step 2: Test platform settings**
 
-defineEmits<{
-  confirm: []
-  cancel: []
-}>()
-</script>
-```
+Run: `cd frontend && npm run dev`
+Expected: Platform settings displays with card layout, two-step creation, and sync functionality
 
-- [ ] **Step 2: Remove EditTaskModal (if unused)**
+- [ ] **Step 3: Commit platform settings**
 
-Check if `EditTaskModal.vue` is used. If not, delete it:
 ```bash
-rm frontend/src/components/EditTaskModal.vue
+git add frontend/src/views/settings/PlatformSettings.vue
+git commit -m "feat: redesign platform settings with card layout and sync"
 ```
 
-- [ ] **Step 3: Final build verification**
+---
+
+### Task 14: Final Integration and Testing
+
+**Files:**
+- All modified files
+
+**Interfaces:**
+- End-to-end testing of all features
+
+- [ ] **Step 1: Run frontend build**
 
 Run: `cd frontend && npm run build`
 Expected: Build succeeds without errors
+
+- [ ] **Step 2: Run backend build**
+
+Run: `go build ./...`
+Expected: Build succeeds without errors
+
+- [ ] **Step 3: Test all pages manually**
+
+- Dashboard loads correctly with stats
+- Navigation works for all routes
+- Sync task list with filtering and pagination
+- Repo list with card layout
+- Operation logs page
+- Sync logs page
+- System logs page
+- Platform settings with card layout
 
 - [ ] **Step 4: Final commit**
 
 ```bash
 git add -A
-git commit -m "feat: complete frontend redesign with Ant Design Vue"
+git commit -m "feat: complete frontend redesign with modern SaaS style"
 ```
 
 ---
 
-## Self-Review Checklist
+## Summary
 
-- ✅ All spec requirements covered
-- ✅ No placeholders (TBD/TODO)
-- ✅ All type names consistent
-- ✅ All component imports correct
-- ✅ All file paths accurate
-- ✅ Code blocks complete and runnable
+This plan covers:
+1. **Foundation**: Design system, top navigation, router updates
+2. **Backend API**: Unified response format, pagination, filtering, batch operations
+3. **Frontend Core**: Dashboard, operation logs, sync logs, system logs
+4. **Remaining Modules**: Sync task list, repo list redesign
+5. **Polish**: Platform settings, integration testing
+
+Total estimated time: 6-7 weeks for full implementation
