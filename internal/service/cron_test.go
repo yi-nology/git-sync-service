@@ -32,10 +32,10 @@ func setupCronTestService(t *testing.T) (*Service, *gorm.DB) {
 	taskService := NewTaskService(taskDAO, nil, nil)
 
 	return &Service{
-		taskService:   taskService,
-		cron:          cron.New(cron.WithSeconds()),
-		cronEntryIDs:  make(map[string]cron.EntryID),
-		cronMu:        sync.RWMutex{},
+		TaskService:  taskService,
+		cron:         cron.New(cron.WithSeconds()),
+		cronEntryIDs: make(map[string]cron.EntryID),
+		cronMu:       sync.RWMutex{},
 	}, db
 }
 
@@ -150,7 +150,7 @@ func TestStartCronJobs(t *testing.T) {
 	}
 
 	for _, tt := range tasks {
-		if _, err := svc.taskService.CreateTask(nil, &model.CreateTaskRequest{
+		if _, err := svc.TaskService.CreateTask(nil, &model.CreateTaskRequest{
 			Name:          tt.key,
 			SourceRepoKey: "source",
 			SourceBranch:  "main",
@@ -180,7 +180,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 	svc, db := setupCronTestService(t)
 
 	// Create tasks with some disabled
-	task1, err := svc.taskService.CreateTask(nil, &model.CreateTaskRequest{
+	task1, err := svc.TaskService.CreateTask(nil, &model.CreateTaskRequest{
 		Name: "task-1", Cron: "* * * * * *",
 		SourceRepoKey: "source", SourceBranch: "main",
 		TargetRepoKey: "target", TargetBranch: "main",
@@ -188,7 +188,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create task1 failed: %v", err)
 	}
-	task2, err := svc.taskService.CreateTask(nil, &model.CreateTaskRequest{
+	task2, err := svc.TaskService.CreateTask(nil, &model.CreateTaskRequest{
 		Name: "task-2", Cron: "*/2 * * * * *",
 		SourceRepoKey: "source", SourceBranch: "main",
 		TargetRepoKey: "target", TargetBranch: "main",
@@ -198,7 +198,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 	}
 
 	// Update task2 to set enabled=false using the actual key
-	if _, err := svc.taskService.UpdateTask(nil, &model.UpdateTaskRequest{
+	if _, err := svc.TaskService.UpdateTask(nil, &model.UpdateTaskRequest{
 		Key:     task2.Key,
 		Enabled: false,
 	}); err != nil {
@@ -213,7 +213,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 		t.Logf("  Task %s: enabled=%v, cron=%q", task.Key, task.Enabled, task.Cron)
 	}
 
-	enabled, err := svc.taskService.FindAllEnabledTasks()
+	enabled, err := svc.TaskService.FindAllEnabledTasks()
 	if err != nil {
 		t.Fatalf("FindAllEnabled failed: %v", err)
 	}
@@ -238,7 +238,7 @@ func TestStartCronJobs_WithTasksWithoutCron(t *testing.T) {
 	svc, _ := setupCronTestService(t)
 
 	// Create tasks without cron
-	if _, err := svc.taskService.CreateTask(nil, &model.CreateTaskRequest{
+	if _, err := svc.TaskService.CreateTask(nil, &model.CreateTaskRequest{
 		Name: "task-1", Cron: "",
 		SourceRepoKey: "source", SourceBranch: "main",
 		TargetRepoKey: "target", TargetBranch: "main",

@@ -256,21 +256,21 @@ func (ws *WebhookService) CleanupOldEvents(maxAge time.Duration) (int64, error) 
 // WebhookParser is an interface for webhook parsing operations.
 type WebhookParser interface {
 	ValidateWebhookSignature(req *http.Request, secret string) error
-	ParseWebhookEvent(req *http.Request, secret string) (*WebhookEvent, error)
+	ParseWebhookEvent(req *http.Request, secret string) (*NormalizedEvent, error)
 }
 
-// WebhookEvent represents a parsed webhook event.
-type WebhookEvent struct {
+// NormalizedEvent represents a normalized webhook event from the SDK.
+type NormalizedEvent struct {
 	ID         string
 	Type       string
 	Source     string
-	Actor      *WebhookActor
+	Actor      *EventActor
 	Branch     string
 	CommitSHA  string
 	RawPayload []byte
 }
 
-// WebhookActor represents the actor of a webhook event.
-type WebhookActor struct {
+// EventActor represents the actor of a webhook event.
+type EventActor struct {
 	Name string
 }

@@ -44,7 +44,7 @@ func setupTestService(t *testing.T) (*Service, *gorm.DB) {
 	repoService := NewRepoService(repoDAO, providerMgr)
 
 	svc := &Service{
-		repoService: repoService,
+		RepoService: repoService,
 	}
 	return svc, db
 }

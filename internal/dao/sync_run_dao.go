@@ -17,10 +17,8 @@ func NewSyncRunDAO(db *gorm.DB) *SyncRunDAO {
 
 func (d *SyncRunDAO) FindByTaskKey(taskKey string, page Pagination) ([]*model.SyncRun, int64, error) {
 	var runs []*model.SyncRun
-	var total int64
 	query := d.db.Where("task_key = ?", taskKey)
-	query.Model(&model.SyncRun{}).Count(&total)
-	err := query.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&runs).Error
+	total, err := Paginate(query, page, &runs)
 	return runs, total, err
 }
 

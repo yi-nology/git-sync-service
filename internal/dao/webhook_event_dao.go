@@ -27,10 +27,8 @@ func (d *WebhookEventDAO) FindByEventID(eventID string) (*model.WebhookEvent, er
 
 func (d *WebhookEventDAO) FindByRepoKey(repoKey string, page Pagination) ([]*model.WebhookEvent, int64, error) {
 	var events []*model.WebhookEvent
-	var total int64
 	query := d.db.Where("repo_key = ?", repoKey)
-	query.Model(&model.WebhookEvent{}).Count(&total)
-	err := query.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&events).Error
+	total, err := Paginate(query, page, &events)
 	return events, total, err
 }
 
@@ -43,12 +41,7 @@ func (d *WebhookEventDAO) Update(event *model.WebhookEvent) error {
 }
 
 func (d *WebhookEventDAO) FindByID(id uint) (*model.WebhookEvent, error) {
-	var event model.WebhookEvent
-	err := d.db.First(&event, id).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-	return &event, err
+	return FindByID[model.WebhookEvent](d.db, id)
 }
 
 func (d *WebhookEventDAO) FindRecent(repoKey string, page Pagination) ([]*model.WebhookEvent, error) {

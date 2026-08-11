@@ -6,11 +6,11 @@ import (
 )
 
 func (s *Service) CleanupOldData(maxAge time.Duration) (events, runs int64, err error) {
-	events, err = s.webhookService.CleanupOldEvents(maxAge)
+	events, err = s.WebhookService.CleanupOldEvents(maxAge)
 	if err != nil {
 		return 0, 0, err
 	}
-	runs, err = s.taskService.CleanupOldRuns(maxAge)
+	runs, err = s.TaskService.CleanupOldRuns(maxAge)
 	if err != nil {
 		return events, 0, err
 	}

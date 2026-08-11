@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
 
 func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
-	repo, err := s.repoService.GetRepo(ctx, repoKey)
+	repo, err := s.RepoService.GetRepo(ctx, repoKey)
 	if err != nil {
 		return err
 	}
@@ -20,7 +21,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return ErrRepoNotFound
 	}
 
-	prov, err := s.repoService.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
+	prov, err := s.RepoService.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
 	if err != nil {
 		return err
 	}
@@ -34,7 +35,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return fmt.Errorf("parse webhook event failed: %w", err)
 	}
 
-	existing, err := s.webhookService.FindEventByEventID(event.ID)
+	existing, err := s.WebhookService.FindEventByEventID(event.ID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
@@ -59,7 +60,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		Status:    "received",
 	}
 
-	if err := s.webhookService.CreateWebhookEvent(whEvent); err != nil {
+	if err := s.WebhookService.CreateWebhookEvent(whEvent); err != nil {
 		return err
 	}
 
@@ -78,37 +79,13 @@ func (s *Service) safeApplyRules(ctx context.Context, repoKey string, event *mod
 }
 
 func (s *Service) applyRules(ctx context.Context, repoKey string, event *model.WebhookEvent) {
-	s.webhookService.ApplyRules(ctx, repoKey, event, &s.lastTriggerTime, func(ctx context.Context, taskKey, trigger string) error {
+	s.WebhookService.ApplyRules(ctx, repoKey, event, &s.lastTriggerTime, func(ctx context.Context, taskKey, trigger string) error {
 		return s.RunTaskWithTrigger(ctx, taskKey, trigger)
 	})
 }
 
-func (s *Service) ListRules(ctx context.Context, repoKey string) ([]*model.WebhookRule, error) {
-	return s.webhookService.ListRules(ctx, repoKey)
-}
-
-func (s *Service) GetRule(ctx context.Context, id uint) (*model.WebhookRule, error) {
-	return s.webhookService.GetRule(ctx, id)
-}
-
-func (s *Service) CreateRule(ctx context.Context, req *model.CreateRuleRequest) (*model.WebhookRule, error) {
-	return s.webhookService.CreateRule(ctx, req)
-}
-
-func (s *Service) UpdateRule(ctx context.Context, req *model.UpdateRuleRequest) (*model.WebhookRule, error) {
-	return s.webhookService.UpdateRule(ctx, req)
-}
-
-func (s *Service) DeleteRule(ctx context.Context, id uint) error {
-	return s.webhookService.DeleteRule(ctx, id)
-}
-
-func (s *Service) ListEvents(ctx context.Context, repoKey string, offset, limit int) ([]*model.WebhookEvent, int64, error) {
-	return s.webhookService.ListEvents(ctx, repoKey, offset, limit)
-}
-
 func (s *Service) RetryEvent(ctx context.Context, eventID uint) error {
-	return s.webhookService.RetryEvent(ctx, eventID, func(ctx context.Context, repoKey string, event *model.WebhookEvent) {
+	return s.WebhookService.RetryEvent(ctx, eventID, func(ctx context.Context, repoKey string, event *model.WebhookEvent) {
 		s.safeApplyRules(ctx, repoKey, event)
 	})
 }
@@ -117,5 +94,34 @@ func matchEventType(pattern, actual string) bool {
 	if pattern == "" || pattern == "*" {
 		return true
 	}
-	return pattern == actual
+
+	// Support comma-separated patterns
+	for _, p := range splitAndTrim(pattern) {
+		if p == actual {
+			return true
+		}
+	}
+	return false
+}
+
+func splitAndTrim(s string) []string {
+	var result []string
+	for _, part := range splitString(s, ",") {
+		part = trimSpace(part)
+		if part != "" {
+			result = append(result, part)
+		}
+	}
+	return result
+}
+
+func splitString(s, sep string) []string {
+	if s == "" {
+		return nil
+	}
+	return strings.Split(s, sep)
+}
+
+func trimSpace(s string) string {
+	return strings.TrimSpace(s)
 }

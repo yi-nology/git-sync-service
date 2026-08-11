@@ -1,8 +1,6 @@
 package dao
 
 import (
-	"errors"
-
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
@@ -17,20 +15,13 @@ func NewSyncTaskDAO(db *gorm.DB) *SyncTaskDAO {
 
 func (d *SyncTaskDAO) FindByRepoKey(repoKey string, page Pagination) ([]*model.SyncTask, int64, error) {
 	var tasks []*model.SyncTask
-	var total int64
 	query := d.db.Where("source_repo_key = ? OR target_repo_key = ?", repoKey, repoKey)
-	query.Model(&model.SyncTask{}).Count(&total)
-	err := query.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&tasks).Error
+	total, err := Paginate(query, page, &tasks)
 	return tasks, total, err
 }
 
 func (d *SyncTaskDAO) FindByKey(key string) (*model.SyncTask, error) {
-	var task model.SyncTask
-	err := d.db.Where("`key` = ?", key).First(&task).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-	return &task, err
+	return FindByKey[model.SyncTask](d.db, key)
 }
 
 func (d *SyncTaskDAO) FindAllEnabled() ([]*model.SyncTask, error) {
@@ -53,8 +44,6 @@ func (d *SyncTaskDAO) Delete(key string) error {
 
 func (d *SyncTaskDAO) FindAll(page Pagination) ([]*model.SyncTask, int64, error) {
 	var tasks []*model.SyncTask
-	var total int64
-	d.db.Model(&model.SyncTask{}).Count(&total)
-	err := d.db.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&tasks).Error
+	total, err := Paginate(d.db, page, &tasks)
 	return tasks, total, err
 }

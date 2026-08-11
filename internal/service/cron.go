@@ -38,7 +38,7 @@ func (s *Service) removeCronJob(taskKey string) {
 }
 
 func (s *Service) startCronJobs() error {
-	tasks, err := s.taskService.FindAllEnabledTasks()
+	tasks, err := s.TaskService.FindAllEnabledTasks()
 	if err != nil {
 		return err
 	}

@@ -35,9 +35,9 @@ func setupTaskTestService(t *testing.T) (*Service, *gorm.DB) {
 	taskService := NewTaskService(taskDAO, runDAO, nil)
 
 	svc := &Service{
-		taskService:   taskService,
-		cron:          cron.New(cron.WithSeconds()),
-		cronEntryIDs:  make(map[string]cron.EntryID),
+		TaskService:  taskService,
+		cron:         cron.New(cron.WithSeconds()),
+		cronEntryIDs: make(map[string]cron.EntryID),
 		config: &model.Config{
 			Sync: model.SyncConfig{
 				DefaultTimeout: 300,
@@ -329,7 +329,7 @@ func TestListHistory(t *testing.T) {
 			TriggerSource: "manual",
 			Status:        "success",
 		}
-		if err := svc.taskService.CreateRun(run); err != nil {
+		if err := svc.TaskService.CreateRun(run); err != nil {
 			t.Fatalf("Create run failed: %v", err)
 		}
 	}
@@ -357,7 +357,7 @@ func TestDeleteHistory(t *testing.T) {
 		TriggerSource: "manual",
 		Status:        "success",
 	}
-	if err := svc.taskService.CreateRun(run); err != nil {
+	if err := svc.TaskService.CreateRun(run); err != nil {
 		t.Fatalf("Create run failed: %v", err)
 	}
 
@@ -399,7 +399,7 @@ func TestPreviewSync_WithRepoDAO(t *testing.T) {
 	taskService := NewTaskService(taskDAO, runDAO, repoDAO)
 
 	svc := &Service{
-		taskService:   taskService,
+		TaskService:  taskService,
 		cron:          cron.New(cron.WithSeconds()),
 		cronEntryIDs:  make(map[string]cron.EntryID),
 	}
@@ -462,7 +462,7 @@ func TestPreviewSync_MissingRepo(t *testing.T) {
 	taskService := NewTaskService(taskDAO, runDAO, repoDAO)
 
 	svc := &Service{
-		taskService:   taskService,
+		TaskService:  taskService,
 		cron:          cron.New(cron.WithSeconds()),
 		cronEntryIDs:  make(map[string]cron.EntryID),
 	}

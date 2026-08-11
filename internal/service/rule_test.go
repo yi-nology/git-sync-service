@@ -46,7 +46,9 @@ func TestMatchEventType(t *testing.T) {
 		{"*", "push", true},
 		{"push", "push", true},
 		{"push", "pull_request", false},
-		{"push,pull_request", "push", false},
+		{"push,pull_request", "push", true},
+		{"push,pull_request", "pull_request", true},
+		{"push,pull_request", "merge", false},
 	}
 
 	for _, tt := range tests {

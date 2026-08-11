@@ -21,11 +21,11 @@ import (
 type Config = model.Config
 
 type Service struct {
-	config          *Config
-	db              *gorm.DB
-	repoService     *RepoService
-	taskService     *TaskService
-	webhookService  *WebhookService
+	config *Config
+	db     *gorm.DB
+	*RepoService
+	*TaskService
+	*WebhookService
 	cron            *cron.Cron
 	cronEntryIDs    map[string]cron.EntryID
 	cronMu          sync.RWMutex
@@ -87,9 +87,9 @@ func NewService(cfg *Config) (*Service, error) {
 	svc := &Service{
 		config:         cfg,
 		db:             db,
-		repoService:    repoService,
-		taskService:    taskService,
-		webhookService: webhookService,
+		RepoService:    repoService,
+		TaskService:    taskService,
+		WebhookService: webhookService,
 		cron:           cron.New(cron.WithSeconds()),
 		cronEntryIDs:   make(map[string]cron.EntryID),
 		lock:           distLock,
@@ -136,13 +136,13 @@ func (s *Service) GetAPIKey() string {
 }
 
 func (s *Service) RunDAO() executor.RunWriter {
-	return s.taskService.runDAO
+	return s.TaskService.runDAO
 }
 
 func (s *Service) TaskDAO() executor.TaskUpdater {
-	return s.taskService.taskDAO
+	return s.TaskService.taskDAO
 }
 
 func (s *Service) RepoDAO() executor.RepoReader {
-	return s.repoService.repoDAO
+	return s.RepoService.repoDAO
 }

@@ -31,7 +31,7 @@ func setupWebhookTestService(t *testing.T) (*Service, *gorm.DB) {
 	webhookService := NewWebhookService(ruleDAO, eventDAO, nil)
 
 	svc := &Service{
-		webhookService: webhookService,
+		WebhookService: webhookService,
 	}
 	return svc, db
 }
@@ -262,7 +262,7 @@ func TestListEvents(t *testing.T) {
 			EventType: "push",
 			Status:    "received",
 		}
-		if err := svc.webhookService.CreateWebhookEvent(event); err != nil {
+		if err := svc.WebhookService.CreateWebhookEvent(event); err != nil {
 			t.Fatalf("Create event failed: %v", err)
 		}
 	}
@@ -290,7 +290,7 @@ func TestRetryEvent(t *testing.T) {
 		EventType: "push",
 		Status:    "received",
 	}
-	if err := svc.webhookService.CreateWebhookEvent(event); err != nil {
+	if err := svc.WebhookService.CreateWebhookEvent(event); err != nil {
 		t.Fatalf("Create event failed: %v", err)
 	}
 
@@ -301,7 +301,7 @@ func TestRetryEvent(t *testing.T) {
 	}
 
 	// Verify the event was updated
-	updated, err := svc.webhookService.FindEventByID(event.ID)
+	updated, err := svc.WebhookService.FindEventByID(event.ID)
 	if err != nil {
 		t.Fatalf("FindByID failed: %v", err)
 	}

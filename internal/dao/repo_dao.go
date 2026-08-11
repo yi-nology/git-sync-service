@@ -42,9 +42,7 @@ func NewRepoDAO(db *gorm.DB) (*RepoDAO, error) {
 
 func (d *RepoDAO) FindAll(page Pagination) ([]*model.Repo, int64, error) {
 	var repos []*model.Repo
-	var total int64
-	d.db.Model(&model.Repo{}).Count(&total)
-	err := d.db.Offset(page.Offset).Limit(page.Limit).Order("id DESC").Find(&repos).Error
+	total, err := Paginate(d.db, page, &repos)
 	return repos, total, err
 }
 
