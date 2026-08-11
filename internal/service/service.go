@@ -34,6 +34,7 @@ type Service struct {
 	semaphoreID     string
 	executor        *executor.Executor
 	lastTriggerTime sync.Map
+	cleanupDone     chan struct{}
 }
 
 func NewService(cfg *Config) (*Service, error) {
@@ -94,6 +95,7 @@ func NewService(cfg *Config) (*Service, error) {
 		lock:           distLock,
 		semaphore:      sem,
 		semaphoreID:    uuid.New().String(),
+		cleanupDone:    make(chan struct{}),
 	}
 
 	exec, err := executor.NewExecutor(svc)
@@ -112,6 +114,7 @@ func (s *Service) Start() error {
 }
 
 func (s *Service) Stop() {
+	close(s.cleanupDone)
 	s.stopCronJobs()
 	if closer, ok := s.lock.(interface{ Close() error }); ok {
 		if err := closer.Close(); err != nil {

@@ -22,13 +22,18 @@ func (s *Service) cleanupTriggerTimes() {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		now := time.Now()
-		s.lastTriggerTime.Range(func(key, value interface{}) bool {
-			if t, ok := value.(time.Time); ok && now.Sub(t) > 1*time.Hour {
-				s.lastTriggerTime.Delete(key)
-			}
-			return true
-		})
+	for {
+		select {
+		case <-ticker.C:
+			now := time.Now()
+			s.lastTriggerTime.Range(func(key, value interface{}) bool {
+				if t, ok := value.(time.Time); ok && now.Sub(t) > 1*time.Hour {
+					s.lastTriggerTime.Delete(key)
+				}
+				return true
+			})
+		case <-s.cleanupDone:
+			return
+		}
 	}
 }
