@@ -3,6 +3,7 @@ package git_sync
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -158,7 +159,11 @@ func ListEvents(ctx context.Context, c *app.RequestContext) {
 	if limit <= 0 {
 		limit = 50
 	}
-	events, _, err := GetSyncService().ListEvents(ctx, req.RepoKey, 0, limit)
+	offset, _ := strconv.Atoi(c.Query("offset"))
+	if offset < 0 {
+		offset = 0
+	}
+	events, _, err := GetSyncService().ListEvents(ctx, req.RepoKey, offset, limit)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return

@@ -26,5 +26,5 @@ type Repo struct {
 }
 
 func (Repo) TableName() string {
-	return "repos"
+	return TableRepos
 }

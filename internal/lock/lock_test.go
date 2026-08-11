@@ -262,7 +262,7 @@ func TestSemaphore_Cleanup(t *testing.T) {
 
 	ctx := context.Background()
 	key := fmt.Sprintf("test-semaphore-cleanup-%d", time.Now().UnixNano())
-	sem := NewSemaphore(client, key, 2)
+	sem := NewSemaphore(client, key, 1)
 	defer client.Del(ctx, sem.key)
 
 	// Acquire a slot
@@ -274,7 +274,7 @@ func TestSemaphore_Cleanup(t *testing.T) {
 		t.Fatal("Expected to acquire semaphore")
 	}
 
-	// Cleanup with 0 duration should remove nothing (entries are fresh)
+	// Cleanup with long duration should remove nothing (entries are fresh)
 	err = sem.Cleanup(ctx, 1*time.Hour)
 	if err != nil {
 		t.Fatalf("Cleanup failed: %v", err)

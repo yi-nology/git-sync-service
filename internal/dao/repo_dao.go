@@ -55,20 +55,36 @@ func (d *RepoDAO) FindByKey(key string) (*model.Repo, error) {
 	if err != nil {
 		return nil, err
 	}
-	decrypted, err := d.cm.Decrypt(repo.AccessToken)
-	if err != nil {
-		return &repo, nil
+	// Decrypt access token
+	if repo.AccessToken != "" {
+		if decrypted, err := d.cm.Decrypt(repo.AccessToken); err == nil {
+			repo.AccessToken = decrypted
+		}
 	}
-	repo.AccessToken = decrypted
+	// Decrypt webhook secret
+	if repo.WebhookSecret != "" {
+		if decrypted, err := d.cm.Decrypt(repo.WebhookSecret); err == nil {
+			repo.WebhookSecret = decrypted
+		}
+	}
 	return &repo, nil
 }
 
 func (d *RepoDAO) Create(repo *model.Repo) error {
-	encrypted, err := d.cm.Encrypt(repo.AccessToken)
-	if err != nil {
-		return err
+	if repo.AccessToken != "" {
+		encrypted, err := d.cm.Encrypt(repo.AccessToken)
+		if err != nil {
+			return err
+		}
+		repo.AccessToken = encrypted
 	}
-	repo.AccessToken = encrypted
+	if repo.WebhookSecret != "" {
+		encrypted, err := d.cm.Encrypt(repo.WebhookSecret)
+		if err != nil {
+			return err
+		}
+		repo.WebhookSecret = encrypted
+	}
 	return d.db.Create(repo).Error
 }
 
@@ -79,6 +95,13 @@ func (d *RepoDAO) Update(repo *model.Repo) error {
 			return err
 		}
 		repo.AccessToken = encrypted
+	}
+	if repo.WebhookSecret != "" {
+		encrypted, err := d.cm.Encrypt(repo.WebhookSecret)
+		if err != nil {
+			return err
+		}
+		repo.WebhookSecret = encrypted
 	}
 	return d.db.Save(repo).Error
 }

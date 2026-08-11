@@ -13,7 +13,7 @@ type ErrorResponse struct {
 type SuccessResponse struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Data    any `json:"data,omitempty"`
 }
 
 func Error(c *app.RequestContext, statusCode int, message string) {
@@ -35,7 +35,7 @@ func NotFound(c *app.RequestContext, message string) {
 	Error(c, consts.StatusNotFound, message)
 }
 
-func Success(c *app.RequestContext, data interface{}) {
+func Success(c *app.RequestContext, data any) {
 	c.JSON(consts.StatusOK, SuccessResponse{
 		Code:    consts.StatusOK,
 		Message: "success",
@@ -43,7 +43,7 @@ func Success(c *app.RequestContext, data interface{}) {
 	})
 }
 
-func Created(c *app.RequestContext, data interface{}) {
+func Created(c *app.RequestContext, data any) {
 	c.JSON(consts.StatusCreated, SuccessResponse{
 		Code:    consts.StatusCreated,
 		Message: "created",

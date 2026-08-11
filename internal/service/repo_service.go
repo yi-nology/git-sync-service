@@ -54,7 +54,7 @@ func (rs *RepoService) CreateRepo(ctx context.Context, req *model.CreateRepoRequ
 		PlatformRepo:  result.Repo,
 		CloneURL:      req.RemoteURL,
 		AccessToken:   req.AccessToken,
-		Status:        "active",
+		Status:        model.RepoStatusActive,
 	}
 
 	if err := rs.repoDAO.Create(repo); err != nil {
@@ -91,6 +91,16 @@ func (rs *RepoService) UpdateRepo(ctx context.Context, req *model.UpdateRepoRequ
 // DeleteRepo deletes a repository by key.
 func (rs *RepoService) DeleteRepo(ctx context.Context, key string) error {
 	return rs.repoDAO.Delete(key)
+}
+
+// GetProvider returns a git platform provider for the given repository.
+func (rs *RepoService) GetProvider(cloneURL, accessToken string) (sdkprov.Provider, error) {
+	return rs.providerMgr.GetByURL(cloneURL, accessToken)
+}
+
+// GetRepoByKey returns a repository by key.
+func (rs *RepoService) GetRepoByKey(key string) (*model.Repo, error) {
+	return rs.repoDAO.FindByKey(key)
 }
 
 // TestConnection tests the connection to a repository.

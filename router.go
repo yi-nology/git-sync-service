@@ -10,8 +10,12 @@ import (
 
 // customizeRegister registers customize routers.
 func customizedRegister(r *server.Hertz) {
+	// Liveness probe (no auth, no middleware)
 	r.GET("/ping", handler.Ping)
 
-	// Webhook 接收端点（带速率限制）
+	// Readiness probe (checks database and Redis, no auth)
+	r.GET("/health", git_sync.HealthCheck)
+
+	// Webhook 接收端点（带速率限制，不走 API 鉴权）
 	r.POST("/api/webhook/receive/:repoKey", git_sync.RateLimitMiddleware(), git_sync.ReceiveWebhook)
 }

@@ -19,12 +19,15 @@ COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -o main .
 
 # 运行阶段
-FROM alpine:latest
+FROM alpine:3.20
 
 WORKDIR /app
 
 # 安装 ca-certificates 和 SQLite 运行时库
-RUN apk --no-cache add ca-certificates sqlite-libs
+RUN apk --no-cache add ca-certificates sqlite-libs wget
+
+# 创建非 root 用户
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # 复制构建的二进制文件
 COPY --from=builder /app/main .
@@ -32,8 +35,21 @@ COPY --from=builder /app/main .
 # 复制配置文件
 COPY --from=builder /app/conf ./conf
 
+# 创建数据目录并设置权限
+RUN mkdir -p /app/data && chown appuser:appgroup /app/data
+
+# 声明数据卷
+VOLUME /app/data
+
 # 暴露端口
 EXPOSE 8890
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -qO- http://localhost:8890/ping || exit 1
+
+# 切换到非 root 用户
+USER appuser
 
 # 运行应用
 CMD ["./main"]

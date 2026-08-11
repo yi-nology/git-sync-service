@@ -4,7 +4,10 @@ package git_sync
 
 import (
 	"context"
+	"crypto/subtle"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	handler "github.com/yi-nology/git-sync-service/biz/handler/git_sync"
@@ -12,15 +15,38 @@ import (
 
 // AuthMiddleware returns a middleware that validates the X-API-Key header.
 // All API endpoints must pass this check before reaching the handler.
+// Uses constant-time comparison to prevent timing attacks.
+// If the server API key is empty, all requests are rejected.
 func AuthMiddleware() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
+		serverKey := handler.GetSyncService().GetAPIKey()
+		if serverKey == "" {
+			c.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized: API key not configured"})
+			c.Abort()
+			return
+		}
 		apiKey := c.GetHeader("X-API-Key")
-		if string(apiKey) != handler.GetSyncService().GetAPIKey() {
+		if subtle.ConstantTimeCompare([]byte(apiKey), []byte(serverKey)) != 1 {
 			c.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 			c.Abort()
 			return
 		}
 		c.Next(ctx)
+	}
+}
+
+// RequestLogMiddleware logs API requests with method, path, status code, and latency.
+func RequestLogMiddleware() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
+		start := time.Now()
+		c.Next(ctx)
+		slog.Info("api request",
+			"method", string(c.Method()),
+			"path", string(c.Path()),
+			"status", c.Response.StatusCode(),
+			"latency", time.Since(start).String(),
+			"client_ip", c.ClientIP(),
+		)
 	}
 }
 
@@ -30,7 +56,7 @@ func rootMw() []app.HandlerFunc {
 }
 
 func _apiMw() []app.HandlerFunc {
-	return []app.HandlerFunc{AuthMiddleware()}
+	return []app.HandlerFunc{RequestLogMiddleware(), AuthMiddleware()}
 }
 
 func _v1Mw() []app.HandlerFunc {

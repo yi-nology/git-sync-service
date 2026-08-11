@@ -2,6 +2,7 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
@@ -31,7 +32,7 @@ func setupWebhookTestService(t *testing.T) (*Service, *gorm.DB) {
 	webhookService := NewWebhookService(ruleDAO, eventDAO, nil)
 
 	svc := &Service{
-		WebhookService: webhookService,
+		webhooks: webhookService,
 	}
 	return svc, db
 }
@@ -262,7 +263,7 @@ func TestListEvents(t *testing.T) {
 			EventType: "push",
 			Status:    "received",
 		}
-		if err := svc.WebhookService.CreateWebhookEvent(event); err != nil {
+		if err := svc.webhooks.CreateWebhookEvent(event); err != nil {
 			t.Fatalf("Create event failed: %v", err)
 		}
 	}
@@ -290,7 +291,7 @@ func TestRetryEvent(t *testing.T) {
 		EventType: "push",
 		Status:    "received",
 	}
-	if err := svc.WebhookService.CreateWebhookEvent(event); err != nil {
+	if err := svc.webhooks.CreateWebhookEvent(event); err != nil {
 		t.Fatalf("Create event failed: %v", err)
 	}
 
@@ -300,8 +301,20 @@ func TestRetryEvent(t *testing.T) {
 		t.Fatalf("RetryEvent failed: %v", err)
 	}
 
-	// Verify the event was updated
-	updated, err := svc.WebhookService.FindEventByID(event.ID)
+	// Verify the event was marked as processing synchronously
+	processing, err := svc.webhooks.FindEventByID(event.ID)
+	if err != nil {
+		t.Fatalf("FindByID failed: %v", err)
+	}
+	if processing.Status != "processing" {
+		t.Errorf("expected status 'processing', got %q", processing.Status)
+	}
+
+	// Wait for the goroutine to complete and update status to "processed"
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify the event was updated to processed
+	updated, err := svc.webhooks.FindEventByID(event.ID)
 	if err != nil {
 		t.Fatalf("FindByID failed: %v", err)
 	}

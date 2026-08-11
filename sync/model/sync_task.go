@@ -31,7 +31,7 @@ type SyncTask struct {
 }
 
 func (SyncTask) TableName() string {
-	return "sync_tasks"
+	return TableSyncTasks
 }
 
 type CreateTaskRequest struct {

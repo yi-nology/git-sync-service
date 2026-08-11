@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/yi-nology/git-sync-service/biz/model/sync_task"
@@ -184,7 +185,11 @@ func ListHistory(ctx context.Context, c *app.RequestContext) {
 	if limit <= 0 {
 		limit = 50
 	}
-	runs, _, err := GetSyncService().ListHistory(ctx, req.TaskKey, 0, limit)
+	offset, _ := strconv.Atoi(c.Query("offset"))
+	if offset < 0 {
+		offset = 0
+	}
+	runs, _, err := GetSyncService().ListHistory(ctx, req.TaskKey, offset, limit)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return

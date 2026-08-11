@@ -38,6 +38,9 @@ dumped_hertz_remote_config.json
 # Binary
 git-sync-service
 
+# Coverage
+coverage.out
+
 # Database
 data/
 

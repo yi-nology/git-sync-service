@@ -23,7 +23,7 @@ type WebhookRule struct {
 }
 
 func (WebhookRule) TableName() string {
-	return "webhook_rules"
+	return TableWebhookRules
 }
 
 type WebhookRuleTask struct {
@@ -34,7 +34,7 @@ type WebhookRuleTask struct {
 }
 
 func (WebhookRuleTask) TableName() string {
-	return "webhook_rule_tasks"
+	return TableWebhookRuleTasks
 }
 
 type CreateRuleRequest struct {

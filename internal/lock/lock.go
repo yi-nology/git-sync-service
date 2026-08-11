@@ -116,13 +116,24 @@ func (l *RedisLock) UnlockWithValue(ctx context.Context, key, value string) erro
 
 func (l *RedisLock) Lock(ctx context.Context, key string) error {
 	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		ok, _, err := l.LockWithTTL(ctx, key, defaultLockTTL)
 		if err != nil {
+			// If context was cancelled during the operation, return context error
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
 			return err
 		}
 		if ok {
 			return nil
 		}
+
 		select {
 		case <-ctx.Done():
 			return ctx.Err()

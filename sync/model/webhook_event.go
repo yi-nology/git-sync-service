@@ -19,5 +19,5 @@ type WebhookEvent struct {
 }
 
 func (WebhookEvent) TableName() string {
-	return "webhook_events"
+	return TableWebhookEvents
 }

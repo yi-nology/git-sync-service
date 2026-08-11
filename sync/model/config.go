@@ -78,10 +78,10 @@ func LoadConfig(path string) (*Config, error) {
 
 func (c *Config) Validate() error {
 	if c.Server.Host == "" {
-		c.Server.Host = "0.0.0.0"
+		c.Server.Host = DefaultHost
 	}
 	if c.Server.Port <= 0 || c.Server.Port > 65535 {
-		c.Server.Port = 8890
+		c.Server.Port = DefaultPort
 	}
 	if c.Database.Driver == "" {
 		return fmt.Errorf("database driver is required")
@@ -89,26 +89,26 @@ func (c *Config) Validate() error {
 	if c.Database.DSN == "" {
 		return fmt.Errorf("database dsn is required")
 	}
-	if c.Database.Driver != "mysql" && c.Database.Driver != "sqlite" {
+	if c.Database.Driver != DriverMySQL && c.Database.Driver != DriverSQLite {
 		return fmt.Errorf("unsupported database driver: %s", c.Database.Driver)
 	}
 	if c.Database.MaxIdleConns <= 0 {
-		c.Database.MaxIdleConns = 10
+		c.Database.MaxIdleConns = DefaultMaxIdleConns
 	}
 	if c.Database.MaxOpenConns <= 0 {
-		c.Database.MaxOpenConns = 100
+		c.Database.MaxOpenConns = DefaultMaxOpenConns
 	}
 	if c.Git.TempDir == "" {
-		c.Git.TempDir = "/tmp/git-sync"
+		c.Git.TempDir = DefaultTempDir
 	}
 	if c.Sync.MaxConcurrent <= 0 {
-		c.Sync.MaxConcurrent = 5
+		c.Sync.MaxConcurrent = DefaultMaxConcurrent
 	}
 	if c.Sync.DefaultTimeout <= 0 {
-		c.Sync.DefaultTimeout = 300
+		c.Sync.DefaultTimeout = DefaultTimeout
 	}
 	if c.Sync.RetryCount <= 0 {
-		c.Sync.RetryCount = 3
+		c.Sync.RetryCount = DefaultRetryCount
 	}
 	return nil
 }

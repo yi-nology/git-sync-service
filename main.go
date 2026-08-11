@@ -12,6 +12,9 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/yi-nology/git-sync-service/biz/handler/git_sync"
 	"github.com/yi-nology/git-sync-service/sync"
+
+	// Register all platform backends (GitHub, GitLab, Gitea, etc.)
+	_ "github.com/yi-nology/git-platform-sdk/backends/all"
 )
 
 var syncSvc *sync.Service

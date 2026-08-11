@@ -119,8 +119,14 @@ func ReceiveWebhook(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	// Use configured max body size, fallback to default 10MB
+	bodySizeLimit := maxWebhookBodySize
+	if cfg := GetSyncService().GetConfig(); cfg != nil && cfg.Webhook.MaxBodySize > 0 {
+		bodySizeLimit = cfg.Webhook.MaxBodySize
+	}
+
 	bodyBytes, _ := c.Body()
-	if len(bodyBytes) > maxWebhookBodySize {
+	if len(bodyBytes) > bodySizeLimit {
 		response.Error(c, consts.StatusRequestEntityTooLarge, "request body too large")
 		return
 	}
@@ -133,7 +139,7 @@ func ReceiveWebhook(ctx context.Context, c *app.RequestContext) {
 	httpReq, err := http.NewRequest(
 		string(c.Method()),
 		string(c.Path()),
-		io.LimitReader(bytes.NewReader(bodyBytes), maxWebhookBodySize),
+		io.LimitReader(bytes.NewReader(bodyBytes), int64(bodySizeLimit)),
 	)
 	if err != nil {
 		response.InternalError(c, err.Error())
@@ -151,7 +157,7 @@ func ReceiveWebhook(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	response.Success(c, map[string]interface{}{
+	response.Success(c, map[string]any{
 		"message": "webhook received",
 	})
 }
