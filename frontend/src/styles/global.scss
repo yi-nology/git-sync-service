@@ -1,0 +1,133 @@
+@import './variables.scss';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: $font-family;
+  color: $text-primary;
+  background-color: $background-color;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Status badges
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: $border-radius-sm;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.success {
+    background: #F6FFED;
+    color: $success-color;
+  }
+
+  &.running {
+    background: #E6F7FF;
+    color: $primary-color;
+  }
+
+  &.failed {
+    background: #FFF2F0;
+    color: $error-color;
+  }
+
+  &.idle {
+    background: #F5F5F5;
+    color: $text-secondary;
+  }
+}
+
+// Branch tags
+.branch-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #F5F5F5;
+  border-radius: $border-radius-sm;
+  font-size: 12px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+// Page container
+.page-container {
+  padding: $spacing-lg;
+  background: $background-color;
+  min-height: 100%;
+}
+
+// Page header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-lg;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+}
+
+// Stats row
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+// Stat card
+.stat-card {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+// Content card
+.content-card {
+  background: $card-background;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+
+  .card-header {
+    padding: $spacing-md $spacing-lg;
+    border-bottom: 1px solid $border-color;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-body {
+    padding: $spacing-lg;
+  }
+}
+
+// Empty state
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: $text-secondary;
+}
+
+// Loading state
+.loading-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: $text-secondary;
+}

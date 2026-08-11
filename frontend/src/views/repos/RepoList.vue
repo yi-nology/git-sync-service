@@ -45,29 +45,25 @@
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form :model="formData" label-width="100px">
-        <el-form-item label="仓库名称">
-          <el-input v-model="formData.name" placeholder="请输入仓库名称"/>
-        </el-form-item>
-        <el-form-item label="仓库地址">
-          <el-input v-model="formData.remote_url" placeholder="请输入仓库地址"/>
-        </el-form-item>
-        <el-form-item label="访问令牌">
-          <el-input v-model="formData.access_token" type="password" placeholder="请输入访问令牌"/>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
-      </template>
-    </el-dialog>
+    <a-modal v-model:open="dialogVisible" :title="dialogTitle" :width="500" @ok="handleSubmit" okText="确定" cancelText="取消">
+      <a-form :model="formData" :label-col="{ span: 6 }">
+        <a-form-item label="仓库名称">
+          <a-input v-model:value="formData.name" placeholder="请输入仓库名称"/>
+        </a-form-item>
+        <a-form-item label="仓库地址">
+          <a-input v-model:value="formData.remote_url" placeholder="请输入仓库地址"/>
+        </a-form-item>
+        <a-form-item label="访问令牌">
+          <a-input-password v-model:value="formData.access_token" placeholder="请输入访问令牌"/>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { message, Modal } from 'ant-design-vue'
 import { useRepoStore } from '@/stores/repo'
 import type { Repo } from '@/types'
 
@@ -102,7 +98,7 @@ function openEdit(repo: Repo) {
 
 async function handleSubmit() {
   if (!formData.name || !formData.remote_url) {
-    ElMessage.warning('请填写仓库名称和地址')
+    message.warning('请填写仓库名称和地址')
     return
   }
   if (editingKey.value) {
@@ -114,14 +110,23 @@ async function handleSubmit() {
 }
 
 async function handleDelete(key: string) {
-  await ElMessageBox.confirm('确定要删除该仓库吗？', '提示', { type: 'warning' })
+  await new Promise<void>((resolve, reject) => {
+    Modal.confirm({
+      title: '提示',
+      content: '确定要删除该仓库吗？',
+      okText: '确定',
+      cancelText: '取消',
+      onOk: () => resolve(),
+      onCancel: () => reject(new Error('cancelled')),
+    })
+  })
   await repoStore.deleteRepo(key)
 }
 
 async function testConn(key: string) {
   const result = await repoStore.testConnection(key)
   if (result) {
-    ElMessage[result.success ? 'success' : 'error'](result.message)
+    message[result.success ? 'success' : 'error'](result.message)
   }
 }
 </script>

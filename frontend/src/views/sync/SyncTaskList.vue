@@ -63,49 +63,43 @@
       </table>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form :model="formData" label-width="120px">
-        <el-form-item label="任务名称">
-          <el-input v-model="formData.name" placeholder="请输入任务名称"/>
-        </el-form-item>
-        <el-form-item label="源仓库 Key">
-          <el-input v-model="formData.source_repo_key" placeholder="请输入源仓库 Key"/>
-        </el-form-item>
-        <el-form-item label="源分支">
-          <el-input v-model="formData.source_branch" placeholder="main"/>
-        </el-form-item>
-        <el-form-item label="目标仓库 Key">
-          <el-input v-model="formData.target_repo_key" placeholder="请输入目标仓库 Key"/>
-        </el-form-item>
-        <el-form-item label="目标分支">
-          <el-input v-model="formData.target_branch" placeholder="main"/>
-        </el-form-item>
-        <el-form-item label="Cron 表达式">
-          <el-input v-model="formData.cron" placeholder="可选，如 0 */5 * * * *"/>
-        </el-form-item>
-        <el-form-item label="同步模式">
-          <el-select v-model="formData.sync_mode" style="width: 100%">
-            <el-option label="单分支" value="single"/>
-            <el-option label="全分支" value="all"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="选项">
-          <el-checkbox v-model="formData.git_tags">同步 Tags</el-checkbox>
-          <el-checkbox v-model="formData.git_force">强制推送</el-checkbox>
-          <el-checkbox v-model="formData.git_prune">Prune</el-checkbox>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
-      </template>
-    </el-dialog>
+    <a-modal v-model:open="dialogVisible" :title="dialogTitle" :width="600" @ok="handleSubmit" okText="确定" cancelText="取消">
+      <a-form :model="formData" :label-col="{ span: 6 }">
+        <a-form-item label="任务名称">
+          <a-input v-model:value="formData.name" placeholder="请输入任务名称"/>
+        </a-form-item>
+        <a-form-item label="源仓库 Key">
+          <a-input v-model:value="formData.source_repo_key" placeholder="请输入源仓库 Key"/>
+        </a-form-item>
+        <a-form-item label="源分支">
+          <a-input v-model:value="formData.source_branch" placeholder="main"/>
+        </a-form-item>
+        <a-form-item label="目标仓库 Key">
+          <a-input v-model:value="formData.target_repo_key" placeholder="请输入目标仓库 Key"/>
+        </a-form-item>
+        <a-form-item label="目标分支">
+          <a-input v-model:value="formData.target_branch" placeholder="main"/>
+        </a-form-item>
+        <a-form-item label="Cron 表达式">
+          <a-input v-model:value="formData.cron" placeholder="可选，如 0 */5 * * * *"/>
+        </a-form-item>
+        <a-form-item label="同步模式">
+          <a-select v-model:value="formData.sync_mode" style="width: 100%"
+            :options="[{label: '单分支', value: 'single'}, {label: '全分支', value: 'all'}]"/>
+        </a-form-item>
+        <a-form-item label="选项">
+          <a-checkbox v-model:checked="formData.git_tags">同步 Tags</a-checkbox>
+          <a-checkbox v-model:checked="formData.git_force">强制推送</a-checkbox>
+          <a-checkbox v-model:checked="formData.git_prune">Prune</a-checkbox>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { message, Modal } from 'ant-design-vue'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import type { SyncTask } from '@/types'
 
@@ -157,7 +151,7 @@ function openEdit(task: SyncTask) {
 
 async function handleSubmit() {
   if (!formData.name || !formData.source_repo_key || !formData.target_repo_key) {
-    ElMessage.warning('请填写必填字段')
+    message.warning('请填写必填字段')
     return
   }
   if (editingKey.value) {
@@ -169,7 +163,16 @@ async function handleSubmit() {
 }
 
 async function handleDelete(key: string) {
-  await ElMessageBox.confirm('确定要删除该任务吗？', '提示', { type: 'warning' })
+  await new Promise<void>((resolve, reject) => {
+    Modal.confirm({
+      title: '提示',
+      content: '确定要删除该任务吗？',
+      okText: '确定',
+      cancelText: '取消',
+      onOk: () => resolve(),
+      onCancel: () => reject(new Error('cancelled')),
+    })
+  })
   await taskStore.deleteTask(key)
 }
 

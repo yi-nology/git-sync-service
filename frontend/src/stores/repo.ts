@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repoApi } from '@/api'
 import type { Repo, CreateRepoRequest, UpdateRepoRequest, TestConnectionResp, Pagination } from '@/types'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 
 export const useRepoStore = defineStore('repo', () => {
   const repos = ref<Repo[]>([])
@@ -16,7 +16,7 @@ export const useRepoStore = defineStore('repo', () => {
       repos.value = data.repos || []
       total.value = data.total || 0
     } catch (e: any) {
-      ElMessage.error(e.error || '获取仓库列表失败')
+      message.error(e.error || '获取仓库列表失败')
     } finally {
       loading.value = false
     }
@@ -27,7 +27,7 @@ export const useRepoStore = defineStore('repo', () => {
       const data = await repoApi.get(key)
       return data.repo
     } catch (e: any) {
-      ElMessage.error(e.error || '获取仓库详情失败')
+      message.error(e.error || '获取仓库详情失败')
       return null
     }
   }
@@ -35,11 +35,11 @@ export const useRepoStore = defineStore('repo', () => {
   async function createRepo(req: CreateRepoRequest): Promise<Repo | null> {
     try {
       const data = await repoApi.create(req)
-      ElMessage.success('创建仓库成功')
+      message.success('创建仓库成功')
       await fetchRepos()
       return data.repo
     } catch (e: any) {
-      ElMessage.error(e.error || '创建仓库失败')
+      message.error(e.error || '创建仓库失败')
       return null
     }
   }
@@ -47,11 +47,11 @@ export const useRepoStore = defineStore('repo', () => {
   async function updateRepo(req: UpdateRepoRequest): Promise<Repo | null> {
     try {
       const data = await repoApi.update(req)
-      ElMessage.success('更新仓库成功')
+      message.success('更新仓库成功')
       await fetchRepos()
       return data.repo
     } catch (e: any) {
-      ElMessage.error(e.error || '更新仓库失败')
+      message.error(e.error || '更新仓库失败')
       return null
     }
   }
@@ -59,10 +59,10 @@ export const useRepoStore = defineStore('repo', () => {
   async function deleteRepo(key: string) {
     try {
       await repoApi.delete(key)
-      ElMessage.success('删除仓库成功')
+      message.success('删除仓库成功')
       await fetchRepos()
     } catch (e: any) {
-      ElMessage.error(e.error || '删除仓库失败')
+      message.error(e.error || '删除仓库失败')
     }
   }
 
@@ -71,7 +71,7 @@ export const useRepoStore = defineStore('repo', () => {
       const data = await repoApi.testConnection(key)
       return data
     } catch (e: any) {
-      ElMessage.error(e.error || '测试连接失败')
+      message.error(e.error || '测试连接失败')
       return null
     }
   }
@@ -81,7 +81,7 @@ export const useRepoStore = defineStore('repo', () => {
       const data = await repoApi.listBranches(key)
       return data.branches || []
     } catch (e: any) {
-      ElMessage.error(e.error || '获取分支列表失败')
+      message.error(e.error || '获取分支列表失败')
       return []
     }
   }

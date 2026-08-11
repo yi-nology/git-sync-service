@@ -3,7 +3,7 @@
     <div class="page-header">
       <h1 class="page-title">Webhook 规则管理</h1>
       <div class="header-actions">
-        <el-input v-model="repoKey" placeholder="输入仓库 Key" style="width: 200px;" @keyup.enter="loadRules"/>
+        <a-input v-model:value="repoKey" placeholder="输入仓库 Key" style="width: 200px;" @keyup.enter="loadRules"/>
         <button class="btn-primary" @click="openCreate">添加规则</button>
       </div>
     </div>
@@ -34,52 +34,43 @@
       </table>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form :model="formData" label-width="100px">
-        <el-form-item label="规则名称">
-          <el-input v-model="formData.name" placeholder="请输入规则名称"/>
-        </el-form-item>
-        <el-form-item label="仓库 Key">
-          <el-input v-model="formData.repo_key" placeholder="请输入仓库 Key"/>
-        </el-form-item>
-        <el-form-item label="事件类型">
-          <el-select v-model="formData.event_type" style="width: 100%">
-            <el-option label="全部" value=""/>
-            <el-option label="push" value="push"/>
-            <el-option label="merge_request" value="merge_request"/>
-            <el-option label="tag" value="tag"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="分支过滤">
-          <el-input v-model="formData.branch_pattern" placeholder="如 main,feature/*"/>
-        </el-form-item>
-        <el-form-item label="触发动作">
-          <el-select v-model="formData.action" style="width: 100%">
-            <el-option label="同步" value="sync"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="关联任务">
-          <el-input v-model="formData.sync_task_keys" placeholder="任务 Key，逗号分隔"/>
-        </el-form-item>
-        <el-form-item label="最小间隔">
-          <el-input-number v-model="formData.min_interval" :min="0" :max="3600"/>
+    <a-modal v-model:open="dialogVisible" :title="dialogTitle" :width="500" @ok="handleSubmit" okText="确定" cancelText="取消">
+      <a-form :model="formData" :label-col="{ span: 6 }">
+        <a-form-item label="规则名称">
+          <a-input v-model:value="formData.name" placeholder="请输入规则名称"/>
+        </a-form-item>
+        <a-form-item label="仓库 Key">
+          <a-input v-model:value="formData.repo_key" placeholder="请输入仓库 Key"/>
+        </a-form-item>
+        <a-form-item label="事件类型">
+          <a-select v-model:value="formData.event_type" style="width: 100%"
+            :options="[{label: '全部', value: ''}, {label: 'push', value: 'push'}, {label: 'merge_request', value: 'merge_request'}, {label: 'tag', value: 'tag'}]"/>
+        </a-form-item>
+        <a-form-item label="分支过滤">
+          <a-input v-model:value="formData.branch_pattern" placeholder="如 main,feature/*"/>
+        </a-form-item>
+        <a-form-item label="触发动作">
+          <a-select v-model:value="formData.action" style="width: 100%"
+            :options="[{label: '同步', value: 'sync'}]"/>
+        </a-form-item>
+        <a-form-item label="关联任务">
+          <a-input v-model:value="formData.sync_task_keys" placeholder="任务 Key，逗号分隔"/>
+        </a-form-item>
+        <a-form-item label="最小间隔">
+          <a-input-number v-model:value="formData.min_interval" :min="0" :max="3600"/>
           <span style="margin-left: 8px; color: #8c8c8c;">秒</span>
-        </el-form-item>
-        <el-form-item label="启用">
-          <el-switch v-model="formData.enabled"/>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
-      </template>
-    </el-dialog>
+        </a-form-item>
+        <a-form-item label="启用">
+          <a-switch v-model:checked="formData.enabled"/>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { message, Modal } from 'ant-design-vue'
 import { useWebhookStore } from '@/stores/webhook'
 import type { WebhookRule } from '@/types'
 
@@ -127,7 +118,7 @@ function openEdit(rule: WebhookRule) {
 
 async function handleSubmit() {
   if (!formData.name || !formData.repo_key) {
-    ElMessage.warning('请填写必填字段')
+    message.warning('请填写必填字段')
     return
   }
   if (editingId.value) {
@@ -140,7 +131,16 @@ async function handleSubmit() {
 }
 
 async function handleDelete(id: number) {
-  await ElMessageBox.confirm('确定要删除该规则吗？', '提示', { type: 'warning' })
+  await new Promise<void>((resolve, reject) => {
+    Modal.confirm({
+      title: '提示',
+      content: '确定要删除该规则吗？',
+      okText: '确定',
+      cancelText: '取消',
+      onOk: () => resolve(),
+      onCancel: () => reject(new Error('cancelled')),
+    })
+  })
   await webhookStore.deleteRule(id)
   loadRules()
 }

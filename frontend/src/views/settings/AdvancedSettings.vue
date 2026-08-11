@@ -9,11 +9,11 @@
       <div class="form-row">
         <div class="form-item">
           <label>启用增量同步</label>
-          <el-switch v-model="config.incrementalSync"/>
+          <a-switch v-model:checked="config.incrementalSync"/>
         </div>
         <div class="form-item">
           <label>启用分布式锁</label>
-          <el-switch v-model="config.distributedLock"/>
+          <a-switch v-model:checked="config.distributedLock"/>
         </div>
       </div>
     </div>
@@ -23,21 +23,21 @@
       <div class="form-row">
         <div class="form-item">
           <label>同步超时 (秒)</label>
-          <el-input-number v-model="config.syncTimeout" :min="10" :max="600"/>
+          <a-input-number v-model:value="config.syncTimeout" :min="10" :max="600"/>
         </div>
         <div class="form-item">
           <label>最大并发同步数</label>
-          <el-input-number v-model="config.maxConcurrent" :min="1" :max="10"/>
+          <a-input-number v-model:value="config.maxConcurrent" :min="1" :max="10"/>
         </div>
         <div class="form-item">
           <label>重试次数</label>
-          <el-input-number v-model="config.retryCount" :min="0" :max="5"/>
+          <a-input-number v-model:value="config.retryCount" :min="0" :max="5"/>
         </div>
       </div>
       <div class="form-row">
         <div class="form-item full-width">
           <label>排除的分支 (正则)</label>
-          <el-input v-model="config.excludeBranches" placeholder="例如: ^feature/.*$"/>
+          <a-input v-model:value="config.excludeBranches" placeholder="例如: ^feature/.*$"/>
         </div>
       </div>
     </div>
@@ -47,35 +47,35 @@
       <div class="form-row">
         <div class="form-item">
           <label>启用 Git LFS</label>
-          <el-switch v-model="config.gitLfs"/>
+          <a-switch v-model:checked="config.gitLfs"/>
         </div>
         <div class="form-item">
           <label>验证提交签名</label>
-          <el-switch v-model="config.verifySignature"/>
+          <a-switch v-model:checked="config.verifySignature"/>
         </div>
         <div class="form-item">
           <label>启用审计日志</label>
-          <el-switch v-model="config.auditLog"/>
+          <a-switch v-model:checked="config.auditLog"/>
         </div>
       </div>
       <div class="form-row">
         <div class="form-item full-width">
           <label>历史记录保留天数</label>
-          <el-input-number v-model="config.retentionDays" :min="1" :max="365"/>
+          <a-input-number v-model:value="config.retentionDays" :min="1" :max="365"/>
         </div>
       </div>
     </div>
 
     <div class="action-footer">
-      <el-button @click="resetConfig">重置</el-button>
-      <el-button type="primary" @click="saveConfig">保存配置</el-button>
+      <a-button @click="resetConfig">重置</a-button>
+      <a-button type="primary" @click="saveConfig">保存配置</a-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 
 const config = reactive({
   incrementalSync: true,
@@ -91,7 +91,7 @@ const config = reactive({
 })
 
 function saveConfig() {
-  ElMessage.success('配置已保存')
+  message.success('配置已保存')
 }
 
 function resetConfig() {
@@ -107,7 +107,7 @@ function resetConfig() {
     auditLog: true,
     retentionDays: 30,
   })
-  ElMessage.info('配置已重置')
+  message.info('配置已重置')
 }
 </script>
 

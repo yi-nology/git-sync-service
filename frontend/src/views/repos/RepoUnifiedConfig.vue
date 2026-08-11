@@ -70,7 +70,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import { useRepoStore } from '@/stores/repo'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import { statusText, copyToClipboard } from '@/utils'
@@ -103,7 +103,7 @@ onMounted(async () => {
 async function testConn() {
   const result = await repoStore.testConnection(repoKey.value)
   if (result) {
-    ElMessage[result.success ? 'success' : 'error'](result.message)
+    message[result.success ? 'success' : 'error'](result.message)
   }
 }
 
@@ -111,13 +111,13 @@ function runSync() {
   if (tasks.value.length > 0) {
     taskStore.runTask(tasks.value[0].key)
   } else {
-    ElMessage.warning('暂无关联任务')
+    message.warning('暂无关联任务')
   }
 }
 
 function copyUrl() {
   copyToClipboard(webhookUrl.value)
-  ElMessage.success('已复制到剪贴板')
+  message.success('已复制到剪贴板')
 }
 </script>
 

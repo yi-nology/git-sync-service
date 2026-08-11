@@ -17,57 +17,57 @@
         <div v-if="step===1">
           <div class="form-item">
             <label>任务名称</label>
-            <el-input v-model="form.name" placeholder="请输入任务名称"/>
+            <a-input v-model:value="form.name" placeholder="请输入任务名称"/>
           </div>
           <div class="form-item">
             <label>源仓库 Key</label>
-            <el-input v-model="form.source_repo_key" placeholder="请输入源仓库 Key"/>
+            <a-input v-model:value="form.source_repo_key" placeholder="请输入源仓库 Key"/>
           </div>
           <div class="form-item">
             <label>目标仓库 Key</label>
-            <el-input v-model="form.target_repo_key" placeholder="请输入目标仓库 Key"/>
+            <a-input v-model:value="form.target_repo_key" placeholder="请输入目标仓库 Key"/>
           </div>
           <div class="form-item">
             <label>同步模式</label>
-            <el-radio-group v-model="form.sync_mode">
-              <el-radio value="single">单分支同步</el-radio>
-              <el-radio value="all">全分支同步</el-radio>
-            </el-radio-group>
+            <a-radio-group v-model:value="form.sync_mode">
+              <a-radio value="single">单分支同步</a-radio>
+              <a-radio value="all">全分支同步</a-radio>
+            </a-radio-group>
           </div>
         </div>
 
         <div v-if="step===2">
           <div class="form-item">
             <label>源分支</label>
-            <el-input v-model="form.source_branch" placeholder="main"/>
+            <a-input v-model:value="form.source_branch" placeholder="main"/>
           </div>
           <div class="form-item">
             <label>目标分支</label>
-            <el-input v-model="form.target_branch" placeholder="main"/>
+            <a-input v-model:value="form.target_branch" placeholder="main"/>
           </div>
           <div class="form-item">
             <label>Cron 表达式（可选）</label>
-            <el-input v-model="form.cron" placeholder="如 0 */5 * * * *"/>
+            <a-input v-model:value="form.cron" placeholder="如 0 */5 * * * *"/>
           </div>
         </div>
 
         <div v-if="step===3">
           <div class="form-item">
-            <el-checkbox v-model="form.git_tags">同步 Tags</el-checkbox>
+            <a-checkbox v-model:checked="form.git_tags">同步 Tags</a-checkbox>
           </div>
           <div class="form-item">
-            <el-checkbox v-model="form.git_force">强制推送</el-checkbox>
+            <a-checkbox v-model:checked="form.git_force">强制推送</a-checkbox>
           </div>
           <div class="form-item">
-            <el-checkbox v-model="form.git_prune">Prune 远程已删除分支</el-checkbox>
+            <a-checkbox v-model:checked="form.git_prune">Prune 远程已删除分支</a-checkbox>
           </div>
         </div>
       </div>
 
       <div class="form-footer">
-        <el-button v-if="step > 1" @click="step--">上一步</el-button>
-        <el-button v-if="step < 3" type="primary" @click="step++">下一步</el-button>
-        <el-button v-if="step === 3" type="primary" @click="submit" :loading="submitting">创建任务</el-button>
+        <a-button v-if="step > 1" @click="step--">上一步</a-button>
+        <a-button v-if="step < 3" type="primary" @click="step++">下一步</a-button>
+        <a-button v-if="step === 3" type="primary" @click="submit" :loading="submitting">创建任务</a-button>
       </div>
     </div>
   </div>
@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import { useSyncTaskStore } from '@/stores/syncTask'
 
 const router = useRouter()
@@ -99,7 +99,7 @@ const form = reactive({
 
 async function submit() {
   if (!form.name || !form.source_repo_key || !form.target_repo_key) {
-    ElMessage.warning('请填写必填字段')
+    message.warning('请填写必填字段')
     return
   }
   submitting.value = true
