@@ -4,16 +4,25 @@ import { syncTaskApi } from '@/api'
 import type { SyncTask, SyncRun, CreateTaskRequest, UpdateTaskRequest, Pagination } from '@/types'
 import { message } from 'ant-design-vue'
 
+export interface TaskListParams extends Partial<Pagination> {
+  repo_key?: string
+  status?: string
+  search?: string
+}
+
 export const useSyncTaskStore = defineStore('syncTask', () => {
   const tasks = ref<SyncTask[]>([])
   const total = ref(0)
   const loading = ref(false)
   const history = ref<SyncRun[]>([])
+  // Keep the last-used params so callers can refresh with the same filters
+  const lastParams = ref<TaskListParams>({})
 
-  async function fetchTasks(params?: { repo_key?: string } & Pagination) {
+  async function fetchTasks(params?: TaskListParams) {
     loading.value = true
+    if (params) lastParams.value = { ...params }
     try {
-      const data = await syncTaskApi.list(params)
+      const data = await syncTaskApi.list(params as any)
       tasks.value = data.tasks || []
       total.value = data.total || 0
     } catch (e: any) {
@@ -21,6 +30,10 @@ export const useSyncTaskStore = defineStore('syncTask', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  async function refreshTasks() {
+    await fetchTasks(lastParams.value)
   }
 
   async function getTask(key: string): Promise<SyncTask | null> {
@@ -85,8 +98,21 @@ export const useSyncTaskStore = defineStore('syncTask', () => {
     }
   }
 
+  async function batchDelete(keys: string[]) {
+    try {
+      const results = await Promise.allSettled(keys.map(k => syncTaskApi.delete(k)))
+      const succeeded = results.filter(r => r.status === 'fulfilled').length
+      const failed = results.length - succeeded
+      if (succeeded > 0) message.success(`成功删除 ${succeeded} 个任务`)
+      if (failed > 0) message.error(`${failed} 个任务删除失败`)
+      await refreshTasks()
+    } catch (e: any) {
+      message.error('批量删除失败')
+    }
+  }
+
   return {
-    tasks, total, loading, history,
-    fetchTasks, getTask, createTask, updateTask, deleteTask, runTask, fetchHistory,
+    tasks, total, loading, history, lastParams,
+    fetchTasks, refreshTasks, getTask, createTask, updateTask, deleteTask, runTask, fetchHistory, batchDelete,
   }
 })
