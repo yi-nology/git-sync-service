@@ -3,7 +3,7 @@
     <div class="page-header">
       <h1 class="page-title">同步历史</h1>
       <div class="header-actions">
-        <el-input v-model="taskKey" placeholder="输入任务 Key" style="width: 200px;" @keyup.enter="loadHistory"/>
+        <a-input v-model:value="taskKey" placeholder="输入任务 Key" style="width: 200px;" @pressEnter="loadHistory"/>
         <button class="btn-default" @click="loadHistory">查询</button>
       </div>
     </div>

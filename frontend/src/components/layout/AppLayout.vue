@@ -1,7 +1,7 @@
 <template>
   <div class="app-layout">
-    <el-container class="layout-container">
-      <el-aside :width="220" class="sidebar">
+    <div class="layout-container">
+      <aside class="sidebar">
         <div class="sidebar-logo">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
@@ -69,13 +69,13 @@
             <span>高级配置</span>
           </router-link>
         </nav>
-      </el-aside>
-      <el-container class="main-container">
-        <el-main class="app-main">
+      </aside>
+      <div class="main-container">
+        <main class="app-main">
           <router-view />
-        </el-main>
-      </el-container>
-    </el-container>
+        </main>
+      </div>
+    </div>
   </div>
 </template>
 

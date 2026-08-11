@@ -3,7 +3,7 @@
     <div class="page-header">
       <h1 class="page-title">Webhook 事件日志</h1>
       <div class="header-actions">
-        <el-input v-model="repoKey" placeholder="输入仓库 Key" style="width: 200px;" @keyup.enter="loadEvents"/>
+        <a-input v-model:value="repoKey" placeholder="输入仓库 Key" style="width: 200px;" @pressEnter="loadEvents"/>
         <button class="btn-default" @click="loadEvents">刷新</button>
       </div>
     </div>
@@ -42,7 +42,7 @@
       </table>
     </div>
 
-    <el-dialog v-model="detailVisible" title="事件详情" width="600px">
+    <a-modal v-model:open="detailVisible" title="事件详情" :width="600" :footer="null">
       <div class="detail-content" v-if="currentEvent">
         <div class="detail-row"><span class="detail-label">事件ID</span><span class="detail-value">{{ currentEvent.event_id }}</span></div>
         <div class="detail-row"><span class="detail-label">触发时间</span><span class="detail-value">{{ currentEvent.created_at }}</span></div>
@@ -53,10 +53,10 @@
         <div class="detail-row"><span class="detail-label">Commit</span><span class="detail-value">{{ currentEvent.commit_sha || '-' }}</span></div>
         <div class="detail-row"><span class="detail-label">状态</span><span class="status-badge" :class="currentEvent.status">{{ statusText(currentEvent.status) }}</span></div>
       </div>
-      <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
+      <div style="text-align: right; margin-top: 16px;">
+        <a-button @click="detailVisible = false">关闭</a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
