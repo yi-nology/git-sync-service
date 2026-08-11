@@ -109,3 +109,79 @@ func (d *RepoDAO) Update(repo *model.Repo) error {
 func (d *RepoDAO) Delete(key string) error {
 	return d.db.Where("`key` = ?", key).Delete(&model.Repo{}).Error
 }
+
+// FindByCloneURL 根据 Clone URL 查找仓库
+func (d *RepoDAO) FindByCloneURL(cloneURL string) (*model.Repo, error) {
+	var repo model.Repo
+	err := d.db.Where("clone_url = ?", cloneURL).First(&repo).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &repo, nil
+}
+
+// FindByPlatformID 根据平台 ID 查找仓库
+func (d *RepoDAO) FindByPlatformID(platformID uint) ([]*model.Repo, error) {
+	var repos []*model.Repo
+	err := d.db.Where("platform_id = ?", platformID).Find(&repos).Error
+	if err != nil {
+		return nil, err
+	}
+	return repos, nil
+}
+
+// RepoFilter contains optional filters for listing repositories.
+type RepoFilter struct {
+	Search   string // search by name or clone_url (LIKE)
+	Platform string // exact match on platform
+	Status   string // exact match on status
+	SortBy   string // column to sort by (default: created_at)
+	OrderBy  string // sort direction: asc or desc (default: desc)
+}
+
+// ListWithFilter returns a filtered, sorted, paginated list of repos and the total count.
+func (d *RepoDAO) ListWithFilter(page Pagination, filter RepoFilter) ([]*model.Repo, int64, error) {
+	var repos []*model.Repo
+	var total int64
+
+	query := d.db.Model(&model.Repo{})
+
+	// Apply search filter (LIKE on name or clone_url)
+	if filter.Search != "" {
+		like := "%" + filter.Search + "%"
+		query = query.Where("(name LIKE ? OR clone_url LIKE ?)", like, like)
+	}
+
+	// Apply exact-match filters
+	if filter.Platform != "" {
+		query = query.Where("platform = ?", filter.Platform)
+	}
+	if filter.Status != "" {
+		query = query.Where("status = ?", filter.Status)
+	}
+
+	// Count total matching records
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Determine sort column and order
+	sortBy := "created_at"
+	if filter.SortBy != "" {
+		sortBy = filter.SortBy
+	}
+	order := "DESC"
+	if filter.OrderBy == "asc" {
+		order = "ASC"
+	}
+
+	// Apply pagination and sorting
+	if err := query.Offset(page.Offset).Limit(page.Limit).Order(sortBy + " " + order).Find(&repos).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return repos, total, nil
+}

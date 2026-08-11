@@ -8,30 +8,56 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/yi-nology/git-sync-service/biz/model/repo"
 	"github.com/yi-nology/git-sync-service/internal/converter"
+	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	"github.com/yi-nology/git-sync-service/internal/service"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
 
+// ListReposRequest is the request struct for the ListRepos endpoint with filtering support.
+type ListReposRequest struct {
+	Page      int    `query:"page" default:"1"`
+	PageSize  int    `query:"page_size" default:"10"`
+	Search    string `query:"search"`
+	Platform  string `query:"platform"`
+	Status    string `query:"status"`
+	SortBy    string `query:"sort_by" default:"created_at"`
+	SortOrder string `query:"sort_order" default:"desc"`
+}
+
 func ListRepos(ctx context.Context, c *app.RequestContext) {
-	var req repo.ListReposReq
+	var req ListReposRequest
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
-	offset, limit := converter.PageToOffset(req.Page, req.PageSize)
-	list, total, err := GetSyncService().ListRepos(ctx, offset, limit)
+	// Apply defaults
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 {
+		req.PageSize = 10
+	}
+
+	offset, limit := converter.PageToOffset(int32(req.Page), int32(req.PageSize))
+
+	filter := dao.RepoFilter{
+		Search:   req.Search,
+		Platform: req.Platform,
+		Status:   req.Status,
+		SortBy:   req.SortBy,
+		OrderBy:  req.SortOrder,
+	}
+
+	list, total, err := GetSyncService().ListReposWithFilter(ctx, offset, limit, filter)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.Success(c, &repo.ListReposResp{
-		Repos: converter.ToRepoInfoList(list),
-		Total: total,
-	})
+	response.Paginated(c, converter.ToRepoInfoList(list), total, req.Page, req.PageSize)
 }
 
 func GetRepo(ctx context.Context, c *app.RequestContext) {

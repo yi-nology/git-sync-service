@@ -31,6 +31,12 @@ func (rs *RepoService) ListRepos(ctx context.Context, offset, limit int) ([]*mod
 	return rs.repoDAO.FindAll(page)
 }
 
+// ListReposWithFilter returns a filtered, sorted, paginated list of repositories.
+func (rs *RepoService) ListReposWithFilter(ctx context.Context, offset, limit int, filter dao.RepoFilter) ([]*model.Repo, int64, error) {
+	page := dao.DefaultPagination(offset, limit)
+	return rs.repoDAO.ListWithFilter(page, filter)
+}
+
 // GetRepo returns a repository by key.
 func (rs *RepoService) GetRepo(ctx context.Context, key string) (*model.Repo, error) {
 	return rs.repoDAO.FindByKey(key)

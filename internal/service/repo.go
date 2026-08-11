@@ -3,12 +3,18 @@ package service
 import (
 	"context"
 
+	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
 // ListRepos returns a paginated list of repositories.
 func (s *Service) ListRepos(ctx context.Context, offset, limit int) ([]*model.Repo, int64, error) {
 	return s.repos.ListRepos(ctx, offset, limit)
+}
+
+// ListReposWithFilter returns a filtered, sorted, paginated list of repositories.
+func (s *Service) ListReposWithFilter(ctx context.Context, offset, limit int, filter dao.RepoFilter) ([]*model.Repo, int64, error) {
+	return s.repos.ListReposWithFilter(ctx, offset, limit, filter)
 }
 
 // GetRepo returns a repository by key.
