@@ -13,7 +13,7 @@ import (
 )
 
 func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
-	repo, err := s.RepoService.GetRepo(ctx, repoKey)
+	repo, err := s.repos.GetRepo(ctx, repoKey)
 	if err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return ErrRepoNotFound
 	}
 
-	prov, err := s.RepoService.providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
+	prov, err := s.repos.GetProvider(repo.CloneURL, repo.AccessToken)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return fmt.Errorf("parse webhook event failed: %w", err)
 	}
 
-	existing, err := s.WebhookService.FindEventByEventID(event.ID)
+	existing, err := s.webhooks.FindEventByEventID(event.ID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
@@ -57,14 +57,18 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		Branch:    event.Branch,
 		CommitSHA: event.CommitSHA,
 		Payload:   event.RawPayload,
-		Status:    "received",
+		Status:    model.StatusReceived,
 	}
 
-	if err := s.WebhookService.CreateWebhookEvent(whEvent); err != nil {
+	if err := s.webhooks.CreateWebhookEvent(whEvent); err != nil {
 		return err
 	}
 
-	go s.safeApplyRules(context.Background(), repoKey, whEvent)
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		s.safeApplyRules(s.bgCtx, repoKey, whEvent)
+	}()
 
 	return nil
 }
@@ -79,15 +83,46 @@ func (s *Service) safeApplyRules(ctx context.Context, repoKey string, event *mod
 }
 
 func (s *Service) applyRules(ctx context.Context, repoKey string, event *model.WebhookEvent) {
-	s.WebhookService.ApplyRules(ctx, repoKey, event, &s.lastTriggerTime, func(ctx context.Context, taskKey, trigger string) error {
-		return s.RunTaskWithTrigger(ctx, taskKey, trigger)
-	})
+	eventID := event.ID
+	s.webhooks.ApplyRules(ctx, repoKey, event, &s.lastTriggerTime, func(ctx context.Context, taskKey, trigger string, webhookEventID *uint) error {
+		return s.RunTaskWithTrigger(ctx, taskKey, trigger, webhookEventID)
+	}, &eventID)
 }
 
 func (s *Service) RetryEvent(ctx context.Context, eventID uint) error {
-	return s.WebhookService.RetryEvent(ctx, eventID, func(ctx context.Context, repoKey string, event *model.WebhookEvent) {
+	return s.webhooks.RetryEvent(ctx, eventID, func(ctx context.Context, repoKey string, event *model.WebhookEvent) {
 		s.safeApplyRules(ctx, repoKey, event)
 	})
+}
+
+// ListRules returns webhook rules for a repository.
+func (s *Service) ListRules(ctx context.Context, repoKey string) ([]*model.WebhookRule, error) {
+	return s.webhooks.ListRules(ctx, repoKey)
+}
+
+// GetRule returns a webhook rule by ID.
+func (s *Service) GetRule(ctx context.Context, id uint) (*model.WebhookRule, error) {
+	return s.webhooks.GetRule(ctx, id)
+}
+
+// CreateRule creates a new webhook rule.
+func (s *Service) CreateRule(ctx context.Context, req *model.CreateRuleRequest) (*model.WebhookRule, error) {
+	return s.webhooks.CreateRule(ctx, req)
+}
+
+// UpdateRule updates an existing webhook rule.
+func (s *Service) UpdateRule(ctx context.Context, req *model.UpdateRuleRequest) (*model.WebhookRule, error) {
+	return s.webhooks.UpdateRule(ctx, req)
+}
+
+// DeleteRule deletes a webhook rule by ID.
+func (s *Service) DeleteRule(ctx context.Context, id uint) error {
+	return s.webhooks.DeleteRule(ctx, id)
+}
+
+// ListEvents returns webhook events for a repository.
+func (s *Service) ListEvents(ctx context.Context, repoKey string, offset, limit int) ([]*model.WebhookEvent, int64, error) {
+	return s.webhooks.ListEvents(ctx, repoKey, offset, limit)
 }
 
 func matchEventType(pattern, actual string) bool {

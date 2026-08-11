@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,17 +11,19 @@ import (
 
 // TaskService handles sync task-related operations.
 type TaskService struct {
-	taskDAO *dao.SyncTaskDAO
-	runDAO  *dao.SyncRunDAO
-	repoDAO *dao.RepoDAO
+	taskDAO    *dao.SyncTaskDAO
+	runDAO     *dao.SyncRunDAO
+	runStepDAO *dao.SyncRunStepDAO
+	repoDAO    *dao.RepoDAO
 }
 
 // NewTaskService creates a new TaskService instance.
-func NewTaskService(taskDAO *dao.SyncTaskDAO, runDAO *dao.SyncRunDAO, repoDAO *dao.RepoDAO) *TaskService {
+func NewTaskService(taskDAO *dao.SyncTaskDAO, runDAO *dao.SyncRunDAO, runStepDAO *dao.SyncRunStepDAO, repoDAO *dao.RepoDAO) *TaskService {
 	return &TaskService{
-		taskDAO: taskDAO,
-		runDAO:  runDAO,
-		repoDAO: repoDAO,
+		taskDAO:    taskDAO,
+		runDAO:     runDAO,
+		runStepDAO: runStepDAO,
+		repoDAO:    repoDAO,
 	}
 }
 
@@ -159,42 +160,49 @@ func (ts *TaskService) FindTaskByKey(key string) (*model.SyncTask, error) {
 	return ts.taskDAO.FindByKey(key)
 }
 
-// UpdateTaskStatus updates the task's last run status.
-func (ts *TaskService) UpdateTaskStatus(task *model.SyncTask) error {
-	return ts.taskDAO.Update(task)
-}
-
-// CreateRun creates a new sync run record.
-func (ts *TaskService) CreateRun(run *model.SyncRun) error {
-	return ts.runDAO.Create(run)
-}
-
-// UpdateRun updates a sync run record.
-func (ts *TaskService) UpdateRun(run *model.SyncRun) error {
-	return ts.runDAO.Update(run)
-}
-
 // CleanupOldRuns removes sync runs older than the specified duration.
 func (ts *TaskService) CleanupOldRuns(maxAge time.Duration) (int64, error) {
 	return ts.runDAO.CleanupOlderThan(maxAge)
 }
 
-// RunTaskWithTrigger runs a sync task with the specified trigger source.
-// This method requires access to the executor, so it takes a callback function.
-func (ts *TaskService) RunTaskWithTrigger(ctx context.Context, taskKey, trigger string, executeFn func(ctx context.Context, task *model.SyncTask, trigger string) (*model.SyncRun, error)) error {
-	task, err := ts.taskDAO.FindByKey(taskKey)
-	if err != nil {
-		return err
-	}
-	if task == nil {
-		return ErrTaskNotFound
-	}
-
-	_, err = executeFn(ctx, task, trigger)
-	return err
+// CleanupOldRunSteps removes sync run steps older than the specified duration.
+func (ts *TaskService) CleanupOldRunSteps(maxAge time.Duration) (int64, error) {
+	return ts.runStepDAO.CleanupOlderThan(maxAge)
 }
 
-// FormatCronJobKey formats a cron job key for a task.
-func FormatCronJobKey(taskKey string) string {
-	return fmt.Sprintf("cron:%s", taskKey)
+// CreateRun creates a new sync run record for a task.
+func (ts *TaskService) CreateRun(task *model.SyncTask, trigger string, webhookEventID *uint) (*model.SyncRun, error) {
+	run := &model.SyncRun{
+		TaskKey:        task.Key,
+		TriggerSource:  trigger,
+		Status:         model.StatusRunning,
+		StartTime:      time.Now(),
+		WebhookEventID: webhookEventID,
+	}
+	if err := ts.runDAO.Create(run); err != nil {
+		return nil, err
+	}
+	return run, nil
+}
+
+// CreateRunStep creates a new sync run step record.
+func (ts *TaskService) CreateRunStep(step *model.SyncRunStep) error {
+	return ts.runStepDAO.Create(step)
+}
+
+// UpdateRunStep updates an existing sync run step record.
+func (ts *TaskService) UpdateRunStep(step *model.SyncRunStep) error {
+	return ts.runStepDAO.Update(step)
+}
+
+// CompleteRun updates a sync run with final status and details.
+func (ts *TaskService) CompleteRun(run *model.SyncRun) error {
+	return ts.runDAO.Update(run)
+}
+
+// UpdateTaskLastRun updates the task's last run time and status.
+func (ts *TaskService) UpdateTaskLastRun(task *model.SyncTask, run *model.SyncRun) error {
+	task.LastRunAt = run.EndTime
+	task.LastStatus = run.Status
+	return ts.taskDAO.Update(task)
 }

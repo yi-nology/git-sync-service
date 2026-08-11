@@ -122,6 +122,23 @@ struct SyncRunInfo {
     8: string details (api.json="details")
     9: string error_message (api.json="error_message")
     10: string created_at (api.json="created_at")
+    11: optional i64 webhook_event_id (api.json="webhook_event_id")
+    12: i64 duration_ms (api.json="duration_ms")
+    13: string error_type (api.json="error_type")
+    14: i32 retry_total (api.json="retry_total")
+    15: list<SyncRunStepInfo> steps (api.json="steps")
+}
+
+struct SyncRunStepInfo {
+    1: i64 id (api.json="id")
+    2: string step_name (api.json="step_name")
+    3: string status (api.json="status")
+    4: string start_time (api.json="start_time")
+    5: string end_time (api.json="end_time")
+    6: i64 duration_ms (api.json="duration_ms")
+    7: string error_msg (api.json="error_msg")
+    8: string error_type (api.json="error_type")
+    9: i32 retry_count (api.json="retry_count")
 }
 
 struct ListHistoryReq {

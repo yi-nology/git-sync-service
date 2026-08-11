@@ -17,7 +17,9 @@ func (s *Service) addCronJob(task *model.SyncTask) error {
 
 	entryID, err := s.cron.AddFunc(task.Cron, func() {
 		ctx := context.Background()
-		_ = s.RunTaskWithTrigger(ctx, task.Key, "cron")
+			if err := s.RunTaskWithTrigger(ctx, task.Key, model.TriggerCron, nil); err != nil {
+			slog.Error("cron task failed", "taskKey", task.Key, "error", err)
+		}
 	})
 	if err != nil {
 		return err
@@ -38,7 +40,7 @@ func (s *Service) removeCronJob(taskKey string) {
 }
 
 func (s *Service) startCronJobs() error {
-	tasks, err := s.TaskService.FindAllEnabledTasks()
+	tasks, err := s.tasks.FindAllEnabledTasks()
 	if err != nil {
 		return err
 	}

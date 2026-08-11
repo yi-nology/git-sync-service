@@ -13,9 +13,9 @@ func InitDB(driver, dsn string) (*gorm.DB, error) {
 	var err error
 
 	switch driver {
-	case "mysql":
+	case DriverMySQL:
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	case "sqlite":
+	case DriverSQLite:
 		db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", driver)
@@ -29,6 +29,7 @@ func InitDB(driver, dsn string) (*gorm.DB, error) {
 		&Repo{},
 		&SyncTask{},
 		&SyncRun{},
+		&SyncRunStep{},
 		&WebhookRule{},
 		&WebhookRuleTask{},
 		&WebhookEvent{},

@@ -5,17 +5,21 @@ import (
 	"time"
 )
 
-func (s *Service) CleanupOldData(maxAge time.Duration) (events, runs int64, err error) {
-	events, err = s.WebhookService.CleanupOldEvents(maxAge)
+func (s *Service) CleanupOldData(maxAge time.Duration) (events, runs, steps int64, err error) {
+	events, err = s.webhooks.CleanupOldEvents(maxAge)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
-	runs, err = s.TaskService.CleanupOldRuns(maxAge)
+	runs, err = s.tasks.CleanupOldRuns(maxAge)
 	if err != nil {
-		return events, 0, err
+		return events, 0, 0, err
 	}
-	slog.Info("data cleanup completed", "events_deleted", events, "runs_deleted", runs)
-	return events, runs, nil
+	steps, err = s.tasks.CleanupOldRunSteps(maxAge)
+	if err != nil {
+		return events, runs, 0, err
+	}
+	slog.Info("data cleanup completed", "events_deleted", events, "runs_deleted", runs, "steps_deleted", steps)
+	return events, runs, steps, nil
 }
 
 func (s *Service) cleanupTriggerTimes() {

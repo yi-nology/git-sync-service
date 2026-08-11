@@ -41,18 +41,59 @@ func ToSyncRunInfo(r *model.SyncRun) *taskmodel.SyncRunInfo {
 	if r.EndTime != nil {
 		endTime = r.EndTime.Format("2006-01-02 15:04:05")
 	}
-	return &taskmodel.SyncRunInfo{
+	info := &taskmodel.SyncRunInfo{
 		ID: int64(r.ID), TaskKey: r.TaskKey, TriggerSource: r.TriggerSource,
 		Status: r.Status, StartTime: r.StartTime.Format("2006-01-02 15:04:05"),
 		EndTime: endTime, CommitRange: r.CommitRange, Details: r.Details,
 		ErrorMessage: r.ErrorMessage, CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
+		DurationMs: r.DurationMs, ErrorType: r.ErrorType, RetryTotal: int32(r.RetryTotal),
 	}
+	if r.WebhookEventID != nil {
+		id := int64(*r.WebhookEventID)
+		info.WebhookEventID = &id
+	}
+	if len(r.Steps) > 0 {
+		steps := make([]*model.SyncRunStep, len(r.Steps))
+		for i := range r.Steps {
+			steps[i] = &r.Steps[i]
+		}
+		info.Steps = ToSyncRunStepInfoList(steps)
+	}
+	return info
 }
 
 func ToSyncRunInfoList(runs []*model.SyncRun) []*taskmodel.SyncRunInfo {
 	result := make([]*taskmodel.SyncRunInfo, 0, len(runs))
 	for _, r := range runs {
 		result = append(result, ToSyncRunInfo(r))
+	}
+	return result
+}
+
+func ToSyncRunStepInfo(s *model.SyncRunStep) *taskmodel.SyncRunStepInfo {
+	if s == nil {
+		return nil
+	}
+	info := &taskmodel.SyncRunStepInfo{
+		ID:         int64(s.ID),
+		StepName:   s.StepName,
+		Status:     s.Status,
+		StartTime:  s.StartTime.Format("2006-01-02 15:04:05"),
+		DurationMs: s.DurationMs,
+		ErrorMsg:   s.ErrorMsg,
+		ErrorType:  s.ErrorType,
+		RetryCount: int32(s.RetryCount),
+	}
+	if s.EndTime != nil {
+		info.EndTime = s.EndTime.Format("2006-01-02 15:04:05")
+	}
+	return info
+}
+
+func ToSyncRunStepInfoList(steps []*model.SyncRunStep) []*taskmodel.SyncRunStepInfo {
+	result := make([]*taskmodel.SyncRunStepInfo, 0, len(steps))
+	for _, s := range steps {
+		result = append(result, ToSyncRunStepInfo(s))
 	}
 	return result
 }

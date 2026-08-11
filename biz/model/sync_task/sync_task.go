@@ -4491,17 +4491,34 @@ func (p *PreviewSyncResp) String() string {
 
 }
 
+type SyncRunStepInfo struct {
+	ID         int64  `thrift:"id,1" form:"id" json:"id" query:"id"`
+	StepName   string `thrift:"step_name,2" form:"step_name" json:"step_name" query:"step_name"`
+	Status     string `thrift:"status,3" form:"status" json:"status" query:"status"`
+	StartTime  string `thrift:"start_time,4" form:"start_time" json:"start_time" query:"start_time"`
+	EndTime    string `thrift:"end_time,5" form:"end_time" json:"end_time" query:"end_time"`
+	DurationMs int64  `thrift:"duration_ms,6" form:"duration_ms" json:"duration_ms" query:"duration_ms"`
+	ErrorMsg   string `thrift:"error_msg,7" form:"error_msg" json:"error_msg" query:"error_msg"`
+	ErrorType  string `thrift:"error_type,8" form:"error_type" json:"error_type" query:"error_type"`
+	RetryCount int32  `thrift:"retry_count,9" form:"retry_count" json:"retry_count" query:"retry_count"`
+}
+
 type SyncRunInfo struct {
-	ID            int64  `thrift:"id,1" form:"id" json:"id" query:"id"`
-	TaskKey       string `thrift:"task_key,2" form:"task_key" json:"task_key" query:"task_key"`
-	TriggerSource string `thrift:"trigger_source,3" form:"trigger_source" json:"trigger_source" query:"trigger_source"`
-	Status        string `thrift:"status,4" form:"status" json:"status" query:"status"`
-	StartTime     string `thrift:"start_time,5" form:"start_time" json:"start_time" query:"start_time"`
-	EndTime       string `thrift:"end_time,6" form:"end_time" json:"end_time" query:"end_time"`
-	CommitRange   string `thrift:"commit_range,7" form:"commit_range" json:"commit_range" query:"commit_range"`
-	Details       string `thrift:"details,8" form:"details" json:"details" query:"details"`
-	ErrorMessage  string `thrift:"error_message,9" form:"error_message" json:"error_message" query:"error_message"`
-	CreatedAt     string `thrift:"created_at,10" form:"created_at" json:"created_at" query:"created_at"`
+	ID             int64              `thrift:"id,1" form:"id" json:"id" query:"id"`
+	TaskKey        string             `thrift:"task_key,2" form:"task_key" json:"task_key" query:"task_key"`
+	TriggerSource  string             `thrift:"trigger_source,3" form:"trigger_source" json:"trigger_source" query:"trigger_source"`
+	Status         string             `thrift:"status,4" form:"status" json:"status" query:"status"`
+	StartTime      string             `thrift:"start_time,5" form:"start_time" json:"start_time" query:"start_time"`
+	EndTime        string             `thrift:"end_time,6" form:"end_time" json:"end_time" query:"end_time"`
+	CommitRange    string             `thrift:"commit_range,7" form:"commit_range" json:"commit_range" query:"commit_range"`
+	Details        string             `thrift:"details,8" form:"details" json:"details" query:"details"`
+	ErrorMessage   string             `thrift:"error_message,9" form:"error_message" json:"error_message" query:"error_message"`
+	CreatedAt      string             `thrift:"created_at,10" form:"created_at" json:"created_at" query:"created_at"`
+	WebhookEventID *int64             `thrift:"webhook_event_id,11,optional" form:"webhook_event_id" json:"webhook_event_id,omitempty" query:"webhook_event_id"`
+	DurationMs     int64              `thrift:"duration_ms,12" form:"duration_ms" json:"duration_ms" query:"duration_ms"`
+	ErrorType      string             `thrift:"error_type,13" form:"error_type" json:"error_type" query:"error_type"`
+	RetryTotal     int32              `thrift:"retry_total,14" form:"retry_total" json:"retry_total" query:"retry_total"`
+	Steps          []*SyncRunStepInfo `thrift:"steps,15" form:"steps" json:"steps" query:"steps"`
 }
 
 func NewSyncRunInfo() *SyncRunInfo {

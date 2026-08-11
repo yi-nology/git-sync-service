@@ -17,7 +17,7 @@ func setupTaskTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open test db: %v", err)
 	}
-	if err := db.AutoMigrate(&model.SyncTask{}, &model.SyncRun{}); err != nil {
+	if err := db.AutoMigrate(&model.SyncTask{}, &model.SyncRun{}, &model.SyncRunStep{}); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
 	return db
@@ -32,12 +32,13 @@ func setupTaskTestService(t *testing.T) (*Service, *gorm.DB) {
 	taskDAO := dao.NewSyncTaskDAO(db)
 	runDAO := dao.NewSyncRunDAO(db)
 
-	taskService := NewTaskService(taskDAO, runDAO, nil)
+	runStepDAO := dao.NewSyncRunStepDAO(db)
+	taskService := NewTaskService(taskDAO, runDAO, runStepDAO, nil)
 
 	svc := &Service{
-		TaskService:  taskService,
-		cron:         cron.New(cron.WithSeconds()),
-		cronEntryIDs: make(map[string]cron.EntryID),
+		tasks:          taskService,
+		cron:           cron.New(cron.WithSeconds()),
+		cronEntryIDs:   make(map[string]cron.EntryID),
 		config: &model.Config{
 			Sync: model.SyncConfig{
 				DefaultTimeout: 300,
@@ -324,12 +325,7 @@ func TestListHistory(t *testing.T) {
 
 	// Create some run history
 	for i := 0; i < 3; i++ {
-		run := &model.SyncRun{
-			TaskKey:       task.Key,
-			TriggerSource: "manual",
-			Status:        "success",
-		}
-		if err := svc.TaskService.CreateRun(run); err != nil {
+		if _, err := svc.tasks.CreateRun(task, "manual", nil); err != nil {
 			t.Fatalf("Create run failed: %v", err)
 		}
 	}
@@ -351,18 +347,21 @@ func TestDeleteHistory(t *testing.T) {
 	svc, _ := setupTaskTestService(t)
 	ctx := context.Background()
 
-	// Create a run
-	run := &model.SyncRun{
-		TaskKey:       "test-task",
-		TriggerSource: "manual",
-		Status:        "success",
+	// Create a task and a run
+	task, err := svc.CreateTask(ctx, &model.CreateTaskRequest{
+		Name: "test-task", SourceRepoKey: "s", SourceBranch: "main",
+		TargetRepoKey: "t", TargetBranch: "main",
+	})
+	if err != nil {
+		t.Fatalf("CreateTask failed: %v", err)
 	}
-	if err := svc.TaskService.CreateRun(run); err != nil {
+	run, err := svc.tasks.CreateRun(task, "manual", nil)
+	if err != nil {
 		t.Fatalf("Create run failed: %v", err)
 	}
 
 	// Delete the history
-	err := svc.DeleteHistory(ctx, run.ID)
+	err = svc.DeleteHistory(ctx, run.ID)
 	if err != nil {
 		t.Fatalf("DeleteHistory failed: %v", err)
 	}
@@ -391,15 +390,16 @@ func TestPreviewSync_WithRepoDAO(t *testing.T) {
 
 	taskDAO := dao.NewSyncTaskDAO(db)
 	runDAO := dao.NewSyncRunDAO(db)
+	runStepDAO := dao.NewSyncRunStepDAO(db)
 	repoDAO, err := dao.NewRepoDAO(db)
 	if err != nil {
 		t.Fatalf("failed to create RepoDAO: %v", err)
 	}
 
-	taskService := NewTaskService(taskDAO, runDAO, repoDAO)
+	taskService := NewTaskService(taskDAO, runDAO, runStepDAO, repoDAO)
 
 	svc := &Service{
-		TaskService:  taskService,
+		tasks:         taskService,
 		cron:          cron.New(cron.WithSeconds()),
 		cronEntryIDs:  make(map[string]cron.EntryID),
 	}
@@ -454,15 +454,16 @@ func TestPreviewSync_MissingRepo(t *testing.T) {
 
 	taskDAO := dao.NewSyncTaskDAO(db)
 	runDAO := dao.NewSyncRunDAO(db)
+	runStepDAO := dao.NewSyncRunStepDAO(db)
 	repoDAO, err := dao.NewRepoDAO(db)
 	if err != nil {
 		t.Fatalf("failed to create RepoDAO: %v", err)
 	}
 
-	taskService := NewTaskService(taskDAO, runDAO, repoDAO)
+	taskService := NewTaskService(taskDAO, runDAO, runStepDAO, repoDAO)
 
 	svc := &Service{
-		TaskService:  taskService,
+		tasks:         taskService,
 		cron:          cron.New(cron.WithSeconds()),
 		cronEntryIDs:  make(map[string]cron.EntryID),
 	}

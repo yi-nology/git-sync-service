@@ -2,17 +2,14 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"sync"
 	"time"
 
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
-	"gorm.io/gorm"
 )
 
 // WebhookService handles webhook-related operations.
@@ -29,62 +26,6 @@ func NewWebhookService(ruleDAO *dao.WebhookRuleDAO, eventDAO *dao.WebhookEventDA
 		eventDAO: eventDAO,
 		repoDAO:  repoDAO,
 	}
-}
-
-// ReceiveWebhook processes an incoming webhook request.
-func (ws *WebhookService) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request, providerMgr interface{ GetByURL(url, token string) (WebhookParser, error) }) error {
-	repo, err := ws.repoDAO.FindByKey(repoKey)
-	if err != nil {
-		return err
-	}
-	if repo == nil {
-		return ErrRepoNotFound
-	}
-
-	prov, err := providerMgr.GetByURL(repo.CloneURL, repo.AccessToken)
-	if err != nil {
-		return err
-	}
-
-	if err := prov.ValidateWebhookSignature(req, repo.WebhookSecret); err != nil {
-		return fmt.Errorf("invalid webhook signature: %w", err)
-	}
-
-	event, err := prov.ParseWebhookEvent(req, repo.WebhookSecret)
-	if err != nil {
-		return fmt.Errorf("parse webhook event failed: %w", err)
-	}
-
-	existing, err := ws.eventDAO.FindByEventID(event.ID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-	if existing != nil {
-		return nil
-	}
-
-	actorName := ""
-	if event.Actor != nil {
-		actorName = event.Actor.Name
-	}
-
-	whEvent := &model.WebhookEvent{
-		EventID:   event.ID,
-		RepoKey:   repoKey,
-		EventType: event.Type,
-		Source:    string(event.Source),
-		ActorName: actorName,
-		Branch:    event.Branch,
-		CommitSHA: event.CommitSHA,
-		Payload:   event.RawPayload,
-		Status:    "received",
-	}
-
-	if err := ws.eventDAO.Create(whEvent); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // ListRules returns webhook rules for a repository.
@@ -175,17 +116,24 @@ func (ws *WebhookService) RetryEvent(ctx context.Context, eventID uint, applyRul
 		return ErrEventNotFound
 	}
 
-	go applyRulesFn(context.Background(), event.RepoKey, event)
+	// Mark as processing before starting the goroutine
+	event.Status = model.StatusProcessing
+	if err := ws.eventDAO.Update(event); err != nil {
+		slog.Error("failed to update event status to processing", "eventID", eventID, "error", err)
+	}
 
-	now := time.Now()
-	event.ProcessedAt = &now
-	event.Status = "processed"
-	return ws.eventDAO.Update(event)
-}
+	go func() {
+		applyRulesFn(context.Background(), event.RepoKey, event)
+		// Update status after goroutine completes
+		now := time.Now()
+		event.ProcessedAt = &now
+		event.Status = model.StatusProcessed
+		if err := ws.eventDAO.Update(event); err != nil {
+			slog.Error("failed to update event status to processed", "eventID", eventID, "error", err)
+		}
+	}()
 
-// FindRulesByRepoKey returns webhook rules for a repository (internal use).
-func (ws *WebhookService) FindRulesByRepoKey(repoKey string) ([]*model.WebhookRule, error) {
-	return ws.ruleDAO.FindByRepoKey(repoKey)
+	return nil
 }
 
 // FindEventByEventID returns a webhook event by event ID (internal use).
@@ -199,7 +147,7 @@ func (ws *WebhookService) FindEventByID(id uint) (*model.WebhookEvent, error) {
 }
 
 // ApplyRules applies webhook rules to an event.
-func (ws *WebhookService) ApplyRules(ctx context.Context, repoKey string, event *model.WebhookEvent, lastTriggerTime *sync.Map, runTaskFn func(ctx context.Context, taskKey, trigger string) error) {
+func (ws *WebhookService) ApplyRules(ctx context.Context, repoKey string, event *model.WebhookEvent, lastTriggerTime *sync.Map, runTaskFn func(ctx context.Context, taskKey, trigger string, webhookEventID *uint) error, webhookEventID *uint) {
 	rules, err := ws.ruleDAO.FindByRepoKey(repoKey)
 	if err != nil {
 		slog.Error("find rules failed", "repoKey", repoKey, "error", err)
@@ -219,7 +167,7 @@ func (ws *WebhookService) ApplyRules(ctx context.Context, repoKey string, event 
 			continue
 		}
 
-		if rule.Action == "sync" {
+		if rule.Action == model.ActionSync {
 			taskKeys := rule.GetTaskKeys()
 			for _, taskKey := range taskKeys {
 				if taskKey == "" {
@@ -228,14 +176,14 @@ func (ws *WebhookService) ApplyRules(ctx context.Context, repoKey string, event 
 				if rule.MinInterval > 0 {
 					key := fmt.Sprintf("%s:%s", rule.RepoKey, taskKey)
 					if lastTime, ok := lastTriggerTime.Load(key); ok {
-						if time.Since(lastTime.(time.Time)) < time.Duration(rule.MinInterval)*time.Second {
+						if t, ok := lastTime.(time.Time); ok && time.Since(t) < time.Duration(rule.MinInterval)*time.Second {
 							slog.Warn("skipping due to min interval", "taskKey", taskKey, "minInterval", rule.MinInterval)
 							continue
 						}
 					}
 					lastTriggerTime.Store(key, time.Now())
 				}
-				if err := runTaskFn(ctx, taskKey, "webhook"); err != nil {
+				if err := runTaskFn(ctx, taskKey, model.TriggerWebhook, webhookEventID); err != nil {
 					slog.Error("run task failed", "taskKey", taskKey, "error", err)
 				}
 			}
@@ -251,26 +199,4 @@ func (ws *WebhookService) CreateWebhookEvent(event *model.WebhookEvent) error {
 // CleanupOldEvents removes webhook events older than the specified duration.
 func (ws *WebhookService) CleanupOldEvents(maxAge time.Duration) (int64, error) {
 	return ws.eventDAO.CleanupOlderThan(maxAge)
-}
-
-// WebhookParser is an interface for webhook parsing operations.
-type WebhookParser interface {
-	ValidateWebhookSignature(req *http.Request, secret string) error
-	ParseWebhookEvent(req *http.Request, secret string) (*NormalizedEvent, error)
-}
-
-// NormalizedEvent represents a normalized webhook event from the SDK.
-type NormalizedEvent struct {
-	ID         string
-	Type       string
-	Source     string
-	Actor      *EventActor
-	Branch     string
-	CommitSHA  string
-	RawPayload []byte
-}
-
-// EventActor represents the actor of a webhook event.
-type EventActor struct {
-	Name string
 }

@@ -9,25 +9,46 @@ import (
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
-// mockRunWriter implements RunWriter interface
-type mockRunWriter struct {
-	runs    []*model.SyncRun
-	createErr error
-	updateErr error
+// mockService implements Service interface for testing.
+type mockService struct {
+	runs        []*model.SyncRun
+	tasks       []*model.SyncTask
+	repos       map[string]*model.Repo
+	createErr   error
+	completeErr error
+	updateErr   error
+	repoErr     error
+	tempDir     string
+	config      *model.Config
 }
 
-func (m *mockRunWriter) Create(run *model.SyncRun) error {
+func (m *mockService) CreateRun(task *model.SyncTask, trigger string, webhookEventID *uint) (*model.SyncRun, error) {
 	if m.createErr != nil {
-		return m.createErr
+		return nil, m.createErr
+	}
+	run := &model.SyncRun{
+		TaskKey:        task.Key,
+		TriggerSource:  trigger,
+		Status:         "running",
+		StartTime:      time.Now(),
+		WebhookEventID: webhookEventID,
 	}
 	run.ID = uint(len(m.runs) + 1)
 	m.runs = append(m.runs, run)
+	return run, nil
+}
+
+func (m *mockService) CreateRunStep(step *model.SyncRunStep) error {
 	return nil
 }
 
-func (m *mockRunWriter) Update(run *model.SyncRun) error {
-	if m.updateErr != nil {
-		return m.updateErr
+func (m *mockService) UpdateRunStep(step *model.SyncRunStep) error {
+	return nil
+}
+
+func (m *mockService) CompleteRun(run *model.SyncRun) error {
+	if m.completeErr != nil {
+		return m.completeErr
 	}
 	for i, r := range m.runs {
 		if r.ID == run.ID {
@@ -38,61 +59,24 @@ func (m *mockRunWriter) Update(run *model.SyncRun) error {
 	return nil
 }
 
-// mockTaskUpdater implements TaskUpdater interface
-type mockTaskUpdater struct {
-	tasks     []*model.SyncTask
-	updateErr error
-}
-
-func (m *mockTaskUpdater) Update(task *model.SyncTask) error {
+func (m *mockService) UpdateTaskLastRun(task *model.SyncTask, run *model.SyncRun) error {
 	if m.updateErr != nil {
 		return m.updateErr
 	}
-	for i, t := range m.tasks {
-		if t.Key == task.Key {
-			m.tasks[i] = task
-			break
-		}
-	}
+	task.LastRunAt = run.EndTime
+	task.LastStatus = run.Status
 	return nil
 }
 
-// mockRepoReader implements RepoReader interface
-type mockRepoReader struct {
-	repos map[string]*model.Repo
-	err   error
-}
-
-func (m *mockRepoReader) FindByKey(key string) (*model.Repo, error) {
-	if m.err != nil {
-		return nil, m.err
+func (m *mockService) GetRepoByKey(key string) (*model.Repo, error) {
+	if m.repoErr != nil {
+		return nil, m.repoErr
 	}
 	repo, ok := m.repos[key]
 	if !ok {
-		return nil, fmt.Errorf("repo not found: %s", key)
+		return nil, nil
 	}
 	return repo, nil
-}
-
-// mockService implements Service interface
-type mockService struct {
-	runWriter   *mockRunWriter
-	taskUpdater *mockTaskUpdater
-	repoReader  *mockRepoReader
-	tempDir     string
-	config      *model.Config
-}
-
-func (m *mockService) RunDAO() RunWriter {
-	return m.runWriter
-}
-
-func (m *mockService) TaskDAO() TaskUpdater {
-	return m.taskUpdater
-}
-
-func (m *mockService) RepoDAO() RepoReader {
-	return m.repoReader
 }
 
 func (m *mockService) GetTempDir(taskKey string) string {
@@ -105,26 +89,20 @@ func (m *mockService) GetConfig() *model.Config {
 
 func newMockService() *mockService {
 	return &mockService{
-		runWriter: &mockRunWriter{
-			runs: make([]*model.SyncRun, 0),
-		},
-		taskUpdater: &mockTaskUpdater{
-			tasks: make([]*model.SyncTask, 0),
-		},
-		repoReader: &mockRepoReader{
-			repos: map[string]*model.Repo{
-				"source-repo": {
-					Key:         "source-repo",
-					Name:        "Source Repo",
-					CloneURL:    "https://github.com/source/repo.git",
-					AccessToken: "source-token",
-				},
-				"target-repo": {
-					Key:         "target-repo",
-					Name:        "Target Repo",
-					CloneURL:    "https://github.com/target/repo.git",
-					AccessToken: "target-token",
-				},
+		runs:  make([]*model.SyncRun, 0),
+		tasks: make([]*model.SyncTask, 0),
+		repos: map[string]*model.Repo{
+			"source-repo": {
+				Key:         "source-repo",
+				Name:        "Source Repo",
+				CloneURL:    "https://github.com/source/repo.git",
+				AccessToken: "source-token",
+			},
+			"target-repo": {
+				Key:         "target-repo",
+				Name:        "Target Repo",
+				CloneURL:    "https://github.com/target/repo.git",
+				AccessToken: "target-token",
 			},
 		},
 		tempDir: "/tmp/git-sync-test",
@@ -156,7 +134,7 @@ func TestNewExecutor(t *testing.T) {
 
 func TestExecute_SourceRepoNotFound(t *testing.T) {
 	svc := newMockService()
-	svc.repoReader.repos = map[string]*model.Repo{} // Empty repos
+	svc.repos = map[string]*model.Repo{} // Empty repos
 
 	exec, err := NewExecutor(svc)
 	if err != nil {
@@ -173,7 +151,7 @@ func TestExecute_SourceRepoNotFound(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	run, err := exec.Execute(ctx, task, "manual")
+	run, err := exec.Execute(ctx, task, "manual", nil)
 	if err == nil {
 		t.Fatal("expected error for missing source repo")
 	}
@@ -187,7 +165,7 @@ func TestExecute_SourceRepoNotFound(t *testing.T) {
 
 func TestExecute_TargetRepoNotFound(t *testing.T) {
 	svc := newMockService()
-	svc.repoReader.repos = map[string]*model.Repo{
+	svc.repos = map[string]*model.Repo{
 		"source-repo": {
 			Key:      "source-repo",
 			CloneURL: "https://github.com/source/repo.git",
@@ -209,7 +187,7 @@ func TestExecute_TargetRepoNotFound(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	run, err := exec.Execute(ctx, task, "manual")
+	run, err := exec.Execute(ctx, task, "manual", nil)
 	if err == nil {
 		t.Fatal("expected error for missing target repo")
 	}
@@ -238,14 +216,14 @@ func TestExecute_RunCreated(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	_, _ = exec.Execute(ctx, task, "manual")
+	_, _ = exec.Execute(ctx, task, "manual", nil)
 
 	// Verify run was created
-	if len(svc.runWriter.runs) == 0 {
+	if len(svc.runs) == 0 {
 		t.Fatal("expected run to be created")
 	}
 
-	run := svc.runWriter.runs[0]
+	run := svc.runs[0]
 	if run.TaskKey != "test-task" {
 		t.Errorf("expected task key 'test-task', got %q", run.TaskKey)
 	}
@@ -259,7 +237,7 @@ func TestExecute_RunCreated(t *testing.T) {
 
 func TestExecute_CreateRunError(t *testing.T) {
 	svc := newMockService()
-	svc.runWriter.createErr = fmt.Errorf("database error")
+	svc.createErr = fmt.Errorf("database error")
 
 	exec, err := NewExecutor(svc)
 	if err != nil {
@@ -276,7 +254,7 @@ func TestExecute_CreateRunError(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	_, err = exec.Execute(ctx, task, "manual")
+	_, err = exec.Execute(ctx, task, "manual", nil)
 	if err == nil {
 		t.Fatal("expected error when run creation fails")
 	}
@@ -284,7 +262,7 @@ func TestExecute_CreateRunError(t *testing.T) {
 
 func TestPreview_SourceRepoNotFound(t *testing.T) {
 	svc := newMockService()
-	svc.repoReader.repos = map[string]*model.Repo{}
+	svc.repos = map[string]*model.Repo{}
 
 	exec, err := NewExecutor(svc)
 	if err != nil {
@@ -312,7 +290,7 @@ func TestPreview_SourceRepoNotFound(t *testing.T) {
 
 func TestPreview_TargetRepoNotFound(t *testing.T) {
 	svc := newMockService()
-	svc.repoReader.repos = map[string]*model.Repo{
+	svc.repos = map[string]*model.Repo{
 		"source-repo": {
 			Key:      "source-repo",
 			CloneURL: "https://github.com/source/repo.git",
