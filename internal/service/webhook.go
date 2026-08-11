@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/yi-nology/git-sync-service/sync/model"
+	"gorm.io/gorm"
 )
 
 func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
@@ -32,7 +34,10 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return fmt.Errorf("parse webhook event failed: %w", err)
 	}
 
-	existing, _ := s.webhookService.FindEventByEventID(event.ID)
+	existing, err := s.webhookService.FindEventByEventID(event.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
 	if existing != nil {
 		return nil
 	}

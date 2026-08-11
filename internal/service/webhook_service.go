@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
+	"gorm.io/gorm"
 )
 
 // WebhookService handles webhook-related operations.
@@ -53,7 +55,10 @@ func (ws *WebhookService) ReceiveWebhook(ctx context.Context, repoKey string, re
 		return fmt.Errorf("parse webhook event failed: %w", err)
 	}
 
-	existing, _ := ws.eventDAO.FindByEventID(event.ID)
+	existing, err := ws.eventDAO.FindByEventID(event.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
 	if existing != nil {
 		return nil
 	}
