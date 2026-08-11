@@ -7,6 +7,7 @@ import type {
   CreateRuleRequest, UpdateRuleRequest,
   Pagination,
 } from '@/types'
+import { useAuthStore } from '@/stores/auth'
 
 const api = axios.create({
   baseURL: '/api/v1',
@@ -14,10 +15,31 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// Add request interceptor to include API key
+api.interceptors.request.use(
+  (config) => {
+    const authStore = useAuthStore()
+    const apiKey = authStore.getApiKey()
+    if (apiKey) {
+      config.headers['X-API-Key'] = apiKey
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     console.error('API Error:', error.response?.data || error.message)
+    // If 401, clear API key and redirect to login
+    if (error.response?.status === 401) {
+      const authStore = useAuthStore()
+      authStore.clearApiKey()
+      window.location.href = '/login'
+    }
     return Promise.reject(error.response?.data || error)
   }
 )
@@ -73,6 +95,31 @@ export const webhookApi = {
     api.get<any, ListEventsResp>('/webhook/events', { params }),
   retryEvent: (id: number) =>
     api.post<any, { success: boolean; message: string }>('/webhook/event/retry', null, { params: { id } }),
+}
+
+export interface SystemStatusResp {
+  status: string
+  version: string
+  uptime: number
+  repoCount: number
+  taskCount: number
+  runningTask: number
+  lastSyncAt: string
+}
+
+export interface HealthResp {
+  status: string
+  database: {
+    status: string
+    size: number
+  }
+}
+
+export const systemApi = {
+  status: () =>
+    api.get<any, SystemStatusResp>('/system/status'),
+  health: () =>
+    api.get<any, HealthResp>('/system/health'),
 }
 
 export default api
