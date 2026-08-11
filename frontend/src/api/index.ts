@@ -97,6 +97,95 @@ export const webhookApi = {
     api.post<any, { success: boolean; message: string }>('/webhook/event/retry', null, { params: { id } }),
 }
 
+export interface OperationLogRequest {
+  page?: number
+  page_size?: number
+  search?: string
+  action?: string
+  user?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface OperationLog {
+  id: number
+  time: string
+  user: string
+  action: string
+  resource: string
+  details: string
+  ip: string
+}
+
+export interface OperationLogResp {
+  list: OperationLog[]
+  pagination: {
+    page: number
+    page_size: number
+    total: number
+  }
+}
+
+export interface SyncLogRequest {
+  page?: number
+  page_size?: number
+  task_key?: string
+  status?: string
+}
+
+export interface SyncLog {
+  id: number
+  task_key: string
+  trigger_source: string
+  status: string
+  start_time: string
+  end_time: string
+  commit_range: string
+  details: string
+  error_message: string
+}
+
+export interface SyncLogResp {
+  list: SyncLog[]
+  pagination: {
+    page: number
+    page_size: number
+    total: number
+  }
+}
+
+export interface SystemLogRequest {
+  page?: number
+  page_size?: number
+  level?: string
+}
+
+export interface SystemLog {
+  id: number
+  time: string
+  level: string
+  message: string
+  details: string
+}
+
+export interface SystemLogResp {
+  list: SystemLog[]
+  pagination: {
+    page: number
+    page_size: number
+    total: number
+  }
+}
+
+export const logApi = {
+  listOperations: (params?: OperationLogRequest) =>
+    api.get<any, OperationLogResp>('/logs/operations', { params }),
+  listSync: (params?: SyncLogRequest) =>
+    api.get<any, SyncLogResp>('/logs/sync', { params }),
+  listSystem: (params?: SystemLogRequest) =>
+    api.get<any, SystemLogResp>('/logs/system', { params }),
+}
+
 export interface SystemStatusResp {
   status: string
   version: string
