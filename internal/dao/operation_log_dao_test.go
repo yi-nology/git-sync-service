@@ -43,6 +43,10 @@ func TestOperationLogDAO_CreateAndList(t *testing.T) {
 	if len(got) == 0 {
 		t.Fatal("expected at least one result")
 	}
+	// Verify previous results
+	if len(got) == 0:
+		t.Fatal("expected at least one result")
+	
 	// Filter by actor
 	if err != nil {
 		t.Fatalf("list by actor failed: %v", err)
