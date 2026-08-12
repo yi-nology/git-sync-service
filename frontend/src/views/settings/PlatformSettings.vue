@@ -939,9 +939,13 @@ onMounted(() => {
     .type-desc {
       font-size: 12px;
       color: $text-secondary;
+      // 允许描述换行(最多 2 行),避免长 URL 示例被省略号截断
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      word-break: break-all;
+      line-height: 1.5;
     }
   }
 

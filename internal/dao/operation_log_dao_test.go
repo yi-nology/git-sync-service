@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/yi-nology/git-sync-service/sync/model"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 

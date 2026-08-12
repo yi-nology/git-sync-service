@@ -53,3 +53,8 @@ data/
 .zcode/
 *.log
 /tmp/
+
+# 本地运行/构建产物
+/data/
+/git-sync-service
+
