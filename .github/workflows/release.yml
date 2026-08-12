@@ -52,7 +52,8 @@ jobs:
           # 全平台交叉编译无需 C 工具链,统一关闭 CGO。
           CGO_ENABLED: 0
         run: |
-          binary_name="git-sync-service"
+          # 带平台后缀,避免 6 个二进制同名碰撞(release 资产才能各平台独立)
+          binary_name="git-sync-service-${GOOS}-${GOARCH}"
           if [ "$GOOS" = "windows" ]; then
             binary_name="${binary_name}.exe"
           fi
