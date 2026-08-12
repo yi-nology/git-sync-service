@@ -92,3 +92,4 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
+replace github.com/yi-nology/git-platform-sdk => ../git-platform-sdk

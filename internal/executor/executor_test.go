@@ -87,6 +87,16 @@ func (m *mockService) GetConfig() *model.Config {
 	return m.config
 }
 
+func (m *mockService) GetPlatformByID(id uint) (*model.Platform, error) {
+	return &model.Platform{
+		ID:          id,
+		Key:         "test-platform",
+		Name:        "Test Platform",
+		Type:        "github",
+		AccessToken: "test-token",
+	}, nil
+}
+
 func newMockService() *mockService {
 	return &mockService{
 		runs:  make([]*model.SyncRun, 0),
