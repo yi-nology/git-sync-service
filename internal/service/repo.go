@@ -13,7 +13,7 @@ func (s *Service) ListRepos(ctx context.Context, offset, limit int) ([]*model.Re
 }
 
 // ListReposWithFilter returns a filtered, sorted, paginated list of repositories.
-func (s *Service) ListReposWithFilter(ctx context.Context, offset, limit int, filter dao.RepoFilter) ([]*model.Repo, int64, error) {
+func (s *Service) ListReposWithFilter(ctx context.Context, offset, limit int, filter *dao.RepoFilter) ([]*model.Repo, int64, error) {
 	return s.repos.ListReposWithFilter(ctx, offset, limit, filter)
 }
 
