@@ -14,7 +14,7 @@ func TestRedisLock_TryLock(t *testing.T) {
 	ctx := context.Background()
 	key := fmt.Sprintf("test-lock-%d", time.Now().UnixNano())
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
 	lock.Unlock(ctx, key)
@@ -48,7 +48,7 @@ func TestRedisLock_TryLockWithTTL(t *testing.T) {
 	ctx := context.Background()
 	key := fmt.Sprintf("test-lock-ttl-%d", time.Now().UnixNano())
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
 	lock.Unlock(ctx, key)
@@ -94,7 +94,7 @@ func TestRedisLock_Unlock(t *testing.T) {
 	ctx := context.Background()
 	key := fmt.Sprintf("test-unlock-%d", time.Now().UnixNano())
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
 	lock.Unlock(ctx, key)
@@ -134,7 +134,7 @@ func TestRedisLock_UnlockWithValue(t *testing.T) {
 	ctx := context.Background()
 	key := fmt.Sprintf("test-unlock-value-%d", time.Now().UnixNano())
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
 	lock.Unlock(ctx, key)
@@ -177,7 +177,7 @@ func TestRedisLock_ExtendLock(t *testing.T) {
 	ctx := context.Background()
 	key := fmt.Sprintf("test-extend-%d", time.Now().UnixNano())
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
 	lock.Unlock(ctx, key)
@@ -218,7 +218,7 @@ func TestRedisLock_Ping(t *testing.T) {
 	defer closeClient(t, client)
 
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	ctx := context.Background()
 	err := lock.Ping(ctx)
@@ -234,7 +234,7 @@ func TestRedisLock_Concurrent(t *testing.T) {
 	ctx := context.Background()
 	key := fmt.Sprintf("test-concurrent-%d", time.Now().UnixNano())
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
 	lock.Unlock(ctx, key)
@@ -273,7 +273,7 @@ func TestRedisLock_LockWithContext(t *testing.T) {
 	ctx := context.Background()
 	key := fmt.Sprintf("test-lock-ctx-%d", time.Now().UnixNano())
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
 	lock.Unlock(ctx, key)
@@ -306,7 +306,7 @@ func TestRedisLock_LockWithContext(t *testing.T) {
 func TestRedisLock_Close(t *testing.T) {
 	lock := NewRedisLock("localhost:6379", "", 15)
 
-	err := lock.Close() || true
+	err := lock.Close()
 	if err != nil {
 		t.Fatalf("Close failed: %v", err)
 	}
@@ -314,7 +314,7 @@ func TestRedisLock_Close(t *testing.T) {
 
 func TestRedisLock_Client(t *testing.T) {
 	lock := NewRedisLock("localhost:6379", "", 15)
-	defer lock.Close() || true
+	defer func() { _ = lock.Close() }()
 
 	client := lock.Client()
 	if client == nil {
