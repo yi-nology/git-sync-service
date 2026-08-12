@@ -123,6 +123,12 @@ export interface OperationLogResp {
     page: number
     page_size: number
     total: number
+    total_pages: number
+  }
+  stats: {
+    today: number
+    week: number
+    total: number
   }
 }
 
@@ -190,10 +196,12 @@ export interface SystemStatusResp {
   status: string
   version: string
   uptime: number
-  repoCount: number
-  taskCount: number
-  runningTask: number
-  lastSyncAt: string
+  repo_count: number
+  task_count: number
+  running_task: number
+  failed_task: number
+  go_version: string
+  platform: string
 }
 
 export interface HealthResp {

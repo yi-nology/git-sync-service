@@ -6,7 +6,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	handler "github.com/yi-nology/git-sync-service/biz/handler"
 	"github.com/yi-nology/git-sync-service/biz/handler/git_sync"
-	routermw "github.com/yi-nology/git-sync-service/biz/router/git_sync"
 )
 
 // customizeRegister registers customize routers.
@@ -17,26 +16,6 @@ func customizedRegister(r *server.Hertz) {
 	// Readiness probe (checks database and Redis, no auth)
 	r.GET("/health", git_sync.HealthCheck)
 
-	// System status API
-	r.GET("/api/v1/system/status", git_sync.SystemStatus)
-
 	// Webhook 接收端点（带速率限制，不走 API 鉴权）
 	r.POST("/api/webhook/receive/:repoKey", git_sync.RateLimitMiddleware(), git_sync.ReceiveWebhook)
-
-	// POST /api/v1/repos/batch -> BatchRepos
-	r.POST("/api/v1/repos/batch", git_sync.BatchRepos)
-
-	// Operation logs (audit) API — requires X-API-Key auth
-	r.GET("/api/v1/logs/operations", routermw.AuthMiddleware(), git_sync.ListOperationLogs)
-
-	// Platform management APIs
-	r.GET("/api/v1/platforms", git_sync.ListPlatforms)
-	r.GET("/api/v1/platform", git_sync.GetPlatform)
-	r.POST("/api/v1/platform/create", git_sync.CreatePlatform)
-	r.POST("/api/v1/platform/update", git_sync.UpdatePlatform)
-	r.POST("/api/v1/platform/delete", git_sync.DeletePlatform)
-	r.POST("/api/v1/platform/test", git_sync.TestPlatformConnection)
-	r.POST("/api/v1/platform/set-default", git_sync.SetDefaultPlatform)
-	r.GET("/api/v1/platform/repos", git_sync.ListPlatformRepos)
-	r.POST("/api/v1/platform/sync-repos", git_sync.SyncPlatformRepos)
 }

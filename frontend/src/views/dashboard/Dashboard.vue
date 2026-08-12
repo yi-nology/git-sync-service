@@ -190,9 +190,9 @@
           <div class="status-item">
             <div class="status-item-label">
               <ClockCircleOutlined style="color: $primary; margin-right: 6px;" />
-              最后同步时间
+              Go 版本
             </div>
-            <span class="status-value">{{ systemStatus?.lastSyncAt || '暂无' }}</span>
+            <span class="status-value">{{ systemStatus?.go_version || '-' }}</span>
           </div>
           <a-divider type="vertical" style="height: 40px;" />
           <div class="status-item">

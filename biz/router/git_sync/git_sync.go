@@ -21,14 +21,30 @@ func Register(r *server.Hertz) {
 		_api := root.Group("/api", _apiMw()...)
 		{
 			_v1 := _api.Group("/v1", _v1Mw()...)
-			_v1.GET("/repo", append(_getMw(), git_sync.Get)...)
+			_v1.GET("/platform", append(_getplatformMw(), git_sync.GetPlatform)...)
+			_platform := _v1.Group("/platform", _platformMw()...)
+			_platform.POST("/create", append(_createplatformMw(), git_sync.CreatePlatform)...)
+			_platform.POST("/delete", append(_deleteplatformMw(), git_sync.DeletePlatform)...)
+			_platform.GET("/repos", append(_listplatformreposMw(), git_sync.ListPlatformRepos)...)
+			_platform.POST("/set-default", append(_setdefaultplatformMw(), git_sync.SetDefaultPlatform)...)
+			_platform.POST("/sync-repos", append(_syncplatformreposMw(), git_sync.SyncPlatformRepos)...)
+			_platform.POST("/test", append(_testplatformconnectionMw(), git_sync.TestPlatformConnection)...)
+			_platform.POST("/update", append(_updateplatformMw(), git_sync.UpdatePlatform)...)
+			_v1.GET("/platforms", append(_listplatformsMw(), git_sync.ListPlatforms)...)
+			_v1.GET("/repo", append(_repogetMw(), git_sync.RepoGet)...)
 			_repo := _v1.Group("/repo", _repoMw()...)
-			_repo.GET("/branches", append(_branchesMw(), git_sync.Branches)...)
-			_repo.POST("/create", append(_createMw(), git_sync.Create)...)
-			_repo.POST("/delete", append(_deleteMw(), git_sync.Delete)...)
-			_repo.POST("/test", append(_testMw(), git_sync.Test)...)
-			_repo.POST("/update", append(_updateMw(), git_sync.Update)...)
-			_v1.GET("/repos", append(_listMw(), git_sync.List)...)
+			_repo.GET("/branches", append(_repobranchesMw(), git_sync.RepoBranches)...)
+			_repo.POST("/create", append(_repocreateMw(), git_sync.RepoCreate)...)
+			_repo.POST("/delete", append(_repodeleteMw(), git_sync.RepoDelete)...)
+			_repo.POST("/test", append(_repotestMw(), git_sync.RepoTest)...)
+			_repo.POST("/update", append(_repoupdateMw(), git_sync.RepoUpdate)...)
+			_v1.GET("/repos", append(_repolistMw(), git_sync.RepoList)...)
+			_repos := _v1.Group("/repos", _reposMw()...)
+			_repos.POST("/batch", append(_batchreposMw(), git_sync.BatchRepos)...)
+			{
+				_logs := _v1.Group("/logs", _logsMw()...)
+				_logs.GET("/operations", append(_listoperationlogsMw(), git_sync.ListOperationLogs)...)
+			}
 			{
 				_sync := _v1.Group("/sync", _syncMw()...)
 				_sync.GET("/history", append(_taskhistoryMw(), git_sync.TaskHistory)...)
@@ -40,6 +56,10 @@ func Register(r *server.Hertz) {
 				_task.POST("/run", append(_taskrunMw(), git_sync.TaskRun)...)
 				_task.POST("/update", append(_taskupdateMw(), git_sync.TaskUpdate)...)
 				_sync.GET("/tasks", append(_tasklistMw(), git_sync.TaskList)...)
+			}
+			{
+				_system := _v1.Group("/system", _systemMw()...)
+				_system.GET("/status", append(_systemstatusMw(), git_sync.SystemStatus)...)
 			}
 			{
 				_webhook := _v1.Group("/webhook", _webhookMw()...)

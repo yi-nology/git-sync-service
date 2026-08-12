@@ -1,18 +1,20 @@
-
-
 include "base.thrift"
 include "repo.thrift"
 include "sync_task.thrift"
 include "webhook.thrift"
+include "operation_log.thrift"
+include "platform.thrift"
+include "system.thrift"
 
 service RepoService {
-    repo.ListReposResp List(1: repo.ListReposReq req) (api.get="/api/v1/repos")
-    repo.GetRepoResp Get(1: repo.GetRepoReq req) (api.get="/api/v1/repo")
-    repo.CreateRepoResp Create(1: repo.CreateRepoReq req) (api.post="/api/v1/repo/create")
-    repo.UpdateRepoResp Update(1: repo.UpdateRepoReq req) (api.post="/api/v1/repo/update")
-    repo.DeleteRepoResp Delete(1: repo.DeleteRepoReq req) (api.post="/api/v1/repo/delete")
-    repo.TestConnectionResp Test(1: repo.TestConnectionReq req) (api.post="/api/v1/repo/test")
-    repo.ListBranchesResp Branches(1: repo.ListBranchesReq req) (api.get="/api/v1/repo/branches")
+    repo.ListReposResp RepoList(1: repo.ListReposReq req) (api.get="/api/v1/repos")
+    repo.GetRepoResp RepoGet(1: repo.GetRepoReq req) (api.get="/api/v1/repo")
+    repo.CreateRepoResp RepoCreate(1: repo.CreateRepoReq req) (api.post="/api/v1/repo/create")
+    repo.UpdateRepoResp RepoUpdate(1: repo.UpdateRepoReq req) (api.post="/api/v1/repo/update")
+    repo.DeleteRepoResp RepoDelete(1: repo.DeleteRepoReq req) (api.post="/api/v1/repo/delete")
+    repo.TestConnectionResp RepoTest(1: repo.TestConnectionReq req) (api.post="/api/v1/repo/test")
+    repo.ListBranchesResp RepoBranches(1: repo.ListBranchesReq req) (api.get="/api/v1/repo/branches")
+    repo.BatchReposResp BatchRepos(1: repo.BatchReposReq req) (api.post="/api/v1/repos/batch")
 }
 
 service SyncTaskService {
@@ -34,4 +36,24 @@ service WebhookService {
     webhook.DeleteRuleResp RuleDelete(1: webhook.DeleteRuleReq req) (api.post="/api/v1/webhook/rule/delete")
     webhook.ListEventsResp ListEvents(1: webhook.ListEventsReq req) (api.get="/api/v1/webhook/events")
     webhook.RetryEventResp RetryEvent(1: webhook.RetryEventReq req) (api.post="/api/v1/webhook/event/retry")
+}
+
+service OperationLogService {
+    operation_log.ListOperationLogsResp ListOperationLogs(1: operation_log.ListOperationLogsReq req) (api.get="/api/v1/logs/operations")
+}
+
+service PlatformService {
+    platform.ListPlatformsResp ListPlatforms(1: platform.ListPlatformsReq req) (api.get="/api/v1/platforms")
+    platform.GetPlatformResp GetPlatform(1: platform.GetPlatformReq req) (api.get="/api/v1/platform")
+    platform.CreatePlatformResp CreatePlatform(1: platform.CreatePlatformReq req) (api.post="/api/v1/platform/create")
+    platform.UpdatePlatformResp UpdatePlatform(1: platform.UpdatePlatformReq req) (api.post="/api/v1/platform/update")
+    platform.DeletePlatformResp DeletePlatform(1: platform.DeletePlatformReq req) (api.post="/api/v1/platform/delete")
+    platform.SetDefaultPlatformResp SetDefaultPlatform(1: platform.SetDefaultPlatformReq req) (api.post="/api/v1/platform/set-default")
+    platform.TestPlatformConnectionResp TestPlatformConnection(1: platform.TestPlatformConnectionReq req) (api.post="/api/v1/platform/test")
+    platform.ListPlatformReposResp ListPlatformRepos(1: platform.ListPlatformReposReq req) (api.get="/api/v1/platform/repos")
+    platform.SyncPlatformReposResp SyncPlatformRepos(1: platform.SyncPlatformReposReq req) (api.post="/api/v1/platform/sync-repos")
+}
+
+service SystemService {
+    system.SystemStatusData SystemStatus(1: system.SystemStatusReq req) (api.get="/api/v1/system/status")
 }

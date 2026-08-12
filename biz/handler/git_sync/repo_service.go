@@ -15,19 +15,8 @@ import (
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
 
-// ListReposRequest is the request struct for the ListRepos endpoint with filtering support.
-type ListReposRequest struct {
-	Page      int    `query:"page" default:"1"`
-	PageSize  int    `query:"page_size" default:"10"`
-	Search    string `query:"search"`
-	Platform  string `query:"platform"`
-	Status    string `query:"status"`
-	SortBy    string `query:"sort_by" default:"created_at"`
-	SortOrder string `query:"sort_order" default:"desc"`
-}
-
-func List(ctx context.Context, c *app.RequestContext) {
-	var req ListReposRequest
+func RepoList(ctx context.Context, c *app.RequestContext) {
+	var req repo.ListReposReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -40,8 +29,14 @@ func List(ctx context.Context, c *app.RequestContext) {
 	if req.PageSize <= 0 {
 		req.PageSize = 10
 	}
+	if req.SortBy == "" {
+		req.SortBy = "created_at"
+	}
+	if req.SortOrder == "" {
+		req.SortOrder = "desc"
+	}
 
-	offset, limit := converter.PageToOffset(int32(req.Page), int32(req.PageSize))
+	offset, limit := converter.PageToOffset(req.Page, req.PageSize)
 
 	filter := dao.RepoFilter{
 		Search:   req.Search,
@@ -57,10 +52,10 @@ func List(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	response.Paginated(c, converter.ToRepoInfoList(list), total, req.Page, req.PageSize)
+	response.Paginated(c, converter.ToRepoInfoList(list), total, int(req.Page), int(req.PageSize))
 }
 
-func Get(ctx context.Context, c *app.RequestContext) {
+func RepoGet(ctx context.Context, c *app.RequestContext) {
 	var req repo.GetRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -83,7 +78,7 @@ func Get(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.GetRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func Create(ctx context.Context, c *app.RequestContext) {
+func RepoCreate(ctx context.Context, c *app.RequestContext) {
 	var req repo.CreateRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -116,7 +111,7 @@ func Create(ctx context.Context, c *app.RequestContext) {
 	response.Created(c, &repo.CreateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func Update(ctx context.Context, c *app.RequestContext) {
+func RepoUpdate(ctx context.Context, c *app.RequestContext) {
 	var req repo.UpdateRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -142,7 +137,7 @@ func Update(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.UpdateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func Delete(ctx context.Context, c *app.RequestContext) {
+func RepoDelete(ctx context.Context, c *app.RequestContext) {
 	var req repo.DeleteRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -161,7 +156,7 @@ func Delete(ctx context.Context, c *app.RequestContext) {
 	response.NoContent(c)
 }
 
-func Test(ctx context.Context, c *app.RequestContext) {
+func RepoTest(ctx context.Context, c *app.RequestContext) {
 	var req repo.TestConnectionReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -180,7 +175,7 @@ func Test(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.TestConnectionResp{Success: result.Success, Message: result.Message})
 }
 
-func Branches(ctx context.Context, c *app.RequestContext) {
+func RepoBranches(ctx context.Context, c *app.RequestContext) {
 	var req repo.ListBranchesReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -197,4 +192,44 @@ func Branches(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	response.Success(c, &repo.ListBranchesResp{Branches: branches})
+}
+
+// BatchRepos 批量操作仓库（目前仅支持 delete）。
+func BatchRepos(ctx context.Context, c *app.RequestContext) {
+	var req repo.BatchReposReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.Action == "" {
+		response.BadRequest(c, "action is required")
+		return
+	}
+	if len(req.Keys) == 0 {
+		response.BadRequest(c, "keys must not be empty")
+		return
+	}
+	if req.Action != "delete" {
+		response.BadRequest(c, fmt.Sprintf("unsupported action: %s", req.Action))
+		return
+	}
+
+	total := len(req.Keys)
+	success := 0
+	failed := 0
+	var errs []string
+	for _, key := range req.Keys {
+		if err := GetSyncService().DeleteRepo(ctx, key); err != nil {
+			failed++
+			errs = append(errs, fmt.Sprintf("%s: %v", key, err))
+		} else {
+			success++
+		}
+	}
+	response.Success(c, &repo.BatchReposResp{
+		Total:   int32(total),
+		Success: int32(success),
+		Failed:  int32(failed),
+		Errors:  errs,
+	})
 }

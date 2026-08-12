@@ -21,6 +21,12 @@ func setupCronTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(&model.SyncTask{}); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
+	// sqlite :memory: 每个连接是独立库;强制单连接,确保 cron goroutine 能看到已迁移的表
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("failed to get underlying db: %v", err)
+	}
+	sqlDB.SetMaxOpenConns(1)
 	return db
 }
 

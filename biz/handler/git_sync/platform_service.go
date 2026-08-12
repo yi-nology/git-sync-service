@@ -7,97 +7,75 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/google/uuid"
+	platform "github.com/yi-nology/git-sync-service/biz/model/platform"
+	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
-// PlatformCreateRequest 创建平台请求
-type PlatformCreateRequest struct {
-	Name          string `json:"name" vd:"required"`
-	Type          string `json:"type" vd:"required"`
-	InstanceURL   string `json:"instance_url"`
-	APIURL        string `json:"api_url"`
-	AccessToken   string `json:"access_token" vd:"required"`
-	SkipTLSVerify bool   `json:"skip_tls_verify"`
-	CACertPath    string `json:"ca_cert_path"`
-	ProxyURL      string `json:"proxy_url"`
-	IsDefault     bool   `json:"is_default"`
-}
-
-// PlatformUpdateRequest 更新平台请求
-type PlatformUpdateRequest struct {
-	Key           string `json:"key" vd:"required"`
-	Name          string `json:"name"`
-	InstanceURL   string `json:"instance_url"`
-	APIURL        string `json:"api_url"`
-	AccessToken   string `json:"access_token"`
-	SkipTLSVerify *bool  `json:"skip_tls_verify"`
-	CACertPath    string `json:"ca_cert_path"`
-	ProxyURL      string `json:"proxy_url"`
-	IsDefault     *bool  `json:"is_default"`
-}
-
-// PlatformListResponse 平台列表响应
-type PlatformListResponse struct {
-	Platforms []*model.Platform `json:"platforms"`
-	Total     int64             `json:"total"`
-}
-
 // CreatePlatform 创建平台
 func CreatePlatform(ctx context.Context, c *app.RequestContext) {
-	var req PlatformCreateRequest
+	var req platform.CreatePlatformReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
-
-	// 生成 API URL（如果未提供）
-	apiURL := req.APIURL
-	if apiURL == "" && req.Type != model.PlatformTypeCustom {
-		apiURL = model.GetAPIURL(req.Type, req.InstanceURL)
+	if req.Name == "" || req.Type == "" || req.AccessToken == "" {
+		response.BadRequest(c, "name, type, access_token are required")
+		return
 	}
 
-	platform := &model.Platform{
+	// 生成 API URL（如果未提供）
+	apiURL := req.ApiUrl
+	if apiURL == "" && req.Type != model.PlatformTypeCustom {
+		apiURL = model.GetAPIURL(req.Type, req.InstanceUrl)
+	}
+
+	p := &model.Platform{
 		Key:           uuid.New().String(),
 		Name:          req.Name,
 		Type:          req.Type,
-		InstanceURL:   req.InstanceURL,
+		InstanceURL:   req.InstanceUrl,
 		APIURL:        apiURL,
 		AccessToken:   req.AccessToken,
-		SkipTLSVerify: req.SkipTLSVerify,
-		CACertPath:    req.CACertPath,
-		ProxyURL:      req.ProxyURL,
+		SkipTLSVerify: req.SkipTlsVerify,
+		CACertPath:    req.CaCertPath,
+		ProxyURL:      req.ProxyUrl,
 		IsDefault:     req.IsDefault,
 		Status:        model.PlatformStatusActive,
 	}
 
-	if err := GetSyncService().CreatePlatform(ctx, platform); err != nil {
+	if err := GetSyncService().CreatePlatform(ctx, p); err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	recordAudit(ctx, c, "create", "platform", platform.Key, "创建平台 "+platform.Name)
-	response.Created(c, map[string]interface{}{
-		"platform": platform,
+	recordAudit(ctx, c, "create", "platform", p.Key, "创建平台 "+p.Name)
+	response.Created(c, &platform.CreatePlatformResp{
+		Platform: converter.ToPlatformInfo(p),
 	})
 }
 
 // GetPlatform 获取单个平台
 func GetPlatform(ctx context.Context, c *app.RequestContext) {
-	key := c.Query("key")
-	if key == "" {
+	var req platform.GetPlatformReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.Key == "" {
 		response.BadRequest(c, "key is required")
 		return
 	}
 
-	platform, err := GetSyncService().GetPlatform(ctx, key)
+	p, err := GetSyncService().GetPlatform(ctx, req.Key)
 	if err != nil {
 		response.NotFound(c, "platform not found")
 		return
 	}
 
-	response.Success(c, map[string]interface{}{
-		"platform": platform,
+	response.Success(c, &platform.GetPlatformResp{
+		Platform: converter.ToPlatformInfo(p),
 	})
 }
 
@@ -109,73 +87,81 @@ func ListPlatforms(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	response.Success(c, &PlatformListResponse{
-		Platforms: platforms,
+	response.Success(c, &platform.ListPlatformsResp{
+		Platforms: converter.ToPlatformList(platforms),
 		Total:     int64(len(platforms)),
 	})
 }
 
 // UpdatePlatform 更新平台
 func UpdatePlatform(ctx context.Context, c *app.RequestContext) {
-	var req PlatformUpdateRequest
+	var req platform.UpdatePlatformReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
+	if req.Key == "" {
+		response.BadRequest(c, "key is required")
+		return
+	}
 
-	platform, err := GetSyncService().GetPlatform(ctx, req.Key)
+	p, err := GetSyncService().GetPlatform(ctx, req.Key)
 	if err != nil {
 		response.NotFound(c, "platform not found")
 		return
 	}
 
-	// 更新字段
+	// 更新字段（空值表示不更新）
 	if req.Name != "" {
-		platform.Name = req.Name
+		p.Name = req.Name
 	}
-	if req.InstanceURL != "" {
-		platform.InstanceURL = req.InstanceURL
+	if req.InstanceUrl != "" {
+		p.InstanceURL = req.InstanceUrl
 	}
-	if req.APIURL != "" {
-		platform.APIURL = req.APIURL
+	if req.ApiUrl != "" {
+		p.APIURL = req.ApiUrl
 	}
 	if req.AccessToken != "" {
-		platform.AccessToken = req.AccessToken
+		p.AccessToken = req.AccessToken
 	}
-	if req.SkipTLSVerify != nil {
-		platform.SkipTLSVerify = *req.SkipTLSVerify
+	if req.SkipTlsVerify != nil {
+		p.SkipTLSVerify = *req.SkipTlsVerify
 	}
-	if req.CACertPath != "" {
-		platform.CACertPath = req.CACertPath
+	if req.CaCertPath != "" {
+		p.CACertPath = req.CaCertPath
 	}
-	if req.ProxyURL != "" {
-		platform.ProxyURL = req.ProxyURL
+	if req.ProxyUrl != "" {
+		p.ProxyURL = req.ProxyUrl
 	}
 	if req.IsDefault != nil {
-		platform.IsDefault = *req.IsDefault
+		p.IsDefault = *req.IsDefault
 	}
 
-	if err := GetSyncService().UpdatePlatform(ctx, platform); err != nil {
+	if err := GetSyncService().UpdatePlatform(ctx, p); err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	recordAudit(ctx, c, "update", "platform", req.Key, "更新平台 "+platform.Name)
-	response.Success(c, map[string]interface{}{
-		"platform": platform,
+	recordAudit(ctx, c, "update", "platform", req.Key, "更新平台 "+p.Name)
+	response.Success(c, &platform.UpdatePlatformResp{
+		Platform: converter.ToPlatformInfo(p),
 	})
 }
 
 // DeletePlatform 删除平台
 func DeletePlatform(ctx context.Context, c *app.RequestContext) {
-	key := c.Query("key")
-	if key == "" {
+	var req platform.DeletePlatformReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.Key == "" {
 		response.BadRequest(c, "key is required")
 		return
 	}
 
 	// 检查是否有关联的仓库
-	repos, err := GetSyncService().ListReposByPlatform(ctx, key)
+	repos, err := GetSyncService().ListReposByPlatform(ctx, req.Key)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
@@ -185,52 +171,60 @@ func DeletePlatform(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := GetSyncService().DeletePlatform(ctx, key); err != nil {
+	if err := GetSyncService().DeletePlatform(ctx, req.Key); err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	recordAudit(ctx, c, "delete", "platform", key, "删除平台 "+key)
+	recordAudit(ctx, c, "delete", "platform", req.Key, "删除平台 "+req.Key)
 	c.JSON(http.StatusNoContent, nil)
 }
 
 // SetDefaultPlatform 设置默认平台
 func SetDefaultPlatform(ctx context.Context, c *app.RequestContext) {
-	key := c.Query("key")
-	if key == "" {
+	var req platform.SetDefaultPlatformReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.Key == "" {
 		response.BadRequest(c, "key is required")
 		return
 	}
 
-	if err := GetSyncService().SetDefaultPlatform(ctx, key); err != nil {
+	if err := GetSyncService().SetDefaultPlatform(ctx, req.Key); err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	recordAudit(ctx, c, "update", "platform", key, "设置默认平台 "+key)
-	response.Success(c, map[string]interface{}{
-		"message": "设置成功",
+	recordAudit(ctx, c, "update", "platform", req.Key, "设置默认平台 "+req.Key)
+	response.Success(c, &platform.SetDefaultPlatformResp{
+		Message: "设置成功",
 	})
 }
 
 // TestPlatformConnection 测试平台连接
 func TestPlatformConnection(ctx context.Context, c *app.RequestContext) {
-	key := c.Query("key")
-	if key == "" {
+	var req platform.TestPlatformConnectionReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.Key == "" {
 		response.BadRequest(c, "key is required")
 		return
 	}
 
-	result, err := GetSyncService().TestPlatformConnection(ctx, key)
+	result, err := GetSyncService().TestPlatformConnection(ctx, req.Key)
 	if err != nil {
 		// 更新平台状态为错误
-		_ = GetSyncService().UpdatePlatformStatus(ctx, key, model.PlatformStatusError, err.Error())
+		_ = GetSyncService().UpdatePlatformStatus(ctx, req.Key, model.PlatformStatusError, err.Error())
 		response.InternalError(c, err.Error())
 		return
 	}
 
 	// 更新平台状态为正常
-	_ = GetSyncService().UpdatePlatformStatus(ctx, key, model.PlatformStatusActive, "connection successful")
+	_ = GetSyncService().UpdatePlatformStatus(ctx, req.Key, model.PlatformStatusActive, "connection successful")
 
 	response.Success(c, map[string]interface{}{
 		"result": result,
@@ -239,16 +233,26 @@ func TestPlatformConnection(ctx context.Context, c *app.RequestContext) {
 
 // ListPlatformRepos 列出平台上的仓库（从远程 API 获取）
 func ListPlatformRepos(ctx context.Context, c *app.RequestContext) {
-	key := c.Query("key")
-	if key == "" {
+	var req platform.ListPlatformReposReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.Key == "" {
 		response.BadRequest(c, "key is required")
 		return
 	}
 
-	page := c.DefaultQuery("page", "1")
-	perPage := c.DefaultQuery("per_page", "30")
+	page := req.Page
+	if page == "" {
+		page = "1"
+	}
+	perPage := req.PerPage
+	if perPage == "" {
+		perPage = "30"
+	}
 
-	repos, err := GetSyncService().ListPlatformRepos(ctx, key, page, perPage)
+	repos, err := GetSyncService().ListPlatformRepos(ctx, req.Key, page, perPage)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
@@ -262,21 +266,25 @@ func ListPlatformRepos(ctx context.Context, c *app.RequestContext) {
 
 // SyncPlatformRepos 同步平台仓库到本地
 func SyncPlatformRepos(ctx context.Context, c *app.RequestContext) {
-	key := c.Query("key")
-	if key == "" {
+	var req platform.SyncPlatformReposReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.Key == "" {
 		response.BadRequest(c, "key is required")
 		return
 	}
 
-	count, err := GetSyncService().SyncPlatformRepos(ctx, key)
+	count, err := GetSyncService().SyncPlatformRepos(ctx, req.Key)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	recordAudit(ctx, c, "sync", "platform", key, fmt.Sprintf("同步平台仓库 %s（导入 %d 个）", key, count))
-	response.Success(c, map[string]interface{}{
-		"message":     "同步成功",
-		"syncedCount": count,
+	recordAudit(ctx, c, "sync", "platform", req.Key, fmt.Sprintf("同步平台仓库 %s（导入 %d 个）", req.Key, count))
+	response.Success(c, &platform.SyncPlatformReposResp{
+		Message:     "同步成功",
+		SyncedCount: int32(count),
 	})
 }
