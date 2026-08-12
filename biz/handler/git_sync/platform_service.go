@@ -219,13 +219,13 @@ func TestPlatformConnection(ctx context.Context, c *app.RequestContext) {
 	result, err := GetSyncService().TestPlatformConnection(ctx, key)
 	if err != nil {
 		// 更新平台状态为错误
-		GetSyncService().UpdatePlatformStatus(ctx, key, model.PlatformStatusError, err.Error())
+		_ = GetSyncService().UpdatePlatformStatus(ctx, key, model.PlatformStatusError, err.Error())
 		response.InternalError(c, err.Error())
 		return
 	}
 
 	// 更新平台状态为正常
-	GetSyncService().UpdatePlatformStatus(ctx, key, model.PlatformStatusActive, "connection successful")
+	_ = GetSyncService().UpdatePlatformStatus(ctx, key, model.PlatformStatusActive, "connection successful")
 
 	response.Success(c, map[string]interface{}{
 		"result": result,

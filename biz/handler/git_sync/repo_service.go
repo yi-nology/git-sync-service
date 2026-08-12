@@ -98,7 +98,7 @@ func Create(ctx context.Context, c *app.RequestContext) {
 	platformIDStr := c.Query("platform_id")
 	var platformID uint
 	if platformIDStr != "" {
-		fmt.Sscanf(platformIDStr, "%d", &platformID)
+		_, _ = fmt.Sscanf(platformIDStr, "%d", &platformID)
 	}
 
 	r, err := GetSyncService().CreateRepo(ctx, &syncmodel.CreateRepoRequest{
