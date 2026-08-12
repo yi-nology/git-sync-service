@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"sync"
 	"testing"
 
@@ -150,7 +151,7 @@ func TestStartCronJobs(t *testing.T) {
 	}
 
 	for _, tt := range tasks {
-		if _, err := svc.tasks.CreateTask(nil, &model.CreateTaskRequest{
+		if _, err := svc.tasks.CreateTask(context.TODO(), &model.CreateTaskRequest{
 			Name:          tt.key,
 			SourceRepoKey: "source",
 			SourceBranch:  "main",
@@ -180,7 +181,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 	svc, db := setupCronTestService(t)
 
 	// Create tasks with some disabled
-	task1, err := svc.tasks.CreateTask(nil, &model.CreateTaskRequest{
+	task1, err := svc.tasks.CreateTask(context.TODO(), &model.CreateTaskRequest{
 		Name: "task-1", Cron: "* * * * * *",
 		SourceRepoKey: "source", SourceBranch: "main",
 		TargetRepoKey: "target", TargetBranch: "main",
@@ -188,7 +189,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create task1 failed: %v", err)
 	}
-	task2, err := svc.tasks.CreateTask(nil, &model.CreateTaskRequest{
+	task2, err := svc.tasks.CreateTask(context.TODO(), &model.CreateTaskRequest{
 		Name: "task-2", Cron: "*/2 * * * * *",
 		SourceRepoKey: "source", SourceBranch: "main",
 		TargetRepoKey: "target", TargetBranch: "main",
@@ -238,7 +239,7 @@ func TestStartCronJobs_WithTasksWithoutCron(t *testing.T) {
 	svc, _ := setupCronTestService(t)
 
 	// Create tasks without cron
-	if _, err := svc.tasks.CreateTask(nil, &model.CreateTaskRequest{
+	if _, err := svc.tasks.CreateTask(context.TODO(), &model.CreateTaskRequest{
 		Name: "task-1", Cron: "",
 		SourceRepoKey: "source", SourceBranch: "main",
 		TargetRepoKey: "target", TargetBranch: "main",

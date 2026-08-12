@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -52,7 +53,7 @@ func TestCreateRule(t *testing.T) {
 		Description:   "Test webhook rule",
 	}
 
-	rule, err := svc.CreateRule(nil, req)
+	rule, err := svc.CreateRule(context.TODO(), req)
 	if err != nil {
 		t.Fatalf("CreateRule failed: %v", err)
 	}
@@ -100,13 +101,13 @@ func TestGetRule(t *testing.T) {
 		Enabled:       true,
 	}
 
-	created, err := svc.CreateRule(nil, req)
+	created, err := svc.CreateRule(context.TODO(), req)
 	if err != nil {
 		t.Fatalf("CreateRule failed: %v", err)
 	}
 
 	// Get the rule
-	rule, err := svc.GetRule(nil, created.ID)
+	rule, err := svc.GetRule(context.TODO(), created.ID)
 	if err != nil {
 		t.Fatalf("GetRule failed: %v", err)
 	}
@@ -131,14 +132,14 @@ func TestListRules(t *testing.T) {
 			Action:        "sync",
 			Enabled:       true,
 		}
-		_, err := svc.CreateRule(nil, req)
+		_, err := svc.CreateRule(context.TODO(), req)
 		if err != nil {
 			t.Fatalf("CreateRule failed: %v", err)
 		}
 	}
 
 	// List rules
-	rules, err := svc.ListRules(nil, "test-repo")
+	rules, err := svc.ListRules(context.TODO(), "test-repo")
 	if err != nil {
 		t.Fatalf("ListRules failed: %v", err)
 	}
@@ -161,7 +162,7 @@ func TestUpdateRule(t *testing.T) {
 		Enabled:       true,
 	}
 
-	created, err := svc.CreateRule(nil, req)
+	created, err := svc.CreateRule(context.TODO(), req)
 	if err != nil {
 		t.Fatalf("CreateRule failed: %v", err)
 	}
@@ -178,7 +179,7 @@ func TestUpdateRule(t *testing.T) {
 		Enabled:       false,
 	}
 
-	updated, err := svc.UpdateRule(nil, updateReq)
+	updated, err := svc.UpdateRule(context.TODO(), updateReq)
 	if err != nil {
 		t.Fatalf("UpdateRule failed: %v", err)
 	}
@@ -208,7 +209,7 @@ func TestUpdateRule_NotFound(t *testing.T) {
 		Name: "Updated Rule",
 	}
 
-	_, err := svc.UpdateRule(nil, updateReq)
+	_, err := svc.UpdateRule(context.TODO(), updateReq)
 	if err == nil {
 		t.Fatal("expected error for non-existent rule")
 	}
@@ -231,19 +232,19 @@ func TestDeleteRule(t *testing.T) {
 		Enabled:       true,
 	}
 
-	created, err := svc.CreateRule(nil, req)
+	created, err := svc.CreateRule(context.TODO(), req)
 	if err != nil {
 		t.Fatalf("CreateRule failed: %v", err)
 	}
 
 	// Delete the rule
-	err = svc.DeleteRule(nil, created.ID)
+	err = svc.DeleteRule(context.TODO(), created.ID)
 	if err != nil {
 		t.Fatalf("DeleteRule failed: %v", err)
 	}
 
 	// Verify it's deleted
-	rule, err := svc.GetRule(nil, created.ID)
+	rule, err := svc.GetRule(context.TODO(), created.ID)
 	if err != nil {
 		t.Fatalf("GetRule failed: %v", err)
 	}
