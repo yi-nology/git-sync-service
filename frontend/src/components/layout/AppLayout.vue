@@ -1,10 +1,8 @@
 <template>
   <a-layout class="app-layout">
-    <!-- Top Navigation -->
-    <TopNav />
-
-    <!-- Main Content Area -->
-    <a-layout class="main-layout">
+    <AppSider :collapsed="collapsed" />
+    <a-layout>
+      <AppHeader :collapsed="collapsed" @toggle="collapsed = !collapsed" />
       <a-layout-content class="app-content">
         <router-view v-slot="{ Component }">
           <transition name="page-fade" mode="out-in">
@@ -17,7 +15,12 @@
 </template>
 
 <script setup lang="ts">
-import TopNav from './TopNav.vue'
+import { ref } from 'vue'
+import AppSider from './AppSider.vue'
+import AppHeader from './AppHeader.vue'
+
+// 侧边栏折叠状态(由顶部按钮控制)
+const collapsed = ref(false)
 </script>
 
 <style scoped lang="scss">
@@ -25,16 +28,12 @@ import TopNav from './TopNav.vue'
   min-height: 100vh;
 }
 
-.main-layout {
-  min-height: calc(100vh - 56px);
-}
-
 .app-content {
   padding: 24px;
   min-height: 280px;
+  background: #f5f5f5;
 }
 
-// Page transition
 .page-fade-enter-active,
 .page-fade-leave-active {
   transition: opacity 0.15s ease;

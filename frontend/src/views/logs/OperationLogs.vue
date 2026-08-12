@@ -20,7 +20,7 @@
     <!-- Stats Cards -->
     <div class="stats-row">
       <div class="stat-card">
-        <div class="stat-icon" style="background: #E6F7FF; color: #1677FF;">
+        <div class="stat-icon" style="background: #e6f7ff; color: #1677ff;">
           <CalendarOutlined />
         </div>
         <div class="stat-content">
@@ -29,7 +29,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: #F6FFED; color: #52C41A;">
+        <div class="stat-icon" style="background: #f6ffed; color: #52c41a;">
           <CalendarOutlined />
         </div>
         <div class="stat-content">
@@ -38,7 +38,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: #FFF7E6; color: #FAAD14;">
+        <div class="stat-icon" style="background: #fff7e6; color: #faad14;">
           <FileTextOutlined />
         </div>
         <div class="stat-content">
@@ -49,7 +49,7 @@
     </div>
 
     <!-- Filter Bar -->
-    <div class="filter-bar">
+    <div class="filter-bar carded">
       <a-input
         v-model:value="filters.search"
         placeholder="搜索日志内容..."
@@ -133,7 +133,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
-import { message } from 'ant-design-vue'
+import type { TablePaginationConfig } from 'ant-design-vue'
 import {
   ReloadOutlined,
   SearchOutlined,
@@ -143,16 +143,13 @@ import {
   UndoOutlined,
 } from '@ant-design/icons-vue'
 import { logApi } from '@/api'
-import type { OperationLog, OperationLogRequest } from '@/api'
+import type { OperationLog, OperationLogParams } from '@/types/api'
+import { notifyError, notifySuccess } from '@/utils/notify'
 import dayjs, { type Dayjs } from 'dayjs'
 
 const loading = ref(false)
 const logs = ref<OperationLog[]>([])
-const stats = reactive({
-  today: 0,
-  week: 0,
-  total: 0,
-})
+const stats = reactive({ today: 0, week: 0, total: 0 })
 
 const filters = reactive({
   search: '',
@@ -231,16 +228,16 @@ function resetFilters() {
   fetchLogs()
 }
 
-function handleTableChange(pag: any) {
-  pagination.current = pag.current
-  pagination.pageSize = pag.pageSize
+function handleTableChange(pag: TablePaginationConfig) {
+  pagination.current = pag.current || 1
+  pagination.pageSize = pag.pageSize || 10
   fetchLogs()
 }
 
 async function fetchLogs() {
   loading.value = true
   try {
-    const params: OperationLogRequest = {
+    const params: OperationLogParams = {
       page: pagination.current,
       page_size: pagination.pageSize,
     }
@@ -249,38 +246,35 @@ async function fetchLogs() {
     if (filters.startDate) params.start_date = filters.startDate
     if (filters.endDate) params.end_date = filters.endDate
 
-    const resp: any = await logApi.listOperations(params)
-    // 响应信封为 { code, message, data: { list, pagination, stats } }
-    const data = resp?.data ?? resp
+    const data = await logApi.listOperations(params)
     logs.value = data.list || []
     pagination.total = data.pagination?.total || 0
     stats.today = data.stats?.today ?? 0
     stats.week = data.stats?.week ?? 0
     stats.total = data.stats?.total ?? pagination.total
-  } catch (e: any) {
-    // 接口不可用时如实清空，不再展示假数据
+  } catch (e) {
+    // 接口不可用时如实清空,不展示假数据
     logs.value = []
     pagination.total = 0
     stats.today = 0
     stats.week = 0
     stats.total = 0
-    message.error(e?.message || '获取操作日志失败')
+    notifyError(e, '获取操作日志失败')
   } finally {
     loading.value = false
   }
 }
 
 function handleExport() {
-  // Build CSV content
   const headers = ['时间', '用户', '操作类型', '操作内容', 'IP']
-  const rows = logs.value.map(log => [
+  const rows = logs.value.map((log) => [
     formatTime(log.time),
     log.user,
     actionLabel(log.action),
     log.resource,
     log.ip,
   ])
-  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+  const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -288,7 +282,7 @@ function handleExport() {
   link.download = `operation-logs-${dayjs().format('YYYY-MM-DD')}.csv`
   link.click()
   URL.revokeObjectURL(url)
-  message.success('日志导出成功')
+  notifySuccess('日志导出成功')
 }
 
 onMounted(() => {
@@ -297,91 +291,17 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
-.page-container {
-  background: $background-color;
-  min-height: 100%;
-}
-
-.page-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 4px 0 0 0;
-}
-
+// 本页统计卡为 3 列
 .stats-row {
-  display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
 }
 
-.stat-card {
-  background: $card-background;
-  border-radius: $radius-md;
-  padding: $spacing-lg;
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  box-shadow: $shadow-card;
-  transition: box-shadow 0.2s;
-
-  &:hover {
-    box-shadow: $shadow-card-hover;
-  }
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: $text-primary;
-  line-height: 1.2;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: $text-secondary;
-  margin-top: 4px;
-}
-
-.filter-bar {
-  display: flex;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: $spacing-md;
+// 过滤栏带卡片背景(覆盖全局)
+.filter-bar.carded {
   padding: $spacing-md;
-  background: $card-background;
+  background: $bg-primary;
   border-radius: $radius-md;
   box-shadow: $shadow-card;
 }

@@ -16,7 +16,7 @@
     <!-- Stats Cards -->
     <div class="stats-row">
       <div class="stat-card">
-        <div class="stat-icon" style="background: #E6F7FF; color: #1677FF;">
+        <div class="stat-icon" style="background: #e6f7ff; color: #1677ff;">
           <ThunderboltOutlined />
         </div>
         <div class="stat-content">
@@ -25,7 +25,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: #F6FFED; color: #52C41A;">
+        <div class="stat-icon" style="background: #f6ffed; color: #52c41a;">
           <CheckCircleOutlined />
         </div>
         <div class="stat-content">
@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: #FFF7E6; color: #FAAD14;">
+        <div class="stat-icon" style="background: #fff7e6; color: #faad14;">
           <ClockCircleOutlined />
         </div>
         <div class="stat-content">
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Filter Bar -->
-    <div class="filter-bar">
+    <div class="filter-bar carded">
       <a-select
         v-model:value="filters.taskKey"
         placeholder="选择任务"
@@ -100,7 +100,13 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'task_name'">
-          <a class="task-link" @click="openDrawer(record)">{{ getTaskName(record.task_key) }}</a>
+          <a
+            class="task-link"
+            role="button"
+            tabindex="0"
+            @click="openDrawer(record)"
+            @keydown.enter="openDrawer(record)"
+          >{{ getTaskName(record.task_key) }}</a>
         </template>
 
         <template v-if="column.key === 'trigger_source'">
@@ -159,7 +165,6 @@
       placement="right"
     >
       <template v-if="currentLog">
-        <!-- Basic Info -->
         <a-descriptions :column="2" bordered size="small" class="detail-section">
           <a-descriptions-item label="任务名称" :span="2">
             {{ getTaskName(currentLog.task_key) }}
@@ -183,7 +188,6 @@
           </a-descriptions-item>
         </a-descriptions>
 
-        <!-- Sync Info -->
         <a-divider>同步信息</a-divider>
         <a-descriptions :column="2" bordered size="small" class="detail-section">
           <a-descriptions-item label="源仓库" :span="2">
@@ -200,7 +204,6 @@
           </a-descriptions-item>
         </a-descriptions>
 
-        <!-- Execution Log -->
         <a-divider>执行日志</a-divider>
         <div class="execution-log">
           <div v-if="parsedDetails.length" class="log-steps">
@@ -221,7 +224,6 @@
           <a-empty v-else :image="simpleImage" description="暂无执行日志" />
         </div>
 
-        <!-- Error Info -->
         <template v-if="currentLog.status === 'failed' && currentLog.error_message">
           <a-divider>错误信息</a-divider>
           <a-alert
@@ -232,7 +234,6 @@
           />
         </template>
 
-        <!-- Actions -->
         <div class="drawer-actions">
           <a-space>
             <a-button
@@ -254,7 +255,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive, computed } from 'vue'
-import { message, Empty } from 'ant-design-vue'
+import { Empty } from 'ant-design-vue'
+import type { TablePaginationConfig } from 'ant-design-vue'
 import {
   ReloadOutlined,
   SearchOutlined,
@@ -265,9 +267,11 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons-vue'
-import { logApi, syncTaskApi } from '@/api'
-import type { SyncLog, SyncLogRequest } from '@/api'
+import { syncTaskApi } from '@/api'
+import type { SyncLog } from '@/types/api'
 import type { SyncTask } from '@/types'
+import { triggerColor, triggerLabel } from '@/utils/dictionaries'
+import { notifySuccess, notifyError } from '@/utils/notify'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import dayjs, { type Dayjs } from 'dayjs'
 
@@ -310,10 +314,11 @@ const columns = [
   { title: '操作', key: 'action', width: 170, fixed: 'right' as const },
 ]
 
-// Task lookup map for quick access
 const taskMap = computed(() => {
   const map: Record<string, SyncTask> = {}
-  tasks.value.forEach(t => { map[t.key] = t })
+  tasks.value.forEach((t) => {
+    map[t.key] = t
+  })
   return map
 })
 
@@ -339,17 +344,16 @@ function getRepoDisplay(taskKey: string): string {
   return `${task.source_repo_key} -> ${task.target_repo_key}`
 }
 
-// Parse execution details into structured steps
+// 把执行详情解析为结构化步骤
 const parsedDetails = computed(() => {
   if (!currentLog.value?.details) return []
   try {
     const parsed = JSON.parse(currentLog.value.details)
-    if (Array.isArray(parsed)) return parsed
+    if (Array.isArray(parsed)) return parsed as { time?: string; message: string; type?: string }[]
     return []
   } catch {
-    // If not JSON, split by newlines into steps
-    const lines = currentLog.value.details.split('\n').filter(l => l.trim())
-    return lines.map(line => {
+    const lines = currentLog.value.details.split('\n').filter((l) => l.trim())
+    return lines.map((line) => {
       const timeMatch = line.match(/^\[([^\]]+)\]\s*(.*)$/)
       if (timeMatch) {
         return { time: timeMatch[1], message: timeMatch[2], type: 'info' }
@@ -358,26 +362,6 @@ const parsedDetails = computed(() => {
     })
   }
 })
-
-function triggerColor(trigger: string): string {
-  const map: Record<string, string> = {
-    manual: 'green',
-    cron: 'blue',
-    webhook: 'purple',
-    retry: 'orange',
-  }
-  return map[trigger] || 'default'
-}
-
-function triggerLabel(trigger: string): string {
-  const map: Record<string, string> = {
-    manual: '手动',
-    cron: '定时',
-    webhook: 'Webhook',
-    retry: '重试',
-  }
-  return map[trigger] || trigger
-}
 
 function formatTime(time: string): string {
   if (!time) return '-'
@@ -396,9 +380,9 @@ function calcDuration(start: string, end: string): string {
   }
 }
 
-function filterTaskOption(input: string, option: any) {
+function filterTaskOption(input: string, option: { value?: string }) {
   if (!option.value) return true
-  const task = tasks.value.find(t => t.key === option.value)
+  const task = tasks.value.find((t) => t.key === option.value)
   return task?.name.toLowerCase().includes(input.toLowerCase()) || false
 }
 
@@ -427,9 +411,9 @@ function resetFilters() {
   fetchLogs()
 }
 
-function handleTableChange(pag: any) {
-  pagination.current = pag.current
-  pagination.pageSize = pag.pageSize
+function handleTableChange(pag: TablePaginationConfig) {
+  pagination.current = pag.current || 1
+  pagination.pageSize = pag.pageSize || 10
   fetchLogs()
 }
 
@@ -441,27 +425,26 @@ function openDrawer(record: SyncLog) {
 async function handleRetry(record: SyncLog) {
   try {
     await syncTaskApi.run(record.task_key)
-    message.success('重试任务已提交')
-    // Refresh the log list after a short delay
+    notifySuccess('重试任务已提交')
     setTimeout(() => fetchLogs(), 1500)
-  } catch (e: any) {
-    message.error(e.error || '重试失败')
+  } catch (e) {
+    notifyError(e, '重试失败')
   }
 }
 
 function calculateStats(logList: SyncLog[]) {
   const today = dayjs().format('YYYY-MM-DD')
-  const todayLogs = logList.filter(l => l.start_time?.startsWith(today))
+  const todayLogs = logList.filter((l) => l.start_time?.startsWith(today))
   stats.today = todayLogs.length
 
   if (logList.length > 0) {
-    const successCount = logList.filter(l => l.status === 'success').length
+    const successCount = logList.filter((l) => l.status === 'success').length
     stats.successRate = `${Math.round((successCount / logList.length) * 100)}%`
 
     const durations = logList
-      .filter(l => l.start_time && l.end_time)
-      .map(l => new Date(l.end_time).getTime() - new Date(l.start_time).getTime())
-      .filter(d => d > 0)
+      .filter((l) => l.start_time && l.end_time)
+      .map((l) => new Date(l.end_time).getTime() - new Date(l.start_time).getTime())
+      .filter((d) => d > 0)
     if (durations.length > 0) {
       const avg = durations.reduce((a, b) => a + b, 0) / durations.length
       if (avg < 1000) stats.avgDuration = `${Math.round(avg)}ms`
@@ -479,36 +462,33 @@ function calculateStats(logList: SyncLog[]) {
 async function fetchLogs() {
   loading.value = true
   try {
-    // 使用同步历史 API
-    const allLogs: any[] = []
+    // 聚合所有任务的同步历史
+    const allLogs: SyncLog[] = []
     for (const task of tasks.value) {
       try {
         const resp = await syncTaskApi.history({ task_key: task.key, limit: 50 })
-        const runs = resp.data?.runs || resp.runs || []
-        allLogs.push(...runs.map((r: any) => ({ ...r, task_name: task.name })))
+        allLogs.push(...(resp.runs || []))
       } catch {
-        // ignore individual failures
+        // 忽略单个任务的失败
       }
     }
 
-    // 按时间排序
-    allLogs.sort((a, b) => {
-      return new Date(b.start_time || 0).getTime() - new Date(a.start_time || 0).getTime()
-    })
+    allLogs.sort(
+      (a, b) => new Date(b.start_time || 0).getTime() - new Date(a.start_time || 0).getTime(),
+    )
 
-    // 应用筛选
     let filtered = allLogs
     if (filters.taskKey) {
-      filtered = filtered.filter(log => log.task_key === filters.taskKey)
+      filtered = filtered.filter((log) => log.task_key === filters.taskKey)
     }
     if (filters.status) {
-      filtered = filtered.filter(log => log.status === filters.status)
+      filtered = filtered.filter((log) => log.status === filters.status)
     }
 
     logs.value = filtered
     pagination.total = filtered.length
     calculateStats(logs.value)
-  } catch (e: any) {
+  } catch (e) {
     console.error('Failed to fetch logs:', e)
     logs.value = []
   } finally {
@@ -519,7 +499,7 @@ async function fetchLogs() {
 async function fetchTasks() {
   try {
     const resp = await syncTaskApi.list({ page: 1, page_size: 100 })
-    tasks.value = resp.data?.tasks || resp.tasks || []
+    tasks.value = resp.tasks || []
   } catch {
     tasks.value = []
   }
@@ -532,103 +512,17 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/variables.scss';
-
-.page-container {
-  background: $background-color;
-  min-height: 100%;
-}
-
-.page-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 4px 0 0 0;
-}
+@use '@/styles/variables.scss' as *;
 
 .stats-row {
-  display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
 }
 
-.stat-card {
-  background: $card-background;
-  border-radius: $radius-md;
-  padding: $spacing-lg;
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  box-shadow: $shadow-card;
-  transition: box-shadow 0.2s;
-
-  &:hover {
-    box-shadow: $shadow-card-hover;
-  }
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: $text-primary;
-  line-height: 1.2;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: $text-secondary;
-  margin-top: 4px;
-}
-
-.filter-bar {
-  display: flex;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: $spacing-md;
+.filter-bar.carded {
   padding: $spacing-md;
-  background: $card-background;
+  background: $bg-primary;
   border-radius: $radius-md;
   box-shadow: $shadow-card;
-}
-
-.task-link {
-  color: $primary-color;
-  font-weight: 500;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
 }
 
 .time-cell {
@@ -646,7 +540,7 @@ onMounted(async () => {
   color: $text-primary;
 }
 
-// Drawer styles
+/* 抽屉详情 */
 .detail-section {
   margin-bottom: $spacing-md;
 }
@@ -681,27 +575,16 @@ onMounted(async () => {
   margin-top: 4px;
   flex-shrink: 0;
 
-  &.info {
-    background: $primary-color;
-  }
-
-  &.success {
-    background: $success-color;
-  }
-
-  &.error {
-    background: $error-color;
-  }
-
-  &.warning {
-    background: $warning-color;
-  }
+  &.info    { background: $primary; }
+  &.success { background: $success; }
+  &.error   { background: $error; }
+  &.warning { background: $warning; }
 }
 
 .step-line {
   width: 2px;
   flex: 1;
-  background: #E8E8E8;
+  background: $border;
   margin: 4px 0;
 }
 
@@ -725,8 +608,8 @@ onMounted(async () => {
 
 .log-raw {
   pre {
-    background: #FAFAFA;
-    border: 1px solid $border-color;
+    background: #fafafa;
+    border: 1px solid $border;
     border-radius: $radius-sm;
     padding: $spacing-md;
     font-size: 12px;
@@ -746,7 +629,7 @@ onMounted(async () => {
 .drawer-actions {
   margin-top: $spacing-lg;
   padding-top: $spacing-md;
-  border-top: 1px solid $border-color;
+  border-top: 1px solid $border;
   display: flex;
   justify-content: flex-end;
 }

@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <div class="dashboard-header">
+    <div class="page-header-bar">
       <div>
         <h1 class="page-title">仪表盘</h1>
         <p class="page-subtitle">系统运行概览</p>
@@ -19,43 +19,19 @@
 
     <!-- Stats Cards -->
     <div class="stats-row">
-      <div class="stat-card" @click="router.push('/repos')">
-        <div class="stat-icon blue">
-          <FolderOutlined />
-        </div>
+      <div
+        v-for="card in statCards"
+        :key="card.path"
+        class="stat-card clickable"
+        role="button"
+        tabindex="0"
+        @click="router.push(card.path)"
+        @keydown.enter="router.push(card.path)"
+      >
+        <div class="stat-icon" :class="card.color"><component :is="card.icon" /></div>
         <div class="stat-content">
-          <div class="stat-num">{{ repoStore.total }}</div>
-          <div class="stat-name">仓库总数</div>
-        </div>
-        <div class="stat-arrow"><RightOutlined /></div>
-      </div>
-      <div class="stat-card" @click="router.push('/sync')">
-        <div class="stat-icon green">
-          <SyncOutlined />
-        </div>
-        <div class="stat-content">
-          <div class="stat-num">{{ taskStore.total }}</div>
-          <div class="stat-name">同步任务</div>
-        </div>
-        <div class="stat-arrow"><RightOutlined /></div>
-      </div>
-      <div class="stat-card" @click="router.push('/sync')">
-        <div class="stat-icon orange">
-          <PlayCircleOutlined />
-        </div>
-        <div class="stat-content">
-          <div class="stat-num">{{ runningCount }}</div>
-          <div class="stat-name">运行中</div>
-        </div>
-        <div class="stat-arrow"><RightOutlined /></div>
-      </div>
-      <div class="stat-card" @click="router.push('/sync')">
-        <div class="stat-icon red">
-          <CloseCircleOutlined />
-        </div>
-        <div class="stat-content">
-          <div class="stat-num">{{ failedCount }}</div>
-          <div class="stat-name">失败任务</div>
+          <div class="stat-num">{{ card.value }}</div>
+          <div class="stat-name">{{ card.label }}</div>
         </div>
         <div class="stat-arrow"><RightOutlined /></div>
       </div>
@@ -65,21 +41,17 @@
     <div class="quick-actions">
       <div class="section-title">快捷操作</div>
       <div class="action-grid">
-        <div class="action-item" @click="router.push('/sync/new')">
-          <div class="action-icon blue"><SyncOutlined /></div>
-          <span>创建同步任务</span>
-        </div>
-        <div class="action-item" @click="router.push('/repos')">
-          <div class="action-icon green"><FolderAddOutlined /></div>
-          <span>添加仓库</span>
-        </div>
-        <div class="action-item" @click="router.push('/webhook/rules')">
-          <div class="action-icon purple"><ApiOutlined /></div>
-          <span>配置 Webhook</span>
-        </div>
-        <div class="action-item" @click="router.push('/sync/history')">
-          <div class="action-icon cyan"><HistoryOutlined /></div>
-          <span>查看日志</span>
+        <div
+          v-for="act in quickActions"
+          :key="act.path"
+          class="action-item"
+          role="button"
+          tabindex="0"
+          @click="router.push(act.path)"
+          @keydown.enter="router.push(act.path)"
+        >
+          <div class="action-icon" :class="act.color"><component :is="act.icon" /></div>
+          <span>{{ act.label }}</span>
         </div>
       </div>
     </div>
@@ -89,7 +61,7 @@
       <div class="content-card">
         <div class="card-header">
           <span class="card-title">
-            <SyncOutlined style="margin-right: 8px; color: #1677FF;" />
+            <SyncOutlined style="margin-right: 8px; color: #1677ff;" />
             最近同步任务
           </span>
           <router-link to="/sync">
@@ -106,11 +78,11 @@
           >
             <template #bodyCell="{ column, record }">
               <template v-if="column.dataIndex === 'name'">
-                <a class="task-link" @click="router.push(`/sync`)">{{ record.name }}</a>
+                <a class="task-link" @click="router.push('/sync')">{{ record.name }}</a>
               </template>
               <template v-if="column.dataIndex === 'branch'">
                 <span class="branch-tag">{{ record.source_branch }}</span>
-                <ArrowRightOutlined style="margin: 0 4px; color: #BFBFBF; font-size: 12px;" />
+                <ArrowRightOutlined style="margin: 0 4px; color: #bfbfbf; font-size: 12px;" />
                 <span class="branch-tag">{{ record.target_branch }}</span>
               </template>
               <template v-if="column.dataIndex === 'last_status'">
@@ -132,7 +104,7 @@
       <div class="content-card">
         <div class="card-header">
           <span class="card-title">
-            <FolderOutlined style="margin-right: 8px; color: #52C41A;" />
+            <FolderOutlined style="margin-right: 8px; color: #52c41a;" />
             仓库列表
           </span>
           <router-link to="/repos">
@@ -178,8 +150,8 @@
         <div class="status-items">
           <div class="status-item">
             <div class="status-item-label">
-              <CheckCircleOutlined v-if="systemStatus?.status === 'running'" style="color: $success; margin-right: 6px;" />
-              <CloseCircleOutlined v-else style="color: $error; margin-right: 6px;" />
+              <CheckCircleOutlined v-if="systemStatus?.status === 'running'" style="color: #52c41a; margin-right: 6px;" />
+              <CloseCircleOutlined v-else style="color: #ff4d4f; margin-right: 6px;" />
               服务状态
             </div>
             <a-tag :color="systemStatus?.status === 'running' ? 'success' : 'error'">
@@ -189,7 +161,7 @@
           <a-divider type="vertical" style="height: 40px;" />
           <div class="status-item">
             <div class="status-item-label">
-              <ClockCircleOutlined style="color: $primary; margin-right: 6px;" />
+              <ClockCircleOutlined style="color: #1677ff; margin-right: 6px;" />
               Go 版本
             </div>
             <span class="status-value">{{ systemStatus?.go_version || '-' }}</span>
@@ -197,7 +169,7 @@
           <a-divider type="vertical" style="height: 40px;" />
           <div class="status-item">
             <div class="status-item-label">
-              <InfoCircleOutlined style="color: #722ED1; margin-right: 6px;" />
+              <InfoCircleOutlined style="color: #722ed1; margin-right: 6px;" />
               版本号
             </div>
             <a-tag color="blue">{{ systemStatus?.version || 'v0.0.0' }}</a-tag>
@@ -205,7 +177,7 @@
           <a-divider type="vertical" style="height: 40px;" />
           <div class="status-item">
             <div class="status-item-label">
-              <CloudServerOutlined style="color: $warning; margin-right: 6px;" />
+              <CloudServerOutlined style="color: #faad14; margin-right: 6px;" />
               运行时长
             </div>
             <span class="status-value">{{ formatUptime(systemStatus?.uptime) }}</span>
@@ -217,12 +189,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, markRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRepoStore } from '@/stores/repo'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import { systemApi } from '@/api'
-import type { SystemStatusResp } from '@/api'
+import type { SystemStatusData } from '@/types/api'
+import { notifyError } from '@/utils/notify'
+import { platformLabel, platformColor } from '@/utils/platform'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import {
   FolderOutlined,
@@ -246,12 +220,26 @@ const router = useRouter()
 const repoStore = useRepoStore()
 const taskStore = useSyncTaskStore()
 
-const systemStatus = ref<SystemStatusResp | null>(null)
+const systemStatus = ref<SystemStatusData | null>(null)
 
-const runningCount = computed(() => taskStore.tasks.filter(t => t.last_status === 'running').length)
-const failedCount = computed(() => taskStore.tasks.filter(t => t.last_status === 'failed').length)
+const runningCount = computed(() => taskStore.tasks.filter((t) => t.last_status === 'running').length)
+const failedCount = computed(() => taskStore.tasks.filter((t) => t.last_status === 'failed').length)
 const recentTasks = computed(() => taskStore.tasks.slice(0, 5))
 const recentRepos = computed(() => repoStore.repos.slice(0, 5))
+
+const statCards = computed(() => [
+  { label: '仓库总数', value: repoStore.total, icon: markRaw(FolderOutlined), color: 'blue', path: '/repos' },
+  { label: '同步任务', value: taskStore.total, icon: markRaw(SyncOutlined), color: 'green', path: '/sync' },
+  { label: '运行中', value: runningCount.value, icon: markRaw(PlayCircleOutlined), color: 'orange', path: '/sync' },
+  { label: '失败任务', value: failedCount.value, icon: markRaw(CloseCircleOutlined), color: 'red', path: '/sync' },
+])
+
+const quickActions = [
+  { label: '创建同步任务', icon: markRaw(SyncOutlined), color: 'blue', path: '/sync/new' },
+  { label: '添加仓库', icon: markRaw(FolderAddOutlined), color: 'green', path: '/repos' },
+  { label: '配置 Webhook', icon: markRaw(ApiOutlined), color: 'purple', path: '/webhook/rules' },
+  { label: '查看日志', icon: markRaw(HistoryOutlined), color: 'cyan', path: '/sync/history' },
+]
 
 const formatUptime = (seconds?: number) => {
   if (!seconds) return '--'
@@ -261,32 +249,6 @@ const formatUptime = (seconds?: number) => {
   if (days > 0) return `${days}天 ${hours}小时`
   if (hours > 0) return `${hours}小时 ${mins}分钟`
   return `${mins}分钟`
-}
-
-const platformColor = (platform: string) => {
-  const map: Record<string, string> = {
-    github: '#24292E',
-    gitlab: '#FC6D26',
-    gitea: '#609926',
-    gitee: '#C71D23',
-    gitcode: '#0066FF',
-    atomgit: '#0084FF',
-    tencent_code: '#00B4D8',
-  }
-  return map[platform] || 'blue'
-}
-
-const platformLabel = (platform: string) => {
-  const map: Record<string, string> = {
-    github: 'GitHub',
-    gitlab: 'GitLab',
-    gitea: 'Gitea',
-    gitee: 'Gitee',
-    gitcode: 'GitCode',
-    atomgit: 'AtomGit',
-    tencent_code: '腾讯工蜂',
-  }
-  return map[platform] || platform
 }
 
 const taskColumns = [
@@ -302,75 +264,37 @@ const repoColumns = [
   { title: '状态', dataIndex: 'status', key: 'status', width: 90, align: 'center' as const },
 ]
 
-const fetchSystemStatus = async () => {
+async function fetchSystemStatus() {
   try {
-    const resp = await systemApi.status()
-    // Handle nested response format
-    systemStatus.value = resp.data || resp
+    systemStatus.value = await systemApi.status()
   } catch (e) {
-    console.error('Failed to fetch system status:', e)
+    notifyError(e, '获取系统状态失败')
   }
 }
 
-onMounted(() => {
-  repoStore.fetchRepos()
-  taskStore.fetchTasks()
-  fetchSystemStatus()
+onMounted(async () => {
+  try {
+    await Promise.all([
+      repoStore.fetchRepos(),
+      taskStore.fetchTasks(),
+      fetchSystemStatus(),
+    ])
+  } catch (e) {
+    notifyError(e, '加载仪表盘数据失败')
+  }
 })
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
-.page-container {
-  background: $background-color;
-  min-height: 100%;
-}
-
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 4px 0 0 0;
-}
-
-// Stats
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-}
-
-.stat-card {
-  background: $card-background;
-  border-radius: $border-radius-md;
-  padding: 20px;
-  box-shadow: $shadow-card;
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  transition: all 0.2s ease;
+// 可点击卡片的交互态
+.stat-card.clickable {
   cursor: pointer;
   border: 1px solid transparent;
 
   &:hover {
-    box-shadow: $shadow-card-hover;
-    border-color: #E6F7FF;
+    border-color: #e6f7ff;
 
     .stat-arrow {
       opacity: 1;
@@ -379,48 +303,15 @@ onMounted(() => {
   }
 }
 
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: $border-radius-lg;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-
-  &.blue { background: #E6F7FF; color: $primary-color; }
-  &.green { background: #F6FFED; color: $success-color; }
-  &.orange { background: #FFF7E6; color: $warning-color; }
-  &.red { background: #FFF2F0; color: $error-color; }
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-num {
-  font-size: 28px;
-  font-weight: 700;
-  color: $text-primary;
-  line-height: 1.2;
-}
-
-.stat-name {
-  font-size: 13px;
-  color: $text-secondary;
-  margin-top: 2px;
-}
-
 .stat-arrow {
-  color: #BFBFBF;
+  color: $text-tertiary;
   font-size: 12px;
   opacity: 0;
   transform: translateX(-4px);
   transition: all 0.2s ease;
 }
 
-// Quick Actions
+/* 快捷操作 */
 .quick-actions {
   margin-bottom: $spacing-lg;
 }
@@ -439,8 +330,8 @@ onMounted(() => {
 }
 
 .action-item {
-  background: $card-background;
-  border-radius: $border-radius-md;
+  background: $bg-primary;
+  border-radius: $radius-md;
   padding: 16px 20px;
   display: flex;
   align-items: center;
@@ -451,7 +342,7 @@ onMounted(() => {
   border: 1px solid transparent;
 
   &:hover {
-    border-color: #E6F7FF;
+    border-color: #e6f7ff;
     box-shadow: $shadow-card-hover;
     transform: translateY(-1px);
   }
@@ -473,70 +364,27 @@ onMounted(() => {
   font-size: 18px;
   flex-shrink: 0;
 
-  &.blue { background: #E6F7FF; color: $primary-color; }
-  &.green { background: #F6FFED; color: $success-color; }
-  &.purple { background: #F9F0FF; color: #722ED1; }
-  &.cyan { background: #E6FFFB; color: #13C2C2; }
+  &.blue   { background: #e6f7ff; color: $primary; }
+  &.green  { background: #f6ffed; color: $success; }
+  &.purple { background: #f9f0ff; color: #722ed1; }
+  &.cyan   { background: #e6fffb; color: #13c2c2; }
 }
 
-// Content Grid
+/* 内容双栏 */
 .grid-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: $spacing-md;
 }
 
-.content-card {
-  background: $card-background;
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-card;
-  overflow: hidden;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px $spacing-lg;
-  border-bottom: 1px solid $border-color;
-}
-
-.card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: $text-primary;
-  display: flex;
-  align-items: center;
-}
-
-.card-body {
-  padding: $spacing-md $spacing-lg;
-}
-
-.task-link {
-  color: $text-primary;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 0.2s;
-
-  &:hover {
-    color: $primary-color;
-  }
-}
-
-.time-text {
-  color: $text-secondary;
-  font-size: 13px;
-}
-
-// System Status
+/* 系统状态 */
 .system-status-section {
   margin-top: $spacing-lg;
 }
 
 .system-status-card {
-  background: $card-background;
-  border-radius: $border-radius-md;
+  background: $bg-primary;
+  border-radius: $radius-md;
   box-shadow: $shadow-card;
   padding: 20px $spacing-lg;
 }
@@ -567,9 +415,7 @@ onMounted(() => {
   color: $text-primary;
 }
 
-// Responsive
 @media (max-width: 1200px) {
-  .stats-row,
   .action-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -590,7 +436,7 @@ onMounted(() => {
     align-items: flex-start;
   }
 
-  .status-items .ant-divider-vertical {
+  .status-items :deep(.ant-divider-vertical) {
     display: none;
   }
 }

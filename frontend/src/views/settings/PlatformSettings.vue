@@ -321,6 +321,7 @@ import {
 } from '@ant-design/icons-vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { platformApi, type Platform } from '@/api/platform'
+import { PLATFORM_COLOR } from '@/utils/platform'
 
 const platforms = ref<Platform[]>([])
 const loading = ref(false)
@@ -435,7 +436,7 @@ async function loadPlatforms() {
   loading.value = true
   try {
     const result = await platformApi.list()
-    platforms.value = result.data?.platforms || result.platforms || []
+    platforms.value = result.platforms || []
   } catch (e) {
     console.error('Failed to load platforms:', e)
     platforms.value = []
@@ -444,19 +445,9 @@ async function loadPlatforms() {
   }
 }
 
-// 获取平台颜色
+// 获取平台颜色(统一使用全局常量)
 function getPlatformColor(type: string): string {
-  const colors: Record<string, string> = {
-    github: '#24292e',
-    gitlab: '#fc6d26',
-    gitea: '#609926',
-    gitee: '#c71d23',
-    gitcode: '#0066ff',
-    atomgit: '#0088cc',
-    tencent_code: '#00a4ff',
-    custom: '#666666',
-  }
-  return colors[type] || '#666666'
+  return PLATFORM_COLOR[type] || '#666666'
 }
 
 // 获取平台图标

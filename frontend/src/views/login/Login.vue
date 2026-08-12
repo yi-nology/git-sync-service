@@ -52,9 +52,6 @@
           <InfoCircleOutlined />
           <span>请向管理员获取 API Key</span>
         </div>
-        <div class="footer-hint">
-          按 <a-tag style="font-size: 11px;">Enter</a-tag> 快速登录
-        </div>
       </div>
     </div>
   </div>
@@ -64,8 +61,9 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { LockOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
 import { useAuthStore } from '@/stores/auth'
+import { systemApi } from '@/api'
+import { notifySuccess, notifyError } from '@/utils/notify'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -79,26 +77,13 @@ const handleLogin = async () => {
   loading.value = true
   try {
     authStore.setApiKey(formState.apiKey)
-
-    const response = await fetch('/api/v1/repos', {
-      headers: {
-        'X-API-Key': formState.apiKey,
-      },
-    })
-
-    if (response.ok) {
-      message.success('登录成功')
-      router.push('/dashboard')
-    } else if (response.status === 401) {
-      message.error('API Key 无效，请检查后重试')
-      authStore.clearApiKey()
-    } else {
-      message.error(`服务器返回错误 (${response.status})`)
-      authStore.clearApiKey()
-    }
-  } catch (error) {
-    message.error('无法连接到服务器，请检查服务是否已启动')
+    // 探测 API Key 有效性(走统一 axios 实例,自动注入 X-API-Key)
+    await systemApi.status()
+    notifySuccess('登录成功')
+    router.push('/dashboard')
+  } catch (e) {
     authStore.clearApiKey()
+    notifyError(e, '无法连接到服务器，请检查服务是否已启动')
   } finally {
     loading.value = false
   }

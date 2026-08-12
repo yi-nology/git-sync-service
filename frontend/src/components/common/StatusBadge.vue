@@ -1,79 +1,39 @@
 <template>
-  <span class="status-badge" :class="statusClass">
-    <span class="status-dot" :class="statusClass"></span>
-    {{ statusText }}
+  <span class="status-badge" :class="kind">
+    <span class="status-dot" :class="kind"></span>
+    {{ text }}
   </span>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { statusLabel, statusKind } from '@/constants/status'
 
 const props = defineProps<{
   status: string | undefined
 }>()
 
-const statusClass = computed(() => {
-  const status = props.status || 'idle'
-  const classMap: Record<string, string> = {
-    success: 'success',
-    running: 'running',
-    failed: 'failed',
-    received: 'running',
-    processed: 'success',
-    active: 'success',
-    idle: 'idle',
-    stopped: 'idle',
-  }
-  return classMap[status] || 'idle'
-})
-
-const statusText = computed(() => {
-  const status = props.status || 'idle'
-  const textMap: Record<string, string> = {
-    success: '成功',
-    running: '运行中',
-    failed: '失败',
-    received: '已接收',
-    processed: '已处理',
-    active: '活跃',
-    idle: '未运行',
-    stopped: '已停止',
-  }
-  return textMap[status] || status || '-'
-})
+const kind = computed(() => statusKind(props.status))
+const text = computed(() => statusLabel(props.status))
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 2px 10px;
-  border-radius: $border-radius-sm;
+  border-radius: $radius-sm;
   font-size: 12px;
   font-weight: 500;
 
-  &.success {
-    background: #F6FFED;
-    color: $success-color;
-  }
-
-  &.running {
-    background: #E6F7FF;
-    color: $primary-color;
-  }
-
-  &.failed {
-    background: #FFF2F0;
-    color: $error-color;
-  }
-
-  &.idle {
-    background: #F5F5F5;
-    color: $text-secondary;
-  }
+  &.success { background: #f6ffed; color: $success; }
+  &.running { background: #e6f7ff; color: $primary; }
+  &.failed  { background: #fff2f0; color: $error; }
+  &.warning { background: #fff7e6; color: $warning; }
+  &.idle    { background: #f5f5f5; color: $text-secondary; }
 }
 
 .status-dot {
@@ -81,9 +41,10 @@ const statusText = computed(() => {
   height: 6px;
   border-radius: 50%;
 
-  &.success { background: $success-color; }
-  &.running { background: $primary-color; }
-  &.failed { background: $error-color; }
-  &.idle { background: $text-secondary; }
+  &.success { background: $success; }
+  &.running { background: $primary; }
+  &.failed  { background: $error; }
+  &.warning { background: $warning; }
+  &.idle    { background: $text-secondary; }
 }
 </style>

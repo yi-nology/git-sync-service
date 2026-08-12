@@ -203,7 +203,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
 import {
   InfoCircleOutlined,
   LeftOutlined,
@@ -212,6 +211,7 @@ import {
 } from '@ant-design/icons-vue'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import { useRepoStore } from '@/stores/repo'
+import { notifySuccess, notifyError, notifyWarning } from '@/utils/notify'
 
 const router = useRouter()
 const taskStore = useSyncTaskStore()
@@ -251,22 +251,22 @@ function getRepoName(key: string) {
 }
 
 function nextStep() {
-  // Validate current step
+  // 校验当前步骤
   if (step.value === 1) {
     if (!form.name) {
-      message.warning('请输入任务名称')
+      notifyWarning('请输入任务名称')
       return
     }
     if (!form.source_repo_key) {
-      message.warning('请选择源仓库')
+      notifyWarning('请选择源仓库')
       return
     }
     if (!form.target_repo_key) {
-      message.warning('请选择目标仓库')
+      notifyWarning('请选择目标仓库')
       return
     }
     if (form.source_repo_key === form.target_repo_key) {
-      message.warning('源仓库和目标仓库不能相同')
+      notifyWarning('源仓库和目标仓库不能相同')
       return
     }
   }
@@ -275,50 +275,30 @@ function nextStep() {
 
 async function submit() {
   if (!form.name || !form.source_repo_key || !form.target_repo_key) {
-    message.warning('请填写必填字段')
+    notifyWarning('请填写必填字段')
     return
   }
   submitting.value = true
-  const result = await taskStore.createTask(form)
-  submitting.value = false
-  if (result) {
+  try {
+    await taskStore.createTask(form)
+    notifySuccess('创建任务成功')
     router.push('/sync')
+  } catch (e) {
+    notifyError(e, '创建任务失败')
+  } finally {
+    submitting.value = false
   }
 }
 
 onMounted(() => {
-  repoStore.fetchRepos()
+  repoStore.fetchRepos().catch((e) => notifyError(e, '加载仓库失败'))
 })
 </script>
 
 <style scoped lang="scss">
 @import '@/styles/variables.scss';
 
-.page-container {
-  background: $background-color;
-  min-height: 100%;
-}
-
-.page-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 4px 0 0 0;
-}
+// 公共样式(page-container/header/title/subtitle/form-tip)统一使用 global.scss
 
 .steps-bar {
   margin-bottom: $spacing-lg;

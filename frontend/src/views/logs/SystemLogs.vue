@@ -26,7 +26,7 @@
     <!-- Stats Cards -->
     <div class="stats-row">
       <div class="stat-card">
-        <div class="stat-icon" style="background: #FFF2F0; color: #FF4D4F;">
+        <div class="stat-icon" style="background: #fff2f0; color: #ff4d4f;">
           <CloseCircleOutlined />
         </div>
         <div class="stat-content">
@@ -35,7 +35,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: #FFF7E6; color: #FAAD14;">
+        <div class="stat-icon" style="background: #fff7e6; color: #faad14;">
           <WarningOutlined />
         </div>
         <div class="stat-content">
@@ -44,7 +44,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: #E6F7FF; color: #1677FF;">
+        <div class="stat-icon" style="background: #e6f7ff; color: #1677ff;">
           <InfoCircleOutlined />
         </div>
         <div class="stat-content">
@@ -55,7 +55,7 @@
     </div>
 
     <!-- Filter Bar -->
-    <div class="filter-bar">
+    <div class="filter-bar carded">
       <a-select
         v-model:value="filters.level"
         placeholder="日志级别"
@@ -158,7 +158,6 @@
       placement="right"
     >
       <template v-if="currentLog">
-        <!-- Basic Info -->
         <a-descriptions :column="2" bordered size="small" class="detail-section">
           <a-descriptions-item label="时间" :span="2">
             {{ formatTime(currentLog.time) }}
@@ -173,13 +172,11 @@
           </a-descriptions-item>
         </a-descriptions>
 
-        <!-- Message -->
         <a-divider>日志消息</a-divider>
         <div class="detail-message">
           <pre>{{ currentLog.message }}</pre>
         </div>
 
-        <!-- Details -->
         <template v-if="currentLog.details">
           <a-divider>详细信息</a-divider>
           <div class="detail-extra">
@@ -187,7 +184,6 @@
           </div>
         </template>
 
-        <!-- Stack Trace -->
         <template v-if="getStackTrace(currentLog)">
           <a-divider>堆栈跟踪</a-divider>
           <div class="detail-stacktrace">
@@ -195,7 +191,6 @@
           </div>
         </template>
 
-        <!-- Actions -->
         <div class="drawer-actions">
           <a-button @click="drawerVisible = false">关闭</a-button>
         </div>
@@ -206,7 +201,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, reactive, computed } from 'vue'
-import { Empty } from 'ant-design-vue'
+import type { TablePaginationConfig } from 'ant-design-vue'
 import {
   ReloadOutlined,
   SearchOutlined,
@@ -217,7 +212,7 @@ import {
   InfoCircleOutlined,
 } from '@ant-design/icons-vue'
 import { logApi } from '@/api'
-import type { SystemLog, SystemLogRequest } from '@/api'
+import type { SystemLog, SystemLogParams } from '@/types/api'
 import dayjs, { type Dayjs } from 'dayjs'
 
 const loading = ref(false)
@@ -228,11 +223,7 @@ let refreshTimer: ReturnType<typeof setInterval> | null = null
 
 const autoRefreshInterval = ref(0)
 
-const stats = reactive({
-  errorCount: 0,
-  warnCount: 0,
-  infoCount: 0,
-})
+const stats = reactive({ errorCount: 0, warnCount: 0, infoCount: 0 })
 
 const filters = reactive({
   level: undefined as string | undefined,
@@ -259,21 +250,18 @@ const columns = [
   { title: '操作', key: 'action', width: 100, fixed: 'right' as const },
 ]
 
-// Extract module from details or message
 function getModule(record: SystemLog): string {
   if (!record.details) return '-'
   try {
     const parsed = JSON.parse(record.details)
     if (parsed.module) return parsed.module
   } catch {
-    // Try to extract from message prefix like [module] or [server]
     const match = record.message?.match(/^\[([a-zA-Z]+)\]/)
     if (match) return match[1]
   }
   return '-'
 }
 
-// Extract stack trace from details
 function getStackTrace(record: SystemLog): string | null {
   if (!record.details) return null
   try {
@@ -282,31 +270,30 @@ function getStackTrace(record: SystemLog): string | null {
       return parsed.stack_trace || parsed.stackTrace
     }
   } catch {
-    // If details contains "Stack Trace:" or "goroutine" patterns
     const stackMatch = record.details.match(/(?:Stack Trace:|goroutine \d+)([\s\S]*)/i)
     if (stackMatch) return stackMatch[1].trim()
   }
   return null
 }
 
-// Client-side filtered logs
 const filteredLogs = computed(() => {
   let result = logs.value
 
   if (filters.module) {
-    result = result.filter(log => getModule(log) === filters.module)
+    result = result.filter((log) => getModule(log) === filters.module)
   }
 
   if (filters.search) {
     const searchLower = filters.search.toLowerCase()
-    result = result.filter(log =>
-      log.message?.toLowerCase().includes(searchLower) ||
-      log.details?.toLowerCase().includes(searchLower)
+    result = result.filter(
+      (log) =>
+        log.message?.toLowerCase().includes(searchLower) ||
+        log.details?.toLowerCase().includes(searchLower),
     )
   }
 
   if (filters.startDate && filters.endDate) {
-    result = result.filter(log => {
+    result = result.filter((log) => {
       if (!log.time) return false
       const logDate = dayjs(log.time).format('YYYY-MM-DD')
       return logDate >= filters.startDate && logDate <= filters.endDate
@@ -357,9 +344,9 @@ function resetFilters() {
   fetchLogs()
 }
 
-function handleTableChange(pag: any) {
-  pagination.current = pag.current
-  pagination.pageSize = pag.pageSize
+function handleTableChange(pag: TablePaginationConfig) {
+  pagination.current = pag.current || 1
+  pagination.pageSize = pag.pageSize || 20
 }
 
 function openDrawer(record: SystemLog) {
@@ -368,9 +355,9 @@ function openDrawer(record: SystemLog) {
 }
 
 function calculateStats(logList: SystemLog[]) {
-  stats.errorCount = logList.filter(l => l.level === 'ERROR').length
-  stats.warnCount = logList.filter(l => l.level === 'WARN').length
-  stats.infoCount = logList.filter(l => l.level === 'INFO').length
+  stats.errorCount = logList.filter((l) => l.level === 'ERROR').length
+  stats.warnCount = logList.filter((l) => l.level === 'WARN').length
+  stats.infoCount = logList.filter((l) => l.level === 'INFO').length
 }
 
 function handleAutoRefreshChange(value: number) {
@@ -388,20 +375,18 @@ function handleAutoRefreshChange(value: number) {
 async function fetchLogs() {
   loading.value = true
   try {
-    const params: SystemLogRequest = {
+    const params: SystemLogParams = {
       page: pagination.current,
       page_size: pagination.pageSize,
     }
     if (filters.level) params.level = filters.level
 
-    const resp: any = await logApi.listSystem(params)
-    // 响应信封为 { code, message, data: { list, pagination } }
-    const data = resp?.data ?? resp
+    const data = await logApi.listSystem(params)
     logs.value = data.list || []
     pagination.total = data.pagination?.total || 0
     calculateStats(logs.value)
-  } catch (e: any) {
-    // 接口不可用时如实清空，不再展示假数据
+  } catch (e) {
+    // 接口不可用时如实清空,不展示假数据
     console.error('Failed to fetch system logs:', e)
     logs.value = []
     pagination.total = 0
@@ -423,104 +408,23 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/variables.scss';
-
-.page-container {
-  background: $background-color;
-  min-height: 100%;
-}
-
-.page-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 4px 0 0 0;
-}
+@use '@/styles/variables.scss' as *;
 
 .stats-row {
-  display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
 }
 
-.stat-card {
-  background: $card-background;
+.filter-bar.carded {
+  padding: $spacing-md;
+  background: $bg-primary;
   border-radius: $radius-md;
-  padding: $spacing-lg;
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
   box-shadow: $shadow-card;
-  transition: box-shadow 0.2s;
-
-  &:hover {
-    box-shadow: $shadow-card-hover;
-  }
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-
-.stat-content {
-  flex: 1;
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 1.2;
-
-  &.stat-error {
-    color: #FF4D4F;
-  }
-
-  &.stat-warn {
-    color: #FAAD14;
-  }
-
-  &.stat-info {
-    color: #1677FF;
-  }
-}
-
-.stat-label {
-  font-size: 13px;
-  color: $text-secondary;
-  margin-top: 4px;
-}
-
-.filter-bar {
-  display: flex;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: $spacing-md;
-  padding: $spacing-md;
-  background: $card-background;
-  border-radius: $radius-md;
-  box-shadow: $shadow-card;
+  &.stat-error { color: $error; }
+  &.stat-warn  { color: $warning; }
+  &.stat-info  { color: $primary; }
 }
 
 .log-time {
@@ -539,7 +443,7 @@ onUnmounted(() => {
   font-size: 13px;
 }
 
-// Drawer styles
+// 抽屉详情
 .detail-section {
   margin-bottom: $spacing-md;
 }
@@ -548,8 +452,8 @@ onUnmounted(() => {
 .detail-extra,
 .detail-stacktrace {
   pre {
-    background: #FAFAFA;
-    border: 1px solid $border-color;
+    background: #fafafa;
+    border: 1px solid $border;
     border-radius: $radius-sm;
     padding: $spacing-md;
     font-size: 12px;
@@ -565,16 +469,16 @@ onUnmounted(() => {
 
 .detail-stacktrace {
   pre {
-    background: #FFF2F0;
-    border-color: #FFCCC7;
-    color: #CF1322;
+    background: #fff2f0;
+    border-color: #ffccc7;
+    color: #cf1322;
   }
 }
 
 .drawer-actions {
   margin-top: $spacing-lg;
   padding-top: $spacing-md;
-  border-top: 1px solid $border-color;
+  border-top: 1px solid $border;
   display: flex;
   justify-content: flex-end;
 }

@@ -155,6 +155,8 @@ import { useWebhookStore } from '@/stores/webhook'
 import { useRepoStore } from '@/stores/repo'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import type { WebhookEvent } from '@/types'
+import { eventTypeColor } from '@/utils/dictionaries'
+import { notifySuccess, notifyError } from '@/utils/notify'
 
 const webhookStore = useWebhookStore()
 const repoStore = useRepoStore()
@@ -196,18 +198,9 @@ function filterRepoOption(input: string, option: any) {
   return repo?.name.toLowerCase().includes(input.toLowerCase()) || false
 }
 
-const eventTypeColor = (type: string) => {
-  const map: Record<string, string> = {
-    push: 'green',
-    merge_request: 'blue',
-    tag: 'purple',
-  }
-  return map[type] || 'default'
-}
-
 function loadEvents() {
   if (repoKey.value) {
-    webhookStore.fetchEvents(repoKey.value)
+    webhookStore.fetchEvents(repoKey.value).catch((e) => notifyError(e, '加载事件失败'))
   }
 }
 
@@ -224,10 +217,14 @@ function toggleAutoRefresh() {
 }
 
 onMounted(async () => {
-  await repoStore.fetchRepos()
-  if (repoStore.repos.length > 0) {
-    repoKey.value = repoStore.repos[0].key
-    loadEvents()
+  try {
+    await repoStore.fetchRepos()
+    if (repoStore.repos.length > 0) {
+      repoKey.value = repoStore.repos[0].key
+      loadEvents()
+    }
+  } catch (e) {
+    notifyError(e, '加载仓库失败')
   }
 })
 
@@ -243,8 +240,13 @@ function showDetail(e: WebhookEvent) {
 }
 
 async function handleRetry(id: number) {
-  await webhookStore.retryEvent(id)
-  loadEvents()
+  try {
+    await webhookStore.retryEvent(id)
+    notifySuccess('事件重试已触发')
+    loadEvents()
+  } catch (e) {
+    notifyError(e, '重试失败')
+  }
 }
 </script>
 

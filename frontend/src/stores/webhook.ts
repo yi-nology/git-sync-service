@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { webhookApi } from '@/api'
 import type { WebhookRule, WebhookEvent, CreateRuleRequest, UpdateRuleRequest } from '@/types'
-import { message } from 'ant-design-vue'
 
 export const useWebhookStore = defineStore('webhook', () => {
   const rules = ref<WebhookRule[]>([])
@@ -14,52 +13,28 @@ export const useWebhookStore = defineStore('webhook', () => {
     try {
       const data = await webhookApi.listRules(repoKey)
       rules.value = data.rules || []
-    } catch (e: any) {
-      message.error(e.error || '获取规则列表失败')
     } finally {
       loading.value = false
     }
   }
 
-  async function getRule(id: number): Promise<WebhookRule | null> {
-    try {
-      const data = await webhookApi.getRule(id)
-      return data.rule
-    } catch (e: any) {
-      message.error(e.error || '获取规则详情失败')
-      return null
-    }
+  async function getRule(id: number): Promise<WebhookRule> {
+    const data = await webhookApi.getRule(id)
+    return data.rule
   }
 
-  async function createRule(req: CreateRuleRequest): Promise<WebhookRule | null> {
-    try {
-      const data = await webhookApi.createRule(req)
-      message.success('创建规则成功')
-      return data.rule
-    } catch (e: any) {
-      message.error(e.error || '创建规则失败')
-      return null
-    }
+  async function createRule(req: CreateRuleRequest): Promise<WebhookRule> {
+    const data = await webhookApi.createRule(req)
+    return data.rule
   }
 
-  async function updateRule(req: UpdateRuleRequest): Promise<WebhookRule | null> {
-    try {
-      const data = await webhookApi.updateRule(req)
-      message.success('更新规则成功')
-      return data.rule
-    } catch (e: any) {
-      message.error(e.error || '更新规则失败')
-      return null
-    }
+  async function updateRule(req: UpdateRuleRequest): Promise<WebhookRule> {
+    const data = await webhookApi.updateRule(req)
+    return data.rule
   }
 
   async function deleteRule(id: number) {
-    try {
-      await webhookApi.deleteRule(id)
-      message.success('删除规则成功')
-    } catch (e: any) {
-      message.error(e.error || '删除规则失败')
-    }
+    await webhookApi.deleteRule(id)
   }
 
   async function fetchEvents(repoKey: string, limit = 50) {
@@ -67,20 +42,13 @@ export const useWebhookStore = defineStore('webhook', () => {
     try {
       const data = await webhookApi.listEvents({ repo_key: repoKey, limit })
       events.value = data.events || []
-    } catch (e: any) {
-      message.error(e.error || '获取事件列表失败')
     } finally {
       loading.value = false
     }
   }
 
   async function retryEvent(id: number) {
-    try {
-      await webhookApi.retryEvent(id)
-      message.success('事件重试已触发')
-    } catch (e: any) {
-      message.error(e.error || '重试事件失败')
-    }
+    await webhookApi.retryEvent(id)
   }
 
   return {

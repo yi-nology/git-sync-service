@@ -1,13 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/login/Login.vue'),
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: false, title: '登录' },
   },
   {
     path: '/',
@@ -15,41 +16,46 @@ const routes = [
     redirect: '/dashboard',
     meta: { requiresAuth: true },
     children: [
-      { path: '/dashboard', component: () => import('@/views/dashboard/Dashboard.vue') },
-      { path: '/sync', component: () => import('@/views/sync/SyncTaskList.vue') },
-      { path: '/sync/history', component: () => import('@/views/sync/SyncHistory.vue') },
-      { path: '/sync/new', component: () => import('@/views/sync/NewSyncTask.vue') },
-      { path: '/webhook/rules', component: () => import('@/views/webhook/WebhookRules.vue') },
-      { path: '/webhook/events', component: () => import('@/views/webhook/WebhookEvents.vue') },
-      { path: '/repos', component: () => import('@/views/repos/RepoList.vue') },
-      { path: '/repos/config/:id', component: () => import('@/views/repos/RepoUnifiedConfig.vue') },
-      { path: '/local-repos/:id', component: () => import('@/views/repos/LocalRepoDetail.vue') },
-      { path: '/logs/operations', component: () => import('@/views/logs/OperationLogs.vue') },
-      { path: '/logs/sync', component: () => import('@/views/logs/SyncLogs.vue') },
-      { path: '/logs/system', component: () => import('@/views/logs/SystemLogs.vue') },
-      { path: '/settings', component: () => import('@/views/settings/Settings.vue') },
-      { path: '/settings/platforms', component: () => import('@/views/settings/PlatformSettings.vue') },
-      { path: '/settings/advanced', component: () => import('@/views/settings/AdvancedSettings.vue') },
-    ]
-  }
+      { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/Dashboard.vue'), meta: { title: '仪表盘' } },
+      { path: 'sync', name: 'SyncTasks', component: () => import('@/views/sync/SyncTaskList.vue'), meta: { title: '同步任务' } },
+      { path: 'sync/history', name: 'SyncHistory', component: () => import('@/views/sync/SyncHistory.vue'), meta: { title: '同步历史' } },
+      { path: 'sync/new', name: 'SyncNew', component: () => import('@/views/sync/NewSyncTask.vue'), meta: { title: '新建同步任务' } },
+      { path: 'webhook/rules', name: 'WebhookRules', component: () => import('@/views/webhook/WebhookRules.vue'), meta: { title: 'Webhook 规则' } },
+      { path: 'webhook/events', name: 'WebhookEvents', component: () => import('@/views/webhook/WebhookEvents.vue'), meta: { title: '事件日志' } },
+      { path: 'repos', name: 'Repos', component: () => import('@/views/repos/RepoList.vue'), meta: { title: '仓库管理' } },
+      { path: 'repos/config/:id', name: 'RepoConfig', component: () => import('@/views/repos/RepoUnifiedConfig.vue'), meta: { title: '仓库配置' } },
+      { path: 'local-repos/:id', name: 'LocalRepoDetail', component: () => import('@/views/repos/LocalRepoDetail.vue'), meta: { title: '本地仓库' } },
+      { path: 'logs/operations', name: 'OperationLogs', component: () => import('@/views/logs/OperationLogs.vue'), meta: { title: '操作日志' } },
+      { path: 'logs/sync', name: 'SyncLogs', component: () => import('@/views/logs/SyncLogs.vue'), meta: { title: '同步执行日志' } },
+      { path: 'logs/system', name: 'SystemLogs', component: () => import('@/views/logs/SystemLogs.vue'), meta: { title: '系统运行日志' } },
+      { path: 'settings', name: 'Settings', component: () => import('@/views/settings/Settings.vue'), meta: { title: '系统设置' } },
+      { path: 'settings/platforms', name: 'PlatformSettings', component: () => import('@/views/settings/PlatformSettings.vue'), meta: { title: '平台管理' } },
+      { path: 'settings/advanced', name: 'AdvancedSettings', component: () => import('@/views/settings/AdvancedSettings.vue'), meta: { title: '高级配置' } },
+      { path: ':pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFound.vue'), meta: { title: '页面不存在' } },
+    ],
+  },
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
 
-// Navigation guard
-router.beforeEach((to, from, next) => {
+// 鉴权守卫
+router.beforeEach((to) => {
   const authStore = useAuthStore()
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth !== false)
+  const requiresAuth = to.matched.some((r) => r.meta.requiresAuth)
 
   if (requiresAuth && !authStore.isAuthenticated) {
-    // Redirect to login if not authenticated
-    next('/login')
-  } else if (to.path === '/login' && authStore.isAuthenticated) {
-    // Redirect to dashboard if already authenticated
-    next('/dashboard')
-  } else {
-    next()
+    return '/login'
   }
+  if (to.path === '/login' && authStore.isAuthenticated) {
+    return '/dashboard'
+  }
+  return true
+})
+
+// 页面标题联动
+router.afterEach((to) => {
+  const title = to.meta.title as string | undefined
+  document.title = title ? `${title} · Git Sync` : 'Git Sync'
 })
 
 export default router

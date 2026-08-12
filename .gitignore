@@ -58,3 +58,7 @@ data/
 /data/
 /git-sync-service
 
+# 前端缓存与构建产物
+frontend/.vite/
+frontend/dist/
+

@@ -7,6 +7,14 @@
       </div>
     </div>
 
+    <a-alert
+      type="warning"
+      show-icon
+      message="功能开发中"
+      description="本页配置项暂未接入后端，保存不会生效。相关能力正在建设中。"
+      style="max-width: 800px; margin-bottom: 16px;"
+    />
+
     <div class="settings-card">
       <a-form layout="vertical" :model="config">
         <a-divider orientation="left">
@@ -106,8 +114,8 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue'
-import { message } from 'ant-design-vue'
 import { InfoCircleOutlined, SaveOutlined } from '@ant-design/icons-vue'
+import { notifyInfo } from '@/utils/notify'
 
 const defaults = {
   dbDriver: 'sqlite',
@@ -121,12 +129,12 @@ const defaults = {
 const config = reactive({ ...defaults })
 
 function handleSave() {
-  message.success('配置已保存')
+  notifyInfo('该功能正在开发中，暂未接入后端')
 }
 
 function handleReset() {
   Object.assign(config, defaults)
-  message.info('配置已重置')
+  notifyInfo('已重置为默认值（尚未保存到后端）')
 }
 </script>
 

@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repoApi } from '@/api'
-import type { Repo, CreateRepoRequest, UpdateRepoRequest, TestConnectionResp } from '@/types'
-import { message } from 'ant-design-vue'
+import type { Repo, CreateRepoRequest, UpdateRepoRequest } from '@/types'
+import type { TestConnectionData } from '@/types/api'
 
 export interface RepoListParams {
   page?: number
@@ -20,96 +20,55 @@ export const useRepoStore = defineStore('repo', () => {
   async function fetchRepos(params?: RepoListParams) {
     loading.value = true
     try {
-      const resp = await repoApi.list(params)
-      // Handle both old format (repos) and new format (list with pagination)
-      if (resp.data?.list) {
-        repos.value = resp.data.list
-        total.value = resp.data.pagination?.total || 0
-      } else if (resp.data?.repos) {
-        repos.value = resp.data.repos
-        total.value = resp.data.total || 0
-      } else if (resp.repos) {
-        repos.value = resp.repos
-        total.value = resp.total || 0
-      } else if (resp.list) {
-        repos.value = resp.list
-        total.value = resp.pagination?.total || 0
-      }
-    } catch (e: any) {
-      message.error(e.error || '获取仓库列表失败')
+      const data = await repoApi.list(params)
+      repos.value = data.list
+      total.value = data.pagination?.total ?? 0
     } finally {
       loading.value = false
     }
   }
 
-  async function getRepo(key: string): Promise<Repo | null> {
-    try {
-      const resp = await repoApi.get(key)
-      // Handle both old format and new format with nested data
-      return resp.data?.repo || resp.repo || null
-    } catch (e: any) {
-      message.error(e.error || '获取仓库详情失败')
-      return null
-    }
+  async function getRepo(key: string): Promise<Repo> {
+    const data = await repoApi.get(key)
+    return data.repo
   }
 
-  async function createRepo(req: CreateRepoRequest): Promise<Repo | null> {
-    try {
-      const data = await repoApi.create(req)
-      message.success('创建仓库成功')
-      await fetchRepos()
-      return data.repo
-    } catch (e: any) {
-      message.error(e.error || '创建仓库失败')
-      return null
-    }
+  async function createRepo(req: CreateRepoRequest): Promise<Repo> {
+    const data = await repoApi.create(req)
+    await fetchRepos()
+    return data.repo
   }
 
-  async function updateRepo(req: UpdateRepoRequest): Promise<Repo | null> {
-    try {
-      const data = await repoApi.update(req)
-      message.success('更新仓库成功')
-      await fetchRepos()
-      return data.repo
-    } catch (e: any) {
-      message.error(e.error || '更新仓库失败')
-      return null
-    }
+  async function updateRepo(req: UpdateRepoRequest): Promise<Repo> {
+    const data = await repoApi.update(req)
+    await fetchRepos()
+    return data.repo
   }
 
   async function deleteRepo(key: string) {
-    try {
-      await repoApi.delete(key)
-      message.success('删除仓库成功')
-      await fetchRepos()
-    } catch (e: any) {
-      message.error(e.error || '删除仓库失败')
-    }
+    await repoApi.delete(key)
+    await fetchRepos()
   }
 
-  async function testConnection(key: string): Promise<TestConnectionResp | null> {
-    try {
-      const data = await repoApi.testConnection(key)
-      return data
-    } catch (e: any) {
-      message.error(e.error || '测试连接失败')
-      return null
-    }
+  /** 批量删除(后端 /repos/batch 支持) */
+  async function batchDelete(keys: string[]): Promise<{ succeeded: number; failed: number }> {
+    const data = await repoApi.batchDelete(keys)
+    await fetchRepos()
+    return { succeeded: data.success, failed: data.failed }
+  }
+
+  async function testConnection(key: string): Promise<TestConnectionData> {
+    return repoApi.testConnection(key)
   }
 
   async function listBranches(key: string): Promise<string[]> {
-    try {
-      const data = await repoApi.listBranches(key)
-      return data.branches || []
-    } catch (e: any) {
-      message.error(e.error || '获取分支列表失败')
-      return []
-    }
+    const data = await repoApi.listBranches(key)
+    return data.branches || []
   }
 
   return {
     repos, total, loading,
-    fetchRepos, getRepo, createRepo, updateRepo, deleteRepo,
+    fetchRepos, getRepo, createRepo, updateRepo, deleteRepo, batchDelete,
     testConnection, listBranches,
   }
 })

@@ -250,7 +250,7 @@
         </a-row>
 
         <a-form-item label="定时表达式 (Cron)">
-          <a-input v-model:value="formData.cron" placeholder="可选，如 0 */5 * * * *" />
+          <a-input v-model:value="formData.cron" placeholder="可选，如 */5 * * * *" />
           <div class="cron-presets">
             <span class="preset-label">常用:</span>
             <a-tag
@@ -287,7 +287,6 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive, computed } from 'vue'
-import { message } from 'ant-design-vue'
 import {
   PlusOutlined,
   PlayCircleOutlined,
@@ -306,6 +305,7 @@ import { useRepoStore } from '@/stores/repo'
 import type { SyncTask } from '@/types'
 import type { TablePaginationConfig } from 'ant-design-vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
+import { notifySuccess, notifyError, notifyWarning } from '@/utils/notify'
 
 const taskStore = useSyncTaskStore()
 const repoStore = useRepoStore()
@@ -383,21 +383,29 @@ function buildParams() {
   }
 }
 
+async function loadTasks() {
+  try {
+    await taskStore.fetchTasks(buildParams())
+  } catch (e) {
+    notifyError(e, '加载任务列表失败')
+  }
+}
+
 function handleSearch() {
   currentPage.value = 1
-  taskStore.fetchTasks(buildParams())
+  loadTasks()
   clearSelection()
 }
 
 function handleRefresh() {
-  taskStore.fetchTasks(buildParams())
+  loadTasks()
   clearSelection()
 }
 
 function handleTableChange(pagination: TablePaginationConfig) {
   currentPage.value = pagination.current || 1
   pageSize.value = pagination.pageSize || 10
-  taskStore.fetchTasks(buildParams())
+  loadTasks()
   clearSelection()
 }
 
@@ -425,8 +433,8 @@ const cronPresets = [
 
 // -- Lifecycle --
 onMounted(() => {
-  taskStore.fetchTasks(buildParams())
-  repoStore.fetchRepos()
+  loadTasks()
+  repoStore.fetchRepos().catch((e) => notifyError(e, '加载仓库失败'))
 })
 
 // -- CRUD actions --
@@ -461,29 +469,51 @@ function openEdit(task: SyncTask) {
 
 async function handleSubmit() {
   if (!formData.name || !formData.source_repo_key || !formData.target_repo_key) {
-    message.warning('请填写必填字段')
+    notifyWarning('请填写必填字段')
     return
   }
-  if (editingKey.value) {
-    await taskStore.updateTask({ key: editingKey.value, ...formData })
-  } else {
-    await taskStore.createTask(formData)
+  try {
+    if (editingKey.value) {
+      await taskStore.updateTask({ key: editingKey.value, ...formData })
+      notifySuccess('更新任务成功')
+    } else {
+      await taskStore.createTask(formData)
+      notifySuccess('创建任务成功')
+    }
+    dialogVisible.value = false
+    clearSelection()
+  } catch (e) {
+    notifyError(e, '保存任务失败')
   }
-  dialogVisible.value = false
-  clearSelection()
 }
 
 async function handleDelete(key: string) {
-  await taskStore.deleteTask(key)
+  try {
+    await taskStore.deleteTask(key)
+    notifySuccess('删除任务成功')
+  } catch (e) {
+    notifyError(e, '删除任务失败')
+  }
   clearSelection()
 }
 
 async function handleRun(key: string) {
-  await taskStore.runTask(key)
+  try {
+    await taskStore.runTask(key)
+    notifySuccess('任务已启动')
+  } catch (e) {
+    notifyError(e, '启动任务失败')
+  }
 }
 
 async function handleBatchDelete() {
-  await taskStore.batchDelete(selectedRowKeys.value)
+  try {
+    const { succeeded, failed } = await taskStore.batchDelete(selectedRowKeys.value)
+    if (succeeded > 0) notifySuccess(`成功删除 ${succeeded} 个任务`)
+    if (failed > 0) notifyError(`有 ${failed} 个任务删除失败`)
+  } catch (e) {
+    notifyError(e, '批量删除失败')
+  }
   selectedRowKeys.value = []
 }
 </script>
@@ -491,112 +521,7 @@ async function handleBatchDelete() {
 <style scoped lang="scss">
 @import '@/styles/variables.scss';
 
-.page-container {
-  background: $bg-secondary;
-  min-height: 100%;
-}
-
-// -- Page header --
-.page-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 4px 0 0 0;
-}
-
-// -- Stats row --
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-}
-
-.stat-card {
-  background: $bg-primary;
-  border-radius: $radius-md;
-  padding: 18px 20px;
-  box-shadow: $shadow-card;
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-}
-
-.stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: $radius-lg;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-
-  &.blue { background: #E6F7FF; color: $primary; }
-  &.green { background: #F6FFED; color: $success; }
-  &.orange { background: #FFF7E6; color: $warning; }
-  &.red { background: #FFF2F0; color: $error; }
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-num {
-  font-size: 26px;
-  font-weight: 700;
-  color: $text-primary;
-  line-height: 1.2;
-}
-
-.stat-name {
-  font-size: 13px;
-  color: $text-secondary;
-  margin-top: 2px;
-}
-
-// -- Filter bar --
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-md;
-  flex-wrap: wrap;
-}
-
-.filter-input {
-  width: 240px;
-}
-
-.filter-select {
-  width: 160px;
-}
-
-// -- Batch actions bar --
-.batch-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #E6F7FF;
-  border: 1px solid #91D5FF;
-  border-radius: $radius-md;
-  padding: 8px 16px;
-  margin-bottom: $spacing-md;
-}
+// 公共样式(page-container/header/stats/filter-bar/batch-bar 等)统一使用 global.scss
 
 .batch-info {
   font-size: 14px;

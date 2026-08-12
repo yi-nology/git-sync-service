@@ -177,7 +177,6 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
-import { message } from 'ant-design-vue'
 import {
   PlusOutlined,
   EditOutlined,
@@ -188,6 +187,8 @@ import { useWebhookStore } from '@/stores/webhook'
 import { useRepoStore } from '@/stores/repo'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import type { WebhookRule } from '@/types'
+import { eventTypeColor } from '@/utils/dictionaries'
+import { notifySuccess, notifyError, notifyWarning } from '@/utils/notify'
 
 const webhookStore = useWebhookStore()
 const repoStore = useRepoStore()
@@ -227,28 +228,22 @@ function filterRepoOption(input: string, option: any) {
   return repo?.name.toLowerCase().includes(input.toLowerCase()) || false
 }
 
-const eventTypeColor = (type: string) => {
-  const map: Record<string, string> = {
-    push: 'green',
-    merge_request: 'blue',
-    tag: 'purple',
-  }
-  return map[type] || 'default'
-}
-
 function loadRules() {
   if (repoKey.value) {
-    webhookStore.fetchRules(repoKey.value)
+    webhookStore.fetchRules(repoKey.value).catch((e) => notifyError(e, '加载规则失败'))
   }
 }
 
 onMounted(async () => {
-  await repoStore.fetchRepos()
-  await taskStore.fetchTasks()
-  // Default to first repo
-  if (repoStore.repos.length > 0) {
-    repoKey.value = repoStore.repos[0].key
-    loadRules()
+  try {
+    await repoStore.fetchRepos()
+    await taskStore.fetchTasks()
+    if (repoStore.repos.length > 0) {
+      repoKey.value = repoStore.repos[0].key
+      loadRules()
+    }
+  } catch (e) {
+    notifyError(e, '加载数据失败')
   }
 })
 
@@ -286,30 +281,45 @@ function openEdit(rule: WebhookRule) {
 
 async function handleSubmit() {
   if (!formData.name || !formData.repo_key) {
-    message.warning('请填写必填字段')
+    notifyWarning('请填写必填字段')
     return
   }
   const submitData = {
     ...formData,
     sync_task_keys: Array.isArray(formData.sync_task_keys) ? formData.sync_task_keys.join(',') : formData.sync_task_keys,
   }
-  if (editingId.value) {
-    await webhookStore.updateRule({ id: editingId.value, ...submitData })
-  } else {
-    await webhookStore.createRule(submitData)
+  try {
+    if (editingId.value) {
+      await webhookStore.updateRule({ id: editingId.value, ...submitData })
+      notifySuccess('更新规则成功')
+    } else {
+      await webhookStore.createRule(submitData)
+      notifySuccess('创建规则成功')
+    }
+    dialogVisible.value = false
+    loadRules()
+  } catch (e) {
+    notifyError(e, '保存规则失败')
   }
-  dialogVisible.value = false
-  loadRules()
 }
 
 async function handleDelete(id: number) {
-  await webhookStore.deleteRule(id)
-  loadRules()
+  try {
+    await webhookStore.deleteRule(id)
+    notifySuccess('删除规则成功')
+    loadRules()
+  } catch (e) {
+    notifyError(e, '删除规则失败')
+  }
 }
 
 async function handleToggleEnabled(rule: WebhookRule, checked: boolean) {
-  await webhookStore.updateRule({ id: rule.id, enabled: checked })
-  loadRules()
+  try {
+    await webhookStore.updateRule({ id: rule.id, enabled: checked })
+    loadRules()
+  } catch (e) {
+    notifyError(e, '更新状态失败')
+  }
 }
 </script>
 

@@ -75,6 +75,8 @@ import { ref, computed, onMounted } from 'vue'
 import { ReloadOutlined } from '@ant-design/icons-vue'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import StatusBadge from '@/components/common/StatusBadge.vue'
+import { triggerColor, triggerLabel } from '@/utils/dictionaries'
+import { notifyError } from '@/utils/notify'
 
 const taskStore = useSyncTaskStore()
 const selectedTask = ref<string>('')
@@ -110,24 +112,6 @@ function filterTaskOption(input: string, option: any) {
   return task?.name.toLowerCase().includes(input.toLowerCase()) || false
 }
 
-const triggerColor = (trigger: string) => {
-  const map: Record<string, string> = {
-    manual: 'green',
-    cron: 'blue',
-    webhook: 'purple',
-  }
-  return map[trigger] || 'default'
-}
-
-const triggerLabel = (trigger: string) => {
-  const map: Record<string, string> = {
-    manual: '手动',
-    cron: '定时',
-    webhook: 'Webhook',
-  }
-  return map[trigger] || trigger
-}
-
 function calcDuration(start: string, end: string) {
   if (!start || !end) return '-'
   try {
@@ -144,7 +128,7 @@ function calcDuration(start: string, end: string) {
 
 function handleTaskChange(key: string) {
   if (key) {
-    taskStore.fetchHistory(key)
+    taskStore.fetchHistory(key).catch((e) => notifyError(e, '加载历史失败'))
   } else {
     loadAllHistory()
   }
@@ -169,14 +153,18 @@ async function loadAllHistory() {
 
 function refresh() {
   if (selectedTask.value) {
-    taskStore.fetchHistory(selectedTask.value)
+    taskStore.fetchHistory(selectedTask.value).catch((e) => notifyError(e, '加载历史失败'))
   } else {
     loadAllHistory()
   }
 }
 
 onMounted(async () => {
-  await taskStore.fetchTasks()
+  try {
+    await taskStore.fetchTasks()
+  } catch (e) {
+    notifyError(e, '加载任务失败')
+  }
   loadAllHistory()
 })
 </script>

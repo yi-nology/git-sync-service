@@ -302,7 +302,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, computed, markRaw } from 'vue'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
 import {
   PlusOutlined,
   SearchOutlined,
@@ -326,6 +325,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import { useRepoStore } from '@/stores/repo'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import type { Repo } from '@/types'
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from '@/utils/notify'
 
 const PLATFORM_STORAGE_KEY = 'git-sync-platforms'
 
@@ -509,26 +509,34 @@ function buildParams() {
   }
 }
 
+async function loadRepos() {
+  try {
+    await repoStore.fetchRepos(buildParams())
+  } catch (e) {
+    notifyError(e, '加载仓库列表失败')
+  }
+}
+
 function handleSearch() {
   currentPage.value = 1
-  repoStore.fetchRepos(buildParams())
+  loadRepos()
 }
 
 function handleRefresh() {
-  repoStore.fetchRepos(buildParams())
+  loadRepos()
 }
 
 function handlePageChange() {
-  repoStore.fetchRepos(buildParams())
+  loadRepos()
 }
 
 function handleSyncPlatform() {
-  message.info('同步平台仓库功能开发中...')
+  notifyInfo('同步平台仓库功能开发中...')
 }
 
 onMounted(() => {
-  repoStore.fetchRepos(buildParams())
-  taskStore.fetchTasks({ page: 1, page_size: 100 })
+  loadRepos()
+  taskStore.fetchTasks({ page: 1, page_size: 100 }).catch((e) => notifyError(e, '加载任务失败'))
   loadConfiguredPlatforms()
 })
 
@@ -574,33 +582,43 @@ function openEdit(repo: Repo) {
 
 async function handleSubmit() {
   if (!formData.name || !formData.remote_url) {
-    message.warning('请填写仓库名称和地址')
+    notifyWarning('请填写仓库名称和地址')
     return
   }
   submitting.value = true
   try {
     if (editingKey.value) {
       await repoStore.updateRepo({ key: editingKey.value, name: formData.name, access_token: formData.access_token })
+      notifySuccess('更新仓库成功')
     } else {
       await repoStore.createRepo(formData)
+      notifySuccess('添加仓库成功')
     }
     dialogVisible.value = false
+  } catch (e) {
+    notifyError(e, '保存失败')
   } finally {
     submitting.value = false
   }
 }
 
 async function handleDelete(key: string) {
-  await repoStore.deleteRepo(key)
+  try {
+    await repoStore.deleteRepo(key)
+    notifySuccess('删除仓库成功')
+  } catch (e) {
+    notifyError(e, '删除仓库失败')
+  }
 }
 
 async function testConn(key: string) {
   testingKeys.value[key] = true
   try {
     const result = await repoStore.testConnection(key)
-    if (result) {
-      message[result.success ? 'success' : 'error'](result.message)
-    }
+    if (result.success) notifySuccess(result.message)
+    else notifyWarning(result.message)
+  } catch (e) {
+    notifyError(e, '测试连接失败')
   } finally {
     testingKeys.value[key] = false
   }
@@ -610,48 +628,9 @@ async function testConn(key: string) {
 <style scoped lang="scss">
 @import '@/styles/variables.scss';
 
-.page-container {
-  background: $bg-secondary;
-  min-height: 100%;
-}
-
-// -- Page header --
-.page-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 4px 0 0 0;
-}
-
-// -- Filter bar --
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-lg;
-  flex-wrap: wrap;
-}
-
+// 公共样式(page-container/header/title/subtitle/filter-bar 等)统一使用 global.scss
 .filter-input {
   width: 260px;
-}
-
-.filter-select {
-  width: 160px;
 }
 
 // -- Repo grid --

@@ -146,7 +146,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
 import {
   FolderOutlined,
   ReloadOutlined,
@@ -165,6 +164,8 @@ import {
 import { useRepoStore } from '@/stores/repo'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import { copyToClipboard } from '@/utils'
+import { triggerColor, triggerLabel } from '@/utils/dictionaries'
+import { notifySuccess, notifyError, notifyWarning } from '@/utils/notify'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import type { Repo, SyncTask, SyncRun } from '@/types'
 
@@ -181,16 +182,6 @@ const activeTab = ref('tasks')
 
 const repoKey = computed(() => route.params.id as string)
 const webhookUrl = computed(() => `${window.location.origin}/api/v1/webhook/receive/${repoKey.value}`)
-
-const triggerColor = (trigger: string) => {
-  const map: Record<string, string> = { manual: 'green', cron: 'blue', webhook: 'purple' }
-  return map[trigger] || 'default'
-}
-
-const triggerLabel = (trigger: string) => {
-  const map: Record<string, string> = { manual: '手动', cron: '定时', webhook: 'Webhook' }
-  return map[trigger] || trigger
-}
 
 const getTaskName = (taskKey: string) => {
   const task = tasks.value.find(t => t.key === taskKey)
@@ -211,6 +202,8 @@ onMounted(async () => {
         await loadHistory()
       }
     }
+  } catch (e) {
+    notifyError(e, '加载仓库详情失败')
   } finally {
     loading.value = false
   }
@@ -242,20 +235,40 @@ async function loadHistory() {
   history.value.sort((a, b) => new Date(b.start_time || 0).getTime() - new Date(a.start_time || 0).getTime())
 }
 
-function refresh() {
-  message.success('刷新成功')
-}
-
-function syncNow() {
-  if (tasks.value.length > 0) {
-    taskStore.runTask(tasks.value[0].key)
-  } else {
-    message.warning('暂无同步任务')
+async function refresh() {
+  try {
+    repo.value = await repoStore.getRepo(repoKey.value)
+    await taskStore.fetchTasks({ repo_key: repoKey.value })
+    tasks.value = taskStore.tasks
+    if (activeTab.value === 'history') {
+      await loadHistory()
+    }
+    notifySuccess('刷新成功')
+  } catch (e) {
+    notifyError(e, '刷新失败')
   }
 }
 
-function runTask(key: string) {
-  taskStore.runTask(key)
+async function syncNow() {
+  if (tasks.value.length === 0) {
+    notifyWarning('暂无同步任务')
+    return
+  }
+  try {
+    await taskStore.runTask(tasks.value[0].key)
+    notifySuccess('任务已启动')
+  } catch (e) {
+    notifyError(e, '启动任务失败')
+  }
+}
+
+async function runTask(key: string) {
+  try {
+    await taskStore.runTask(key)
+    notifySuccess('任务已启动')
+  } catch (e) {
+    notifyError(e, '启动任务失败')
+  }
 }
 
 function editTask(key: string) {
@@ -264,7 +277,7 @@ function editTask(key: string) {
 
 function copyUrl() {
   copyToClipboard(webhookUrl.value)
-  message.success('已复制到剪贴板')
+  notifySuccess('已复制到剪贴板')
 }
 </script>
 

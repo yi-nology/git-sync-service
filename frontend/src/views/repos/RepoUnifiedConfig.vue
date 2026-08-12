@@ -123,7 +123,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
 import {
   FolderOutlined,
   ApiOutlined,
@@ -136,6 +135,8 @@ import {
 import { useRepoStore } from '@/stores/repo'
 import { useSyncTaskStore } from '@/stores/syncTask'
 import { copyToClipboard } from '@/utils'
+import { platformColor, platformLabel } from '@/utils/platform'
+import { notifySuccess, notifyError, notifyWarning } from '@/utils/notify'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import type { Repo, SyncTask } from '@/types'
 
@@ -151,22 +152,6 @@ const tasks = ref<SyncTask[]>([])
 const repoKey = computed(() => route.params.id as string)
 const webhookUrl = computed(() => `${window.location.origin}/api/v1/webhook/receive/${repoKey.value}`)
 
-const platformColor = (platform: string) => {
-  const map: Record<string, string> = {
-    github: '#24292E', gitlab: '#FC6D26', gitea: '#609926',
-    gitee: '#C71D23', gitcode: '#0066FF', atomgit: '#0084FF', tencent_code: '#00B4D8',
-  }
-  return map[platform] || 'blue'
-}
-
-const platformLabel = (platform: string) => {
-  const map: Record<string, string> = {
-    github: 'GitHub', gitlab: 'GitLab', gitea: 'Gitea', gitee: 'Gitee',
-    gitcode: 'GitCode', atomgit: 'AtomGit', tencent_code: '腾讯工蜂',
-  }
-  return map[platform] || platform
-}
-
 onMounted(async () => {
   try {
     repo.value = await repoStore.getRepo(repoKey.value)
@@ -174,29 +159,39 @@ onMounted(async () => {
       await taskStore.fetchTasks({ repo_key: repoKey.value })
       tasks.value = taskStore.tasks
     }
+  } catch (e) {
+    notifyError(e, '加载仓库详情失败')
   } finally {
     loading.value = false
   }
 })
 
 async function testConn() {
-  const result = await repoStore.testConnection(repoKey.value)
-  if (result) {
-    message[result.success ? 'success' : 'error'](result.message)
+  try {
+    const result = await repoStore.testConnection(repoKey.value)
+    if (result.success) notifySuccess(result.message)
+    else notifyWarning(result.message)
+  } catch (e) {
+    notifyError(e, '测试连接失败')
   }
 }
 
-function runSync() {
-  if (tasks.value.length > 0) {
-    taskStore.runTask(tasks.value[0].key)
-  } else {
-    message.warning('暂无关联任务')
+async function runSync() {
+  if (tasks.value.length === 0) {
+    notifyWarning('暂无关联任务')
+    return
+  }
+  try {
+    await taskStore.runTask(tasks.value[0].key)
+    notifySuccess('任务已启动')
+  } catch (e) {
+    notifyError(e, '启动任务失败')
   }
 }
 
 function copyUrl() {
   copyToClipboard(webhookUrl.value)
-  message.success('已复制到剪贴板')
+  notifySuccess('已复制到剪贴板')
 }
 </script>
 

@@ -1,39 +1,25 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { syncTaskApi } from '@/api'
-import type { SyncTask, SyncRun, CreateTaskRequest, UpdateTaskRequest, Pagination } from '@/types'
-import { message } from 'ant-design-vue'
+import { syncTaskApi, type TaskListParams } from '@/api'
+import type { SyncTask, SyncRun, CreateTaskRequest, UpdateTaskRequest } from '@/types'
 
-export interface TaskListParams extends Partial<Pagination> {
-  repo_key?: string
-  status?: string
-  search?: string
-}
+export type { TaskListParams }
 
 export const useSyncTaskStore = defineStore('syncTask', () => {
   const tasks = ref<SyncTask[]>([])
   const total = ref(0)
   const loading = ref(false)
   const history = ref<SyncRun[]>([])
-  // Keep the last-used params so callers can refresh with the same filters
+  // 记忆上次查询参数,便于刷新时复用
   const lastParams = ref<TaskListParams>({})
 
   async function fetchTasks(params?: TaskListParams) {
     loading.value = true
     if (params) lastParams.value = { ...params }
     try {
-      const resp = await syncTaskApi.list(params as any)
-      // Handle nested response format: { code, message, data: { tasks: [...], total: N } }
-      const data = resp as any
-      if (data?.data?.tasks) {
-        tasks.value = data.data.tasks
-        total.value = data.data.total || 0
-      } else if (data?.tasks) {
-        tasks.value = data.tasks
-        total.value = data.total || 0
-      }
-    } catch (e: any) {
-      message.error(e.error || '获取任务列表失败')
+      const data = await syncTaskApi.list(params)
+      tasks.value = data.tasks
+      total.value = data.total ?? 0
     } finally {
       loading.value = false
     }
@@ -43,81 +29,44 @@ export const useSyncTaskStore = defineStore('syncTask', () => {
     await fetchTasks(lastParams.value)
   }
 
-  async function getTask(key: string): Promise<SyncTask | null> {
-    try {
-      const data = await syncTaskApi.get(key)
-      return data.task
-    } catch (e: any) {
-      message.error(e.error || '获取任务详情失败')
-      return null
-    }
+  async function getTask(key: string): Promise<SyncTask> {
+    const data = await syncTaskApi.get(key)
+    return data.task
   }
 
-  async function createTask(req: CreateTaskRequest): Promise<SyncTask | null> {
-    try {
-      const data = await syncTaskApi.create(req)
-      message.success('创建任务成功')
-      await fetchTasks()
-      return data.task
-    } catch (e: any) {
-      message.error(e.error || '创建任务失败')
-      return null
-    }
+  async function createTask(req: CreateTaskRequest): Promise<SyncTask> {
+    const data = await syncTaskApi.create(req)
+    await refreshTasks()
+    return data.task
   }
 
-  async function updateTask(req: UpdateTaskRequest): Promise<SyncTask | null> {
-    try {
-      const data = await syncTaskApi.update(req)
-      message.success('更新任务成功')
-      await fetchTasks()
-      return data.task
-    } catch (e: any) {
-      message.error(e.error || '更新任务失败')
-      return null
-    }
+  async function updateTask(req: UpdateTaskRequest): Promise<SyncTask> {
+    const data = await syncTaskApi.update(req)
+    await refreshTasks()
+    return data.task
   }
 
   async function deleteTask(key: string) {
-    try {
-      await syncTaskApi.delete(key)
-      message.success('删除任务成功')
-      await fetchTasks()
-    } catch (e: any) {
-      message.error(e.error || '删除任务失败')
-    }
+    await syncTaskApi.delete(key)
+    await refreshTasks()
   }
 
   async function runTask(key: string) {
-    try {
-      await syncTaskApi.run(key)
-      message.success('任务已启动')
-    } catch (e: any) {
-      message.error(e.error || '启动任务失败')
-    }
+    await syncTaskApi.run(key)
   }
 
   async function fetchHistory(taskKey: string, limit = 50) {
-    try {
-      const resp = await syncTaskApi.history({ task_key: taskKey, limit })
-      // Handle nested response format: { code, message, data: { runs: [...] } }
-      const data = resp as any
-      history.value = data?.data?.runs || data?.runs || []
-    } catch (e: any) {
-      message.error(e.error || '获取历史记录失败')
-    }
+    const data = await syncTaskApi.history({ task_key: taskKey, limit })
+    history.value = data.runs || []
   }
 
-  async function batchDelete(keys: string[]) {
-    try {
-      const results = await Promise.allSettled(keys.map(k => syncTaskApi.delete(k)))
-      const succeeded = results.filter(r => r.status === 'fulfilled').length
-      const failed = results.length - succeeded
-      if (succeeded > 0) message.success(`成功删除 ${succeeded} 个任务`)
-      if (failed > 0) message.error(`${failed} 个任务删除失败`)
-      await refreshTasks()
-    } catch (e: any) {
-      message.error('批量删除失败')
-    }
+  /** 批量删除(后端无批量接口,逐个调用) */
+  async function batchDelete(keys: string[]): Promise<{ succeeded: number; failed: number }> {
+    const results = await Promise.allSettled(keys.map((k) => syncTaskApi.delete(k)))
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - succeeded
+    await refreshTasks()
+    return { succeeded, failed }
   }
 
   return {
