@@ -525,26 +525,6 @@ async function fetchTasks() {
   }
 }
 
-function generateMockLogs(): SyncLog[] {
-  const statuses = ['success', 'success', 'success', 'failed', 'success', 'running']
-  const triggers = ['manual', 'cron', 'webhook', 'cron', 'manual', 'webhook']
-  return Array.from({ length: 8 }, (_, i) => {
-    const start = dayjs().subtract(i * 3, 'hour')
-    const end = statuses[i % statuses.length] === 'running' ? '' : start.add(30 + i * 10, 'second').format('YYYY-MM-DD HH:mm:ss')
-    return {
-      id: i + 1,
-      task_key: tasks.value[i % Math.max(tasks.value.length, 1)]?.key || 'task-1',
-      trigger_source: triggers[i % triggers.length],
-      status: statuses[i % statuses.length],
-      start_time: start.format('YYYY-MM-DD HH:mm:ss'),
-      end_time: end,
-      commit_range: `abc${1000 + i}..def${2000 + i}`,
-      details: i === 3 ? 'error: push failed: permission denied' : `[${start.format('HH:mm:ss')}] Starting sync\n[${start.add(5, 's').format('HH:mm:ss')}] Fetching source\n[${start.add(15, 's').format('HH:mm:ss')}] Pushing to target\n[${start.add(25, 's').format('HH:mm:ss')}] Done`,
-      error_message: i === 3 ? 'push failed: permission denied to target repository' : '',
-    }
-  })
-}
-
 onMounted(async () => {
   await fetchTasks()
   fetchLogs()

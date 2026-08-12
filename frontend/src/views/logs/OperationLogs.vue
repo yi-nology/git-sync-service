@@ -67,10 +67,12 @@
         @change="fetchLogs"
       >
         <a-select-option value="">全部类型</a-select-option>
-        <a-select-option value="login">登录</a-select-option>
         <a-select-option value="create">创建</a-select-option>
         <a-select-option value="update">更新</a-select-option>
         <a-select-option value="delete">删除</a-select-option>
+        <a-select-option value="run">手动触发</a-select-option>
+        <a-select-option value="retry">重试</a-select-option>
+        <a-select-option value="sync">同步</a-select-option>
       </a-select>
       <a-range-picker
         v-model:value="filters.dateRange"
@@ -181,6 +183,9 @@ const actionColors: Record<string, string> = {
   create: 'green',
   update: 'orange',
   delete: 'red',
+  run: 'purple',
+  retry: 'cyan',
+  sync: 'geekblue',
 }
 
 const actionLabels: Record<string, string> = {
@@ -188,6 +193,9 @@ const actionLabels: Record<string, string> = {
   create: '创建',
   update: '更新',
   delete: '删除',
+  run: '手动触发',
+  retry: '重试',
+  sync: '同步',
 }
 
 function actionColor(action: string): string {
@@ -241,49 +249,25 @@ async function fetchLogs() {
     if (filters.startDate) params.start_date = filters.startDate
     if (filters.endDate) params.end_date = filters.endDate
 
-    const resp = await logApi.listOperations(params)
-    logs.value = resp.list || []
-    pagination.total = resp.pagination?.total || 0
-
-    // Update stats from response or calculate
-    stats.total = pagination.total
-    // These would ideally come from a separate stats API
-    // For now, estimate from data
-    const today = dayjs().format('YYYY-MM-DD')
-    stats.today = logs.value.filter(l => l.time?.startsWith(today)).length
-    stats.week = Math.min(pagination.total, stats.today + Math.floor(Math.random() * 20))
+    const resp: any = await logApi.listOperations(params)
+    // 响应信封为 { code, message, data: { list, pagination, stats } }
+    const data = resp?.data ?? resp
+    logs.value = data.list || []
+    pagination.total = data.pagination?.total || 0
+    stats.today = data.stats?.today ?? 0
+    stats.week = data.stats?.week ?? 0
+    stats.total = data.stats?.total ?? pagination.total
   } catch (e: any) {
-    // If API not available, show mock data for demo
-    logs.value = generateMockLogs()
-    pagination.total = logs.value.length
-    stats.today = 12
-    stats.week = 45
-    stats.total = 128
+    // 接口不可用时如实清空，不再展示假数据
+    logs.value = []
+    pagination.total = 0
+    stats.today = 0
+    stats.week = 0
+    stats.total = 0
+    message.error(e?.message || '获取操作日志失败')
   } finally {
     loading.value = false
   }
-}
-
-function generateMockLogs(): OperationLog[] {
-  const actions = ['login', 'create', 'update', 'delete']
-  const users = ['admin', 'developer', 'ops']
-  const resources = [
-    '登录系统',
-    '创建同步任务 sync-project-a',
-    '更新仓库配置 repo-main',
-    '删除同步任务 sync-old',
-    '更新 webhook 规则',
-    '创建仓库 project-x',
-  ]
-  return Array.from({ length: 8 }, (_, i) => ({
-    id: i + 1,
-    time: dayjs().subtract(i * 2, 'hour').format('YYYY-MM-DD HH:mm:ss'),
-    user: users[i % users.length],
-    action: actions[i % actions.length],
-    resource: resources[i % resources.length],
-    details: '',
-    ip: `192.168.1.${100 + i}`,
-  }))
 }
 
 function handleExport() {

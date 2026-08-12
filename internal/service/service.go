@@ -270,7 +270,7 @@ func (s *Service) RecordOperation(ctx context.Context, entry *model.OperationLog
 
 // ListOperations 按过滤条件分页返回审计日志。
 func (s *Service) ListOperations(ctx context.Context, offset, limit int, filter *dao.OperationLogFilter) ([]*model.OperationLog, int64, error) {
-	return s.opLogs.List(ctx, offset, limit, &filter)
+	return s.opLogs.List(ctx, offset, limit, filter)
 }
 
 // OperationStats 返回今日、本周、总操作数。

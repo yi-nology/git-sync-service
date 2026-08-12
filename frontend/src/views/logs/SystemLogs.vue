@@ -394,39 +394,21 @@ async function fetchLogs() {
     }
     if (filters.level) params.level = filters.level
 
-    const resp = await logApi.listSystem(params)
-    logs.value = resp.list || []
-    pagination.total = resp.pagination?.total || 0
+    const resp: any = await logApi.listSystem(params)
+    // 响应信封为 { code, message, data: { list, pagination } }
+    const data = resp?.data ?? resp
+    logs.value = data.list || []
+    pagination.total = data.pagination?.total || 0
     calculateStats(logs.value)
-  } catch {
-    // If API not available, show mock data for demo
-    logs.value = generateMockLogs()
-    pagination.total = logs.value.length
+  } catch (e: any) {
+    // 接口不可用时如实清空，不再展示假数据
+    console.error('Failed to fetch system logs:', e)
+    logs.value = []
+    pagination.total = 0
     calculateStats(logs.value)
   } finally {
     loading.value = false
   }
-}
-
-function generateMockLogs(): SystemLog[] {
-  const levels = ['ERROR', 'WARN', 'INFO', 'INFO', 'DEBUG', 'INFO', 'WARN', 'ERROR']
-  const messages = [
-    'Failed to connect to database: connection refused',
-    'Sync task sync-project-a exceeded timeout threshold',
-    'Server started on port 8080',
-    'Repository repo-main synced successfully',
-    'Git fetch completed for origin/main',
-    'Scheduler triggered sync task sync-project-b',
-    'High memory usage detected: 85%',
-    'TLS certificate verification failed for platform gitlab-prod',
-  ]
-  return Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    time: dayjs().subtract(i * 15, 'minute').format('YYYY-MM-DD HH:mm:ss'),
-    level: levels[i % levels.length],
-    message: messages[i % messages.length],
-    details: i % 3 === 0 ? JSON.stringify({ module: ['database', 'sync', 'server', 'git', 'scheduler'][i % 5] }) : '',
-  }))
 }
 
 onMounted(() => {
