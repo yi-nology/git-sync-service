@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/yi-nology/git-sync-service)](https://goreportcard.com/report/github.com/yi-nology/git-sync-service)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/yi-nology/git-sync-service)](https://go.dev/)
 [![License](https://img.shields.io/github/license/yi-nology/git-sync-service)](LICENSE)
-[![Latest Release](https://img.shields.io/github/v/release/yi-nology/git-sync-service)](https://github.com/yi-nology/git-sync-service/releases)
+[![Latest Release](https://img.shields.io/github/v/release/yi-nology/git-sync-service)](https://github.com/yi-nology/git-sync-service/releases/tag/v1.5.0)
 
 A service for synchronizing Git repositories across different platforms.
 
@@ -109,3 +109,12 @@ Once the server is running, access the API at `http://localhost:8890`.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Project Stats
+
+<!-- STATS_START -->
+| Metric | Value |
+|--------|-------|
+| Test Files | 12 |
+| Total Tests | 97 |
+<!-- STATS_END -->
