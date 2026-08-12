@@ -53,7 +53,7 @@ func InternalError(c *app.RequestContext, message string) {
 }
 
 // Paginated sends a 200 OK response with pagination data
-func Paginated(c *app.RequestContext, list interface{}, total int64, page int, pageSize int) {
+func Paginated(c *app.RequestContext, list interface{}, total int64, page, pageSize int) {
 	totalPages := int(math.Ceil(float64(total) / float64(pageSize)))
 
 	c.JSON(consts.StatusOK, Response{
