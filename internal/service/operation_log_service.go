@@ -27,7 +27,7 @@ func (s *OperationLogService) Record(ctx context.Context, entry *model.Operation
 }
 
 // List 按过滤条件分页返回审计日志。
-func (s *OperationLogService) List(ctx context.Context, offset, limit int, filter dao.OperationLogFilter) ([]*model.OperationLog, int64, error) {
+func (s *OperationLogService) List(ctx context.Context, offset, limit int, filter *dao.OperationLogFilter) ([]*model.OperationLog, int64, error) {
 	page := dao.DefaultPagination(offset, limit)
 	return s.opLogDAO.List(page, filter)
 }
