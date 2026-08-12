@@ -263,3 +263,13 @@ func _repolistMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _reposMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _batchreposMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

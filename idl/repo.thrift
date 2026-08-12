@@ -17,6 +17,11 @@ struct RepoInfo {
 struct ListReposReq {
     1: i32 page (api.query="page")
     2: i32 pageSize (api.query="page_size")
+    3: string search (api.query="search")
+    4: string platform (api.query="platform")
+    5: string status (api.query="status")
+    6: string sortBy (api.query="sort_by")
+    7: string sortOrder (api.query="sort_order")
 }
 
 struct ListReposResp {
@@ -75,4 +80,16 @@ struct ListBranchesReq {
 
 struct ListBranchesResp {
     1: list<string> branches (api.json="branches")
+}
+
+struct BatchReposReq {
+    1: string action (api.json="action")
+    2: list<string> keys (api.json="keys")
+}
+
+struct BatchReposResp {
+    1: i32 total (api.json="total")
+    2: i32 success (api.json="success")
+    3: i32 failed (api.json="failed")
+    4: list<string> errors (api.json="errors")
 }

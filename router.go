@@ -6,7 +6,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	handler "github.com/yi-nology/git-sync-service/biz/handler"
 	"github.com/yi-nology/git-sync-service/biz/handler/git_sync"
-	routermw "github.com/yi-nology/git-sync-service/biz/router/git_sync"
 )
 
 // customizeRegister registers customize routers.
@@ -22,7 +21,4 @@ func customizedRegister(r *server.Hertz) {
 
 	// Webhook 接收端点（带速率限制，不走 API 鉴权）
 	r.POST("/api/webhook/receive/:repoKey", git_sync.RateLimitMiddleware(), git_sync.ReceiveWebhook)
-
-	// POST /api/v1/repos/batch -> BatchRepos（需 X-API-Key 鉴权）
-	r.POST("/api/v1/repos/batch", routermw.AuthMiddleware(), git_sync.BatchRepos)
 }

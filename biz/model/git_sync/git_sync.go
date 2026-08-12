@@ -27,6 +27,8 @@ type RepoService interface {
 	RepoTest(ctx context.Context, req *repo.TestConnectionReq) (r *repo.TestConnectionResp, err error)
 
 	RepoBranches(ctx context.Context, req *repo.ListBranchesReq) (r *repo.ListBranchesResp, err error)
+
+	BatchRepos(ctx context.Context, req *repo.BatchReposReq) (r *repo.BatchReposResp, err error)
 }
 
 type RepoServiceClient struct {
@@ -114,6 +116,15 @@ func (p *RepoServiceClient) RepoBranches(ctx context.Context, req *repo.ListBran
 	_args.Req = req
 	var _result RepoServiceRepoBranchesResult
 	if err = p.Client_().Call(ctx, "RepoBranches", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+func (p *RepoServiceClient) BatchRepos(ctx context.Context, req *repo.BatchReposReq) (r *repo.BatchReposResp, err error) {
+	var _args RepoServiceBatchReposArgs
+	_args.Req = req
+	var _result RepoServiceBatchReposResult
+	if err = p.Client_().Call(ctx, "BatchRepos", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
@@ -537,6 +548,7 @@ func NewRepoServiceProcessor(handler RepoService) *RepoServiceProcessor {
 	self.AddToProcessorMap("RepoDelete", &repoServiceProcessorRepoDelete{handler: handler})
 	self.AddToProcessorMap("RepoTest", &repoServiceProcessorRepoTest{handler: handler})
 	self.AddToProcessorMap("RepoBranches", &repoServiceProcessorRepoBranches{handler: handler})
+	self.AddToProcessorMap("BatchRepos", &repoServiceProcessorBatchRepos{handler: handler})
 	return self
 }
 func (p *RepoServiceProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -876,6 +888,54 @@ func (p *repoServiceProcessorRepoBranches) Process(ctx context.Context, seqId in
 		result.Success = retval
 	}
 	if err2 = oprot.WriteMessageBegin("RepoBranches", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type repoServiceProcessorBatchRepos struct {
+	handler RepoService
+}
+
+func (p *repoServiceProcessorBatchRepos) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := RepoServiceBatchReposArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("BatchRepos", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := RepoServiceBatchReposResult{}
+	var retval *repo.BatchReposResp
+	if retval, err2 = p.handler.BatchRepos(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing BatchRepos: "+err2.Error())
+		oprot.WriteMessageBegin("BatchRepos", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	} else {
+		result.Success = retval
+	}
+	if err2 = oprot.WriteMessageBegin("BatchRepos", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -2948,6 +3008,300 @@ func (p *RepoServiceRepoBranchesResult) String() string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("RepoServiceRepoBranchesResult(%+v)", *p)
+
+}
+
+type RepoServiceBatchReposArgs struct {
+	Req *repo.BatchReposReq `thrift:"req,1"`
+}
+
+func NewRepoServiceBatchReposArgs() *RepoServiceBatchReposArgs {
+	return &RepoServiceBatchReposArgs{}
+}
+
+func (p *RepoServiceBatchReposArgs) InitDefault() {
+}
+
+var RepoServiceBatchReposArgs_Req_DEFAULT *repo.BatchReposReq
+
+func (p *RepoServiceBatchReposArgs) GetReq() (v *repo.BatchReposReq) {
+	if !p.IsSetReq() {
+		return RepoServiceBatchReposArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+var fieldIDToName_RepoServiceBatchReposArgs = map[int16]string{
+	1: "req",
+}
+
+func (p *RepoServiceBatchReposArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *RepoServiceBatchReposArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceBatchReposArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *RepoServiceBatchReposArgs) ReadField1(iprot thrift.TProtocol) error {
+	_field := repo.NewBatchReposReq()
+	if err := _field.Read(iprot); err != nil {
+		return err
+	}
+	p.Req = _field
+	return nil
+}
+
+func (p *RepoServiceBatchReposArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("BatchRepos_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *RepoServiceBatchReposArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := p.Req.Write(oprot); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *RepoServiceBatchReposArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("RepoServiceBatchReposArgs(%+v)", *p)
+
+}
+
+type RepoServiceBatchReposResult struct {
+	Success *repo.BatchReposResp `thrift:"success,0,optional"`
+}
+
+func NewRepoServiceBatchReposResult() *RepoServiceBatchReposResult {
+	return &RepoServiceBatchReposResult{}
+}
+
+func (p *RepoServiceBatchReposResult) InitDefault() {
+}
+
+var RepoServiceBatchReposResult_Success_DEFAULT *repo.BatchReposResp
+
+func (p *RepoServiceBatchReposResult) GetSuccess() (v *repo.BatchReposResp) {
+	if !p.IsSetSuccess() {
+		return RepoServiceBatchReposResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+var fieldIDToName_RepoServiceBatchReposResult = map[int16]string{
+	0: "success",
+}
+
+func (p *RepoServiceBatchReposResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *RepoServiceBatchReposResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField0(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceBatchReposResult[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *RepoServiceBatchReposResult) ReadField0(iprot thrift.TProtocol) error {
+	_field := repo.NewBatchReposResp()
+	if err := _field.Read(iprot); err != nil {
+		return err
+	}
+	p.Success = _field
+	return nil
+}
+
+func (p *RepoServiceBatchReposResult) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("BatchRepos_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField0(oprot); err != nil {
+			fieldId = 0
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *RepoServiceBatchReposResult) writeField0(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSuccess() {
+		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Success.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
+}
+
+func (p *RepoServiceBatchReposResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("RepoServiceBatchReposResult(%+v)", *p)
 
 }
 

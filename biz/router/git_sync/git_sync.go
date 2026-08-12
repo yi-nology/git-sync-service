@@ -39,6 +39,8 @@ func Register(r *server.Hertz) {
 			_repo.POST("/test", append(_repotestMw(), git_sync.RepoTest)...)
 			_repo.POST("/update", append(_repoupdateMw(), git_sync.RepoUpdate)...)
 			_v1.GET("/repos", append(_repolistMw(), git_sync.RepoList)...)
+			_repos := _v1.Group("/repos", _reposMw()...)
+			_repos.POST("/batch", append(_batchreposMw(), git_sync.BatchRepos)...)
 			{
 				_logs := _v1.Group("/logs", _logsMw()...)
 				_logs.GET("/operations", append(_listoperationlogsMw(), git_sync.ListOperationLogs)...)

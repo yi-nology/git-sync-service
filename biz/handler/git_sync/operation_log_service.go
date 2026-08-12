@@ -60,10 +60,10 @@ func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
 			"total":       total,
 			"total_pages": totalPages,
 		},
-		"stats": map[string]interface{}{
-			"today": today,
-			"week":  week,
-			"total": statsTotal,
+		"stats": &operation_log.OperationLogStats{
+			Today: today,
+			Week:  week,
+			Total: statsTotal,
 		},
 	})
 }

@@ -13,6 +13,7 @@ service RepoService {
     repo.DeleteRepoResp RepoDelete(1: repo.DeleteRepoReq req) (api.post="/api/v1/repo/delete")
     repo.TestConnectionResp RepoTest(1: repo.TestConnectionReq req) (api.post="/api/v1/repo/test")
     repo.ListBranchesResp RepoBranches(1: repo.ListBranchesReq req) (api.get="/api/v1/repo/branches")
+    repo.BatchReposResp BatchRepos(1: repo.BatchReposReq req) (api.post="/api/v1/repos/batch")
 }
 
 service SyncTaskService {
