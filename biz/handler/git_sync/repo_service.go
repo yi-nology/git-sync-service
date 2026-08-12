@@ -26,7 +26,7 @@ type ListReposRequest struct {
 	SortOrder string `query:"sort_order" default:"desc"`
 }
 
-func List(ctx context.Context, c *app.RequestContext) {
+func RepoList(ctx context.Context, c *app.RequestContext) {
 	var req ListReposRequest
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -60,7 +60,7 @@ func List(ctx context.Context, c *app.RequestContext) {
 	response.Paginated(c, converter.ToRepoInfoList(list), total, req.Page, req.PageSize)
 }
 
-func Get(ctx context.Context, c *app.RequestContext) {
+func RepoGet(ctx context.Context, c *app.RequestContext) {
 	var req repo.GetRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -83,7 +83,7 @@ func Get(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.GetRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func Create(ctx context.Context, c *app.RequestContext) {
+func RepoCreate(ctx context.Context, c *app.RequestContext) {
 	var req repo.CreateRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -116,7 +116,7 @@ func Create(ctx context.Context, c *app.RequestContext) {
 	response.Created(c, &repo.CreateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func Update(ctx context.Context, c *app.RequestContext) {
+func RepoUpdate(ctx context.Context, c *app.RequestContext) {
 	var req repo.UpdateRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -142,7 +142,7 @@ func Update(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.UpdateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func Delete(ctx context.Context, c *app.RequestContext) {
+func RepoDelete(ctx context.Context, c *app.RequestContext) {
 	var req repo.DeleteRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -161,7 +161,7 @@ func Delete(ctx context.Context, c *app.RequestContext) {
 	response.NoContent(c)
 }
 
-func Test(ctx context.Context, c *app.RequestContext) {
+func RepoTest(ctx context.Context, c *app.RequestContext) {
 	var req repo.TestConnectionReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -180,7 +180,7 @@ func Test(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.TestConnectionResp{Success: result.Success, Message: result.Message})
 }
 
-func Branches(ctx context.Context, c *app.RequestContext) {
+func RepoBranches(ctx context.Context, c *app.RequestContext) {
 	var req repo.ListBranchesReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())

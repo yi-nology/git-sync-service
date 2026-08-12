@@ -4,33 +4,16 @@ import (
 	"context"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	operation_log "github.com/yi-nology/git-sync-service/biz/model/operation_log"
 	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 )
 
-// ListOperationLogsRequest 操作日志查询请求。
-type ListOperationLogsRequest struct {
-	Page      int    `query:"page" default:"1"`
-	PageSize  int    `query:"page_size" default:"10"`
-	Search    string `query:"search"`
-	Action    string `query:"action"`
-	User      string `query:"user"`
-	StartDate string `query:"start_date"`
-	EndDate   string `query:"end_date"`
-}
-
-// OperationLogStats 操作统计。
-type OperationLogStats struct {
-	Today int64 `json:"today"`
-	Week  int64 `json:"week"`
-	Total int64 `json:"total"`
-}
-
 // ListOperationLogs GET /api/v1/logs/operations
 // 返回 {list, pagination, stats}（stats.total 为全量总数，pagination.total 为过滤后的结果数）。
 func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
-	var req ListOperationLogsRequest
+	var req operation_log.ListOperationLogsReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -42,7 +25,7 @@ func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
 		req.PageSize = 10
 	}
 
-	offset, limit := converter.PageToOffset(int32(req.Page), int32(req.PageSize))
+	offset, limit := converter.PageToOffset(req.Page, req.PageSize)
 
 	filter := dao.OperationLogFilter{
 		Search:    req.Search,
@@ -64,9 +47,9 @@ func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	totalPages := 0
+	totalPages := int32(0)
 	if req.PageSize > 0 && total > 0 {
-		totalPages = int((total + int64(req.PageSize) - 1) / int64(req.PageSize))
+		totalPages = int32((total + int64(req.PageSize) - 1) / int64(req.PageSize))
 	}
 
 	response.Success(c, map[string]interface{}{
@@ -77,10 +60,10 @@ func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
 			"total":       total,
 			"total_pages": totalPages,
 		},
-		"stats": OperationLogStats{
-			Today: today,
-			Week:  week,
-			Total: statsTotal,
+		"stats": map[string]interface{}{
+			"today": today,
+			"week":  week,
+			"total": statsTotal,
 		},
 	})
 }

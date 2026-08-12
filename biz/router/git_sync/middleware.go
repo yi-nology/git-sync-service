@@ -104,41 +104,6 @@ func _retryeventMw() []app.HandlerFunc {
 	return nil
 }
 
-func _getMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _branchesMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _createMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _deleteMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _testMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _updateMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _listMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
 func _taskhistoryMw() []app.HandlerFunc {
 	// your code...
 	return nil
@@ -200,6 +165,101 @@ func _ruleupdateMw() []app.HandlerFunc {
 }
 
 func _rulelistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _logsMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _listoperationlogsMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _platformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _createplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deleteplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _listplatformreposMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _setdefaultplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _syncplatformreposMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _testplatformconnectionMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _updateplatformMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _listplatformsMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _repogetMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _repobranchesMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _repocreateMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _repodeleteMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _repotestMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _repoupdateMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _repolistMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
