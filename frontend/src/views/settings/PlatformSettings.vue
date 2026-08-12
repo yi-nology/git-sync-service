@@ -16,7 +16,7 @@
         v-for="platform in platforms"
         :key="platform.key"
         class="platform-card"
-        :class="{ 'is-default': platform.is_default }"
+        :class="{ 'is-default': getIsDefault(platform) }"
         hoverable
       >
         <template #cover>
@@ -24,7 +24,7 @@
             <div class="platform-icon">
               <component :is="getPlatformIcon(platform.type)" style="font-size: 48px; color: white" />
             </div>
-            <a-tag v-if="platform.is_default" color="white" class="default-tag">默认</a-tag>
+            <a-tag v-if="getIsDefault(platform)" color="white" class="default-tag">默认</a-tag>
           </div>
         </template>
 
@@ -38,18 +38,18 @@
           <div class="info-item">
             <GlobalOutlined class="info-icon" />
             <span class="info-label">实例地址</span>
-            <span class="info-value">{{ platform.instance_url || platform.api_url }}</span>
+            <span class="info-value">{{ getInstanceUrl(platform) || getApiUrl(platform) }}</span>
           </div>
           <div class="info-item">
             <ApiOutlined class="info-icon" />
             <span class="info-label">API 地址</span>
-            <span class="info-value">{{ platform.api_url }}</span>
+            <span class="info-value">{{ getApiUrl(platform) }}</span>
           </div>
           <div class="info-item">
             <LockOutlined class="info-icon" />
             <span class="info-label">TLS 验证</span>
-            <a-tag :color="platform.skip_tls_verify ? 'warning' : 'success'" size="small">
-              {{ platform.skip_tls_verify ? '已跳过' : '已启用' }}
+            <a-tag :color="getSkipTls(platform) ? 'warning' : 'success'" size="small">
+              {{ getSkipTls(platform) ? '已跳过' : '已启用' }}
             </a-tag>
           </div>
           <div class="info-item">
@@ -62,12 +62,12 @@
           <div class="info-item">
             <DatabaseOutlined class="info-icon" />
             <span class="info-label">仓库数</span>
-            <span class="info-value">{{ platform.repo_count || 0 }}</span>
+            <span class="info-value">{{ getRepoCount(platform) }}</span>
           </div>
-          <div class="info-item" v-if="platform.last_test_at">
+          <div class="info-item" v-if="getLastTestAt(platform)">
             <ClockCircleOutlined class="info-icon" />
             <span class="info-label">最后测试</span>
-            <span class="info-value">{{ formatTime(platform.last_test_at) }}</span>
+            <span class="info-value">{{ formatTime(getLastTestAt(platform)) }}</span>
           </div>
         </div>
 
@@ -83,7 +83,7 @@
             </a-button>
           </a-tooltip>
           <a-tooltip title="设为默认">
-            <a-button type="text" size="small" @click="setDefault(platform)" :disabled="platform.is_default">
+            <a-button type="text" size="small" @click="setDefault(platform)" :disabled="getIsDefault(platform)">
               <StarOutlined />
             </a-button>
           </a-tooltip>
@@ -435,7 +435,7 @@ async function loadPlatforms() {
   loading.value = true
   try {
     const result = await platformApi.list()
-    platforms.value = result.platforms || []
+    platforms.value = result.data?.platforms || result.platforms || []
   } catch (e) {
     console.error('Failed to load platforms:', e)
     platforms.value = []
@@ -472,6 +472,26 @@ function getPlatformIcon(type: string) {
     custom: SettingOutlined,
   }
   return markRaw(icons[type] || SettingOutlined)
+}
+
+// Helper functions to handle both camelCase and snake_case
+function getInstanceUrl(p: any): string {
+  return p.instanceUrl || p.instance_url || ''
+}
+function getApiUrl(p: any): string {
+  return p.apiUrl || p.api_url || ''
+}
+function getSkipTls(p: any): boolean {
+  return p.skip_tls_verify || false
+}
+function getIsDefault(p: any): boolean {
+  return p.is_default || false
+}
+function getRepoCount(p: any): number {
+  return p.repo_count || 0
+}
+function getLastTestAt(p: any): string {
+  return p.last_test_at || ''
 }
 
 // 格式化时间
@@ -576,12 +596,12 @@ function openEdit(platform: Platform) {
   formData.type = platform.type
   formData.name = platform.name
   formData.instance_url = platform.instance_url || ''
-  formData.url = platform.api_url
+  formData.url = platform.api_url || ''
   formData.token = '' // 不回显 token
-  formData.skip_tls_verify = platform.skip_tls_verify
-  formData.ca_cert_path = platform.ca_cert_path
-  formData.proxy_url = platform.proxy_url
-  formData.is_default = platform.is_default
+  formData.skip_tls_verify = platform.skip_tls_verify || false
+  formData.ca_cert_path = platform.ca_cert_path || ''
+  formData.proxy_url = platform.proxy_url || ''
+  formData.is_default = platform.is_default || false
 
   const preset = platformPresets[platform.type]
   if (preset) {
@@ -589,7 +609,7 @@ function openEdit(platform: Platform) {
     urlTip.value = preset.urlTip
     tokenTip.value = preset.tokenTip
     instancePlaceholder.value = preset.instancePlaceholder
-    instanceTip.value = platform.instance_url ? '私有部署实例' : `留空使用默认: ${preset.defaultInstance}`
+    instanceTip.value = formData.instance_url ? '私有部署实例' : `留空使用默认: ${preset.defaultInstance}`
   }
 
   dialogVisible.value = true

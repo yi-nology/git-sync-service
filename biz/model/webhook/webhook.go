@@ -10,15 +10,15 @@ import (
 type WebhookRuleInfo struct {
 	ID            int64  `thrift:"id,1" form:"id" json:"id" query:"id"`
 	Name          string `thrift:"name,2" form:"name" json:"name" query:"name"`
-	RepoKey       string `thrift:"repo_key,3" form:"repo_key" json:"repo_key" query:"repo_key"`
-	EventType     string `thrift:"event_type,4" form:"event_type" json:"event_type" query:"event_type"`
-	BranchPattern string `thrift:"branch_pattern,5" form:"branch_pattern" json:"branch_pattern" query:"branch_pattern"`
+	RepoKey       string `thrift:"repoKey,3" form:"repo_key" json:"repo_key" query:"repo_key"`
+	EventType     string `thrift:"eventType,4" form:"event_type" json:"event_type" query:"event_type"`
+	BranchPattern string `thrift:"branchPattern,5" form:"branch_pattern" json:"branch_pattern" query:"branch_pattern"`
 	Action        string `thrift:"action,6" form:"action" json:"action" query:"action"`
-	SyncTaskKeys  string `thrift:"sync_task_keys,7" form:"sync_task_keys" json:"sync_task_keys" query:"sync_task_keys"`
-	MinInterval   int32  `thrift:"min_interval,8" form:"min_interval" json:"min_interval" query:"min_interval"`
+	SyncTaskKeys  string `thrift:"syncTaskKeys,7" form:"sync_task_keys" json:"sync_task_keys" query:"sync_task_keys"`
+	MinInterval   int32  `thrift:"minInterval,8" form:"min_interval" json:"min_interval" query:"min_interval"`
 	Enabled       bool   `thrift:"enabled,9" form:"enabled" json:"enabled" query:"enabled"`
 	Description   string `thrift:"description,10" form:"description" json:"description" query:"description"`
-	CreatedAt     string `thrift:"created_at,11" form:"created_at" json:"created_at" query:"created_at"`
+	CreatedAt     string `thrift:"createdAt,11" form:"created_at" json:"created_at" query:"created_at"`
 }
 
 func NewWebhookRuleInfo() *WebhookRuleInfo {
@@ -75,15 +75,15 @@ func (p *WebhookRuleInfo) GetCreatedAt() (v string) {
 var fieldIDToName_WebhookRuleInfo = map[int16]string{
 	1:  "id",
 	2:  "name",
-	3:  "repo_key",
-	4:  "event_type",
-	5:  "branch_pattern",
+	3:  "repoKey",
+	4:  "eventType",
+	5:  "branchPattern",
 	6:  "action",
-	7:  "sync_task_keys",
-	8:  "min_interval",
+	7:  "syncTaskKeys",
+	8:  "minInterval",
 	9:  "enabled",
 	10: "description",
-	11: "created_at",
+	11: "createdAt",
 }
 
 func (p *WebhookRuleInfo) Read(iprot thrift.TProtocol) (err error) {
@@ -447,7 +447,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookRuleInfo) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("repo_key", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("repoKey", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.RepoKey); err != nil {
@@ -464,7 +464,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookRuleInfo) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("event_type", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("eventType", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.EventType); err != nil {
@@ -481,7 +481,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookRuleInfo) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("branch_pattern", thrift.STRING, 5); err != nil {
+	if err = oprot.WriteFieldBegin("branchPattern", thrift.STRING, 5); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.BranchPattern); err != nil {
@@ -515,7 +515,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookRuleInfo) writeField7(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("sync_task_keys", thrift.STRING, 7); err != nil {
+	if err = oprot.WriteFieldBegin("syncTaskKeys", thrift.STRING, 7); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SyncTaskKeys); err != nil {
@@ -532,7 +532,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookRuleInfo) writeField8(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("min_interval", thrift.I32, 8); err != nil {
+	if err = oprot.WriteFieldBegin("minInterval", thrift.I32, 8); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteI32(p.MinInterval); err != nil {
@@ -583,7 +583,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookRuleInfo) writeField11(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("created_at", thrift.STRING, 11); err != nil {
+	if err = oprot.WriteFieldBegin("createdAt", thrift.STRING, 11); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.CreatedAt); err != nil {
@@ -608,7 +608,7 @@ func (p *WebhookRuleInfo) String() string {
 }
 
 type ListRulesReq struct {
-	RepoKey string `thrift:"repo_key,1" json:"repo_key" query:"repo_key"`
+	RepoKey string `thrift:"repoKey,1" json:"repo_key" query:"repo_key"`
 }
 
 func NewListRulesReq() *ListRulesReq {
@@ -623,7 +623,7 @@ func (p *ListRulesReq) GetRepoKey() (v string) {
 }
 
 var fieldIDToName_ListRulesReq = map[int16]string{
-	1: "repo_key",
+	1: "repoKey",
 }
 
 func (p *ListRulesReq) Read(iprot thrift.TProtocol) (err error) {
@@ -723,7 +723,7 @@ WriteStructEndError:
 }
 
 func (p *ListRulesReq) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("repo_key", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("repoKey", thrift.STRING, 1); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.RepoKey); err != nil {
@@ -1195,12 +1195,12 @@ func (p *GetRuleResp) String() string {
 
 type CreateRuleReq struct {
 	Name          string `thrift:"name,1" form:"name" json:"name" query:"name"`
-	RepoKey       string `thrift:"repo_key,2" form:"repo_key" json:"repo_key" query:"repo_key"`
-	EventType     string `thrift:"event_type,3" form:"event_type" json:"event_type" query:"event_type"`
-	BranchPattern string `thrift:"branch_pattern,4" form:"branch_pattern" json:"branch_pattern" query:"branch_pattern"`
+	RepoKey       string `thrift:"repoKey,2" form:"repo_key" json:"repo_key" query:"repo_key"`
+	EventType     string `thrift:"eventType,3" form:"event_type" json:"event_type" query:"event_type"`
+	BranchPattern string `thrift:"branchPattern,4" form:"branch_pattern" json:"branch_pattern" query:"branch_pattern"`
 	Action        string `thrift:"action,5" form:"action" json:"action" query:"action"`
-	SyncTaskKeys  string `thrift:"sync_task_keys,6" form:"sync_task_keys" json:"sync_task_keys" query:"sync_task_keys"`
-	MinInterval   int32  `thrift:"min_interval,7" form:"min_interval" json:"min_interval" query:"min_interval"`
+	SyncTaskKeys  string `thrift:"syncTaskKeys,6" form:"sync_task_keys" json:"sync_task_keys" query:"sync_task_keys"`
+	MinInterval   int32  `thrift:"minInterval,7" form:"min_interval" json:"min_interval" query:"min_interval"`
 	Enabled       bool   `thrift:"enabled,8" form:"enabled" json:"enabled" query:"enabled"`
 	Description   string `thrift:"description,9" form:"description" json:"description" query:"description"`
 }
@@ -1250,12 +1250,12 @@ func (p *CreateRuleReq) GetDescription() (v string) {
 
 var fieldIDToName_CreateRuleReq = map[int16]string{
 	1: "name",
-	2: "repo_key",
-	3: "event_type",
-	4: "branch_pattern",
+	2: "repoKey",
+	3: "eventType",
+	4: "branchPattern",
 	5: "action",
-	6: "sync_task_keys",
-	7: "min_interval",
+	6: "syncTaskKeys",
+	7: "minInterval",
 	8: "enabled",
 	9: "description",
 }
@@ -1558,7 +1558,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateRuleReq) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("repo_key", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("repoKey", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.RepoKey); err != nil {
@@ -1575,7 +1575,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateRuleReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("event_type", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("eventType", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.EventType); err != nil {
@@ -1592,7 +1592,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateRuleReq) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("branch_pattern", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("branchPattern", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.BranchPattern); err != nil {
@@ -1626,7 +1626,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateRuleReq) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("sync_task_keys", thrift.STRING, 6); err != nil {
+	if err = oprot.WriteFieldBegin("syncTaskKeys", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SyncTaskKeys); err != nil {
@@ -1643,7 +1643,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateRuleReq) writeField7(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("min_interval", thrift.I32, 7); err != nil {
+	if err = oprot.WriteFieldBegin("minInterval", thrift.I32, 7); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteI32(p.MinInterval); err != nil {
@@ -1850,11 +1850,11 @@ func (p *CreateRuleResp) String() string {
 type UpdateRuleReq struct {
 	ID            int64  `thrift:"id,1" form:"id" json:"id" query:"id"`
 	Name          string `thrift:"name,2" form:"name" json:"name" query:"name"`
-	EventType     string `thrift:"event_type,3" form:"event_type" json:"event_type" query:"event_type"`
-	BranchPattern string `thrift:"branch_pattern,4" form:"branch_pattern" json:"branch_pattern" query:"branch_pattern"`
+	EventType     string `thrift:"eventType,3" form:"event_type" json:"event_type" query:"event_type"`
+	BranchPattern string `thrift:"branchPattern,4" form:"branch_pattern" json:"branch_pattern" query:"branch_pattern"`
 	Action        string `thrift:"action,5" form:"action" json:"action" query:"action"`
-	SyncTaskKeys  string `thrift:"sync_task_keys,6" form:"sync_task_keys" json:"sync_task_keys" query:"sync_task_keys"`
-	MinInterval   int32  `thrift:"min_interval,7" form:"min_interval" json:"min_interval" query:"min_interval"`
+	SyncTaskKeys  string `thrift:"syncTaskKeys,6" form:"sync_task_keys" json:"sync_task_keys" query:"sync_task_keys"`
+	MinInterval   int32  `thrift:"minInterval,7" form:"min_interval" json:"min_interval" query:"min_interval"`
 	Enabled       bool   `thrift:"enabled,8" form:"enabled" json:"enabled" query:"enabled"`
 	Description   string `thrift:"description,9" form:"description" json:"description" query:"description"`
 }
@@ -1905,11 +1905,11 @@ func (p *UpdateRuleReq) GetDescription() (v string) {
 var fieldIDToName_UpdateRuleReq = map[int16]string{
 	1: "id",
 	2: "name",
-	3: "event_type",
-	4: "branch_pattern",
+	3: "eventType",
+	4: "branchPattern",
 	5: "action",
-	6: "sync_task_keys",
-	7: "min_interval",
+	6: "syncTaskKeys",
+	7: "minInterval",
 	8: "enabled",
 	9: "description",
 }
@@ -2229,7 +2229,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateRuleReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("event_type", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("eventType", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.EventType); err != nil {
@@ -2246,7 +2246,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateRuleReq) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("branch_pattern", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("branchPattern", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.BranchPattern); err != nil {
@@ -2280,7 +2280,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateRuleReq) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("sync_task_keys", thrift.STRING, 6); err != nil {
+	if err = oprot.WriteFieldBegin("syncTaskKeys", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SyncTaskKeys); err != nil {
@@ -2297,7 +2297,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateRuleReq) writeField7(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("min_interval", thrift.I32, 7); err != nil {
+	if err = oprot.WriteFieldBegin("minInterval", thrift.I32, 7); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteI32(p.MinInterval); err != nil {
@@ -2783,17 +2783,17 @@ func (p *DeleteRuleResp) String() string {
 
 type WebhookEventInfo struct {
 	ID           int64  `thrift:"id,1" form:"id" json:"id" query:"id"`
-	EventID      string `thrift:"event_id,2" form:"event_id" json:"event_id" query:"event_id"`
-	RepoKey      string `thrift:"repo_key,3" form:"repo_key" json:"repo_key" query:"repo_key"`
-	EventType    string `thrift:"event_type,4" form:"event_type" json:"event_type" query:"event_type"`
+	EventId      string `thrift:"eventId,2" form:"event_id" json:"event_id" query:"event_id"`
+	RepoKey      string `thrift:"repoKey,3" form:"repo_key" json:"repo_key" query:"repo_key"`
+	EventType    string `thrift:"eventType,4" form:"event_type" json:"event_type" query:"event_type"`
 	Source       string `thrift:"source,5" form:"source" json:"source" query:"source"`
-	ActorName    string `thrift:"actor_name,6" form:"actor_name" json:"actor_name" query:"actor_name"`
+	ActorName    string `thrift:"actorName,6" form:"actor_name" json:"actor_name" query:"actor_name"`
 	Branch       string `thrift:"branch,7" form:"branch" json:"branch" query:"branch"`
-	CommitSha    string `thrift:"commit_sha,8" form:"commit_sha" json:"commit_sha" query:"commit_sha"`
+	CommitSha    string `thrift:"commitSha,8" form:"commit_sha" json:"commit_sha" query:"commit_sha"`
 	Status       string `thrift:"status,9" form:"status" json:"status" query:"status"`
-	ErrorMessage string `thrift:"error_message,10" form:"error_message" json:"error_message" query:"error_message"`
-	ProcessedAt  string `thrift:"processed_at,11" form:"processed_at" json:"processed_at" query:"processed_at"`
-	CreatedAt    string `thrift:"created_at,12" form:"created_at" json:"created_at" query:"created_at"`
+	ErrorMessage string `thrift:"errorMessage,10" form:"error_message" json:"error_message" query:"error_message"`
+	ProcessedAt  string `thrift:"processedAt,11" form:"processed_at" json:"processed_at" query:"processed_at"`
+	CreatedAt    string `thrift:"createdAt,12" form:"created_at" json:"created_at" query:"created_at"`
 }
 
 func NewWebhookEventInfo() *WebhookEventInfo {
@@ -2807,8 +2807,8 @@ func (p *WebhookEventInfo) GetID() (v int64) {
 	return p.ID
 }
 
-func (p *WebhookEventInfo) GetEventID() (v string) {
-	return p.EventID
+func (p *WebhookEventInfo) GetEventId() (v string) {
+	return p.EventId
 }
 
 func (p *WebhookEventInfo) GetRepoKey() (v string) {
@@ -2853,17 +2853,17 @@ func (p *WebhookEventInfo) GetCreatedAt() (v string) {
 
 var fieldIDToName_WebhookEventInfo = map[int16]string{
 	1:  "id",
-	2:  "event_id",
-	3:  "repo_key",
-	4:  "event_type",
+	2:  "eventId",
+	3:  "repoKey",
+	4:  "eventType",
 	5:  "source",
-	6:  "actor_name",
+	6:  "actorName",
 	7:  "branch",
-	8:  "commit_sha",
+	8:  "commitSha",
 	9:  "status",
-	10: "error_message",
-	11: "processed_at",
-	12: "created_at",
+	10: "errorMessage",
+	11: "processedAt",
+	12: "createdAt",
 }
 
 func (p *WebhookEventInfo) Read(iprot thrift.TProtocol) (err error) {
@@ -3029,7 +3029,7 @@ func (p *WebhookEventInfo) ReadField2(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.EventID = _field
+	p.EventId = _field
 	return nil
 }
 func (p *WebhookEventInfo) ReadField3(iprot thrift.TProtocol) error {
@@ -3233,10 +3233,10 @@ WriteFieldEndError:
 }
 
 func (p *WebhookEventInfo) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("event_id", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("eventId", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.EventID); err != nil {
+	if err := oprot.WriteString(p.EventId); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -3250,7 +3250,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookEventInfo) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("repo_key", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("repoKey", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.RepoKey); err != nil {
@@ -3267,7 +3267,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookEventInfo) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("event_type", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("eventType", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.EventType); err != nil {
@@ -3301,7 +3301,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookEventInfo) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("actor_name", thrift.STRING, 6); err != nil {
+	if err = oprot.WriteFieldBegin("actorName", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.ActorName); err != nil {
@@ -3335,7 +3335,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookEventInfo) writeField8(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("commit_sha", thrift.STRING, 8); err != nil {
+	if err = oprot.WriteFieldBegin("commitSha", thrift.STRING, 8); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.CommitSha); err != nil {
@@ -3369,7 +3369,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookEventInfo) writeField10(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("error_message", thrift.STRING, 10); err != nil {
+	if err = oprot.WriteFieldBegin("errorMessage", thrift.STRING, 10); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.ErrorMessage); err != nil {
@@ -3386,7 +3386,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookEventInfo) writeField11(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("processed_at", thrift.STRING, 11); err != nil {
+	if err = oprot.WriteFieldBegin("processedAt", thrift.STRING, 11); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.ProcessedAt); err != nil {
@@ -3403,7 +3403,7 @@ WriteFieldEndError:
 }
 
 func (p *WebhookEventInfo) writeField12(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("created_at", thrift.STRING, 12); err != nil {
+	if err = oprot.WriteFieldBegin("createdAt", thrift.STRING, 12); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.CreatedAt); err != nil {
@@ -3428,7 +3428,7 @@ func (p *WebhookEventInfo) String() string {
 }
 
 type ListEventsReq struct {
-	RepoKey string `thrift:"repo_key,1" json:"repo_key" query:"repo_key"`
+	RepoKey string `thrift:"repoKey,1" json:"repo_key" query:"repo_key"`
 	Limit   int32  `thrift:"limit,2" json:"limit" query:"limit"`
 }
 
@@ -3448,7 +3448,7 @@ func (p *ListEventsReq) GetLimit() (v int32) {
 }
 
 var fieldIDToName_ListEventsReq = map[int16]string{
-	1: "repo_key",
+	1: "repoKey",
 	2: "limit",
 }
 
@@ -3572,7 +3572,7 @@ WriteStructEndError:
 }
 
 func (p *ListEventsReq) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("repo_key", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("repoKey", thrift.STRING, 1); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.RepoKey); err != nil {

@@ -304,7 +304,9 @@ const repoColumns = [
 
 const fetchSystemStatus = async () => {
   try {
-    systemStatus.value = await systemApi.status()
+    const resp = await systemApi.status()
+    // Handle nested response format
+    systemStatus.value = resp.data || resp
   } catch (e) {
     console.error('Failed to fetch system status:', e)
   }

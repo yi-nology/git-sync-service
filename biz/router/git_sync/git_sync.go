@@ -21,58 +21,40 @@ func Register(r *server.Hertz) {
 		_api := root.Group("/api", _apiMw()...)
 		{
 			_v1 := _api.Group("/v1", _v1Mw()...)
-			{
-				_repo := _v1.Group("/repo", _repoMw()...)
-				_repo.GET("", append(_getrepoMw(), git_sync.GetRepo)...)
-				_repo.GET("/branches", append(_listbranchesMw(), git_sync.ListBranches)...)
-				_repo.POST("", append(_createrepoMw(), git_sync.CreateRepo)...)
-				_repo.PUT("", append(_updaterepoMw(), git_sync.UpdateRepo)...)
-				_repo.DELETE("", append(_deleterepoMw(), git_sync.DeleteRepo)...)
-				_repo.POST("/test", append(_testconnectionMw(), git_sync.TestConnection)...)
-			}
-			_v1.GET("/repos", append(_listreposMw(), git_sync.ListRepos)...)
+			_v1.GET("/repo", append(_getMw(), git_sync.Get)...)
+			_repo := _v1.Group("/repo", _repoMw()...)
+			_repo.GET("/branches", append(_branchesMw(), git_sync.Branches)...)
+			_repo.POST("/create", append(_createMw(), git_sync.Create)...)
+			_repo.POST("/delete", append(_deleteMw(), git_sync.Delete)...)
+			_repo.POST("/test", append(_testMw(), git_sync.Test)...)
+			_repo.POST("/update", append(_updateMw(), git_sync.Update)...)
+			_v1.GET("/repos", append(_listMw(), git_sync.List)...)
 			{
 				_sync := _v1.Group("/sync", _syncMw()...)
-				_sync.GET("/history", append(_listhistoryMw(), git_sync.ListHistory)...)
-				_sync.POST("/preview", append(_previewsyncMw(), git_sync.PreviewSync)...)
-				{
-					_task := _sync.Group("/task", _taskMw()...)
-					_task.GET("", append(_gettaskMw(), git_sync.GetTask)...)
-					_task.POST("", append(_createtaskMw(), git_sync.CreateTask)...)
-					_task.PUT("", append(_updatetaskMw(), git_sync.UpdateTask)...)
-					_task.DELETE("", append(_deletetaskMw(), git_sync.DeleteTask)...)
-					_task.POST("/run", append(_runtaskMw(), git_sync.RunTask)...)
-				}
-				_sync.GET("/tasks", append(_listtasksMw(), git_sync.ListTasks)...)
+				_sync.GET("/history", append(_taskhistoryMw(), git_sync.TaskHistory)...)
+				_sync.POST("/preview", append(_taskpreviewMw(), git_sync.TaskPreview)...)
+				_sync.GET("/task", append(_taskgetMw(), git_sync.TaskGet)...)
+				_task := _sync.Group("/task", _taskMw()...)
+				_task.POST("/create", append(_taskcreateMw(), git_sync.TaskCreate)...)
+				_task.POST("/delete", append(_taskdeleteMw(), git_sync.TaskDelete)...)
+				_task.POST("/run", append(_taskrunMw(), git_sync.TaskRun)...)
+				_task.POST("/update", append(_taskupdateMw(), git_sync.TaskUpdate)...)
+				_sync.GET("/tasks", append(_tasklistMw(), git_sync.TaskList)...)
 			}
 			{
 				_webhook := _v1.Group("/webhook", _webhookMw()...)
 				_webhook.GET("/events", append(_listeventsMw(), git_sync.ListEvents)...)
-				{
-					_rule := _webhook.Group("/rule", _ruleMw()...)
-					_rule.GET("", append(_getruleMw(), git_sync.GetRule)...)
-					_rule.POST("", append(_createruleMw(), git_sync.CreateRule)...)
-					_rule.PUT("", append(_updateruleMw(), git_sync.UpdateRule)...)
-					_rule.DELETE("", append(_deleteruleMw(), git_sync.DeleteRule)...)
-				}
-				_webhook.GET("/rules", append(_listrulesMw(), git_sync.ListRules)...)
+				_webhook.GET("/rule", append(_rulegetMw(), git_sync.RuleGet)...)
+				_rule := _webhook.Group("/rule", _ruleMw()...)
+				_rule.POST("/create", append(_rulecreateMw(), git_sync.RuleCreate)...)
+				_rule.POST("/delete", append(_ruledeleteMw(), git_sync.RuleDelete)...)
+				_rule.POST("/update", append(_ruleupdateMw(), git_sync.RuleUpdate)...)
+				_webhook.GET("/rules", append(_rulelistMw(), git_sync.RuleList)...)
 				{
 					_event := _webhook.Group("/event", _eventMw()...)
 					_event.POST("/retry", append(_retryeventMw(), git_sync.RetryEvent)...)
 				}
 			}
-			{
-				_platform := _v1.Group("/platform", _platformMw()...)
-				_platform.GET("", append(_getplatformMw(), git_sync.GetPlatform)...)
-				_platform.POST("", append(_createplatformMw(), git_sync.CreatePlatform)...)
-				_platform.PUT("", append(_updateplatformMw(), git_sync.UpdatePlatform)...)
-				_platform.DELETE("", append(_deleteplatformMw(), git_sync.DeletePlatform)...)
-				_platform.POST("/test", append(_testplatformconnectionMw(), git_sync.TestPlatformConnection)...)
-				_platform.POST("/set-default", append(_setdefaultplatformMw(), git_sync.SetDefaultPlatform)...)
-				_platform.GET("/repos", append(_listplatformreposMw(), git_sync.ListPlatformRepos)...)
-				_platform.POST("/sync-repos", append(_syncplatformreposMw(), git_sync.SyncPlatformRepos)...)
-			}
-			_v1.GET("/platforms", append(_listplatformsMw(), git_sync.ListPlatforms)...)
 		}
 	}
 }

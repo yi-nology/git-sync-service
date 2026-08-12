@@ -27,6 +27,11 @@ type RepoProvider interface {
 	GetRepoByKey(key string) (*model.Repo, error)
 }
 
+// PlatformProvider provides platform lookup by ID.
+type PlatformProvider interface {
+	GetPlatformByID(id uint) (*model.Platform, error)
+}
+
 // Service is the interface the executor depends on.
 // It exposes only the operations the executor needs — no DAO leakage.
 type Service interface {
@@ -34,6 +39,7 @@ type Service interface {
 	GetConfig() *model.Config
 	RunManager
 	RepoProvider
+	PlatformProvider
 }
 
 type Executor struct {
@@ -142,7 +148,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		details.WriteString("Step 1: Initial clone of source repo...\n")
 		if err := e.cloneRepo(execCtx, repoDir, sourceRepo, task); err != nil {
 			e.failStep(step1, err)
-			details.WriteString(fmt.Sprintf("clone error: %v\n", err))
+			fmt.Fprintf(&details, "clone error: %v\n", err)
 			run.Status = model.StatusFailed
 			run.ErrorMessage = fmt.Sprintf("clone failed: %v", err)
 			run.ErrorType = ClassifyError(err)
@@ -152,7 +158,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		details.WriteString("Step 1: Fetch updates from source repo...\n")
 		if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo); err != nil {
 			e.failStep(step1, err)
-			details.WriteString(fmt.Sprintf("fetch error: %v\n", err))
+			fmt.Fprintf(&details, "fetch error: %v\n", err)
 			run.Status = model.StatusFailed
 			run.ErrorMessage = fmt.Sprintf("fetch failed: %v", err)
 			run.ErrorType = ClassifyError(err)
@@ -167,7 +173,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	details.WriteString("\nStep 2: Ensure target remote exists...\n")
 	if err := e.ensureRemote(execCtx, repoDir, targetRepo); err != nil {
 		e.failStep(step2, err)
-		details.WriteString(fmt.Sprintf("add remote error: %v\n", err))
+		fmt.Fprintf(&details, "add remote error: %v\n", err)
 		run.Status = model.StatusFailed
 		run.ErrorMessage = fmt.Sprintf("add remote failed: %v", err)
 		run.ErrorType = ClassifyError(err)
@@ -192,7 +198,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 			time.Sleep(time.Duration(attempt*500) * time.Millisecond)
 		}
 
-		pushErr = e.push(execCtx, repoDir, task, sourceRepo)
+		pushErr = e.push(execCtx, repoDir, task, targetRepo)
 		if pushErr == nil {
 			break
 		}
@@ -209,7 +215,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	if pushErr != nil {
 		e.failStep(step3, pushErr)
-		details.WriteString(fmt.Sprintf("push error: %v\n", pushErr))
+		fmt.Fprintf(&details, "push error: %v\n", pushErr)
 		run.Status = model.StatusFailed
 		run.ErrorMessage = fmt.Sprintf("push failed after %d attempts: %v", maxRetries, pushErr)
 		run.ErrorType = ClassifyError(pushErr)
@@ -224,12 +230,27 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 }
 
 func (e *Executor) authConfig(repo *model.Repo) gitbackend.AuthConfig {
+	// Use repo's access token first
 	if repo.AccessToken != "" {
+		slog.Debug("using repo access token", "repo", repo.Key)
 		return gitbackend.AuthConfig{
 			Type:  gitbackend.AuthHTTPToken,
 			Token: repo.AccessToken,
 		}
 	}
+	// Fall back to platform's token
+	if repo.PlatformID > 0 {
+		platform, err := e.service.GetPlatformByID(repo.PlatformID)
+		if err == nil && platform != nil && platform.AccessToken != "" {
+			slog.Debug("using platform access token", "repo", repo.Key, "platform", platform.Name)
+			return gitbackend.AuthConfig{
+				Type:  gitbackend.AuthHTTPToken,
+				Token: platform.AccessToken,
+			}
+		}
+		slog.Debug("no platform token found", "repo", repo.Key, "platformID", repo.PlatformID)
+	}
+	slog.Debug("no auth configured", "repo", repo.Key)
 	return gitbackend.AuthConfig{Type: gitbackend.AuthNone}
 }
 
@@ -273,11 +294,17 @@ func (e *Executor) failStep(step *model.SyncRunStep, err error) {
 }
 
 func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, task *model.SyncTask) error {
+	// Use shallow clone by default for efficiency
+	depth := 1
+	// If force push is enabled, use full clone to avoid "shallow update not allowed"
+	if task.GitForce {
+		depth = 0
+	}
 	return e.backend.Clone(ctx, gitbackend.CloneOptions{
 		URL:          repo.CloneURL,
 		Path:         dir,
 		Branch:       task.SourceBranch,
-		Depth:        1,
+		Depth:        depth,
 		SingleBranch: true,
 		Auth:         e.authConfig(repo),
 	})

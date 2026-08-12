@@ -22,9 +22,16 @@ export const useSyncTaskStore = defineStore('syncTask', () => {
     loading.value = true
     if (params) lastParams.value = { ...params }
     try {
-      const data = await syncTaskApi.list(params as any)
-      tasks.value = data.tasks || []
-      total.value = data.total || 0
+      const resp = await syncTaskApi.list(params as any)
+      // Handle nested response format: { code, message, data: { tasks: [...], total: N } }
+      const data = resp as any
+      if (data?.data?.tasks) {
+        tasks.value = data.data.tasks
+        total.value = data.data.total || 0
+      } else if (data?.tasks) {
+        tasks.value = data.tasks
+        total.value = data.total || 0
+      }
     } catch (e: any) {
       message.error(e.error || '获取任务列表失败')
     } finally {
@@ -91,8 +98,10 @@ export const useSyncTaskStore = defineStore('syncTask', () => {
 
   async function fetchHistory(taskKey: string, limit = 50) {
     try {
-      const data = await syncTaskApi.history({ task_key: taskKey, limit })
-      history.value = data.runs || []
+      const resp = await syncTaskApi.history({ task_key: taskKey, limit })
+      // Handle nested response format: { code, message, data: { runs: [...] } }
+      const data = resp as any
+      history.value = data?.data?.runs || data?.runs || []
     } catch (e: any) {
       message.error(e.error || '获取历史记录失败')
     }

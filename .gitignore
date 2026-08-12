@@ -46,3 +46,10 @@ data/
 
 # Environment variables (contains secrets)
 .env
+
+# Temporary files
+.playwright-mcp/
+.superpowers/
+.zcode/
+*.log
+/tmp/

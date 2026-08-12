@@ -11,21 +11,21 @@ type SyncTaskInfo struct {
 	ID            int64  `thrift:"id,1" form:"id" json:"id" query:"id"`
 	Key           string `thrift:"key,2" form:"key" json:"key" query:"key"`
 	Name          string `thrift:"name,3" form:"name" json:"name" query:"name"`
-	SourceRepoKey string `thrift:"source_repo_key,4" form:"source_repo_key" json:"source_repo_key" query:"source_repo_key"`
-	SourceBranch  string `thrift:"source_branch,5" form:"source_branch" json:"source_branch" query:"source_branch"`
-	TargetRepoKey string `thrift:"target_repo_key,6" form:"target_repo_key" json:"target_repo_key" query:"target_repo_key"`
-	TargetBranch  string `thrift:"target_branch,7" form:"target_branch" json:"target_branch" query:"target_branch"`
-	SyncMode      string `thrift:"sync_mode,8" form:"sync_mode" json:"sync_mode" query:"sync_mode"`
+	SourceRepoKey string `thrift:"sourceRepoKey,4" form:"source_repo_key" json:"source_repo_key" query:"source_repo_key"`
+	SourceBranch  string `thrift:"sourceBranch,5" form:"source_branch" json:"source_branch" query:"source_branch"`
+	TargetRepoKey string `thrift:"targetRepoKey,6" form:"target_repo_key" json:"target_repo_key" query:"target_repo_key"`
+	TargetBranch  string `thrift:"targetBranch,7" form:"target_branch" json:"target_branch" query:"target_branch"`
+	SyncMode      string `thrift:"syncMode,8" form:"sync_mode" json:"sync_mode" query:"sync_mode"`
 	Cron          string `thrift:"cron,9" form:"cron" json:"cron" query:"cron"`
-	WebhookToken  string `thrift:"webhook_token,10" form:"webhook_token" json:"webhook_token" query:"webhook_token"`
+	WebhookToken  string `thrift:"webhookToken,10" form:"webhook_token" json:"webhook_token" query:"webhook_token"`
 	Enabled       bool   `thrift:"enabled,11" form:"enabled" json:"enabled" query:"enabled"`
-	GitTags       bool   `thrift:"git_tags,12" form:"git_tags" json:"git_tags" query:"git_tags"`
-	GitForce      bool   `thrift:"git_force,13" form:"git_force" json:"git_force" query:"git_force"`
-	GitPrune      bool   `thrift:"git_prune,14" form:"git_prune" json:"git_prune" query:"git_prune"`
-	GitNoVerify   bool   `thrift:"git_no_verify,15" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
-	LastRunAt     string `thrift:"last_run_at,16" form:"last_run_at" json:"last_run_at" query:"last_run_at"`
-	LastStatus    string `thrift:"last_status,17" form:"last_status" json:"last_status" query:"last_status"`
-	CreatedAt     string `thrift:"created_at,18" form:"created_at" json:"created_at" query:"created_at"`
+	GitTags       bool   `thrift:"gitTags,12" form:"git_tags" json:"git_tags" query:"git_tags"`
+	GitForce      bool   `thrift:"gitForce,13" form:"git_force" json:"git_force" query:"git_force"`
+	GitPrune      bool   `thrift:"gitPrune,14" form:"git_prune" json:"git_prune" query:"git_prune"`
+	GitNoVerify   bool   `thrift:"gitNoVerify,15" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
+	LastRunAt     string `thrift:"lastRunAt,16" form:"last_run_at" json:"last_run_at" query:"last_run_at"`
+	LastStatus    string `thrift:"lastStatus,17" form:"last_status" json:"last_status" query:"last_status"`
+	CreatedAt     string `thrift:"createdAt,18" form:"created_at" json:"created_at" query:"created_at"`
 }
 
 func NewSyncTaskInfo() *SyncTaskInfo {
@@ -111,21 +111,21 @@ var fieldIDToName_SyncTaskInfo = map[int16]string{
 	1:  "id",
 	2:  "key",
 	3:  "name",
-	4:  "source_repo_key",
-	5:  "source_branch",
-	6:  "target_repo_key",
-	7:  "target_branch",
-	8:  "sync_mode",
+	4:  "sourceRepoKey",
+	5:  "sourceBranch",
+	6:  "targetRepoKey",
+	7:  "targetBranch",
+	8:  "syncMode",
 	9:  "cron",
-	10: "webhook_token",
+	10: "webhookToken",
 	11: "enabled",
-	12: "git_tags",
-	13: "git_force",
-	14: "git_prune",
-	15: "git_no_verify",
-	16: "last_run_at",
-	17: "last_status",
-	18: "created_at",
+	12: "gitTags",
+	13: "gitForce",
+	14: "gitPrune",
+	15: "gitNoVerify",
+	16: "lastRunAt",
+	17: "lastStatus",
+	18: "createdAt",
 }
 
 func (p *SyncTaskInfo) Read(iprot thrift.TProtocol) (err error) {
@@ -667,7 +667,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("source_repo_key", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("sourceRepoKey", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SourceRepoKey); err != nil {
@@ -684,7 +684,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("source_branch", thrift.STRING, 5); err != nil {
+	if err = oprot.WriteFieldBegin("sourceBranch", thrift.STRING, 5); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SourceBranch); err != nil {
@@ -701,7 +701,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("target_repo_key", thrift.STRING, 6); err != nil {
+	if err = oprot.WriteFieldBegin("targetRepoKey", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TargetRepoKey); err != nil {
@@ -718,7 +718,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField7(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("target_branch", thrift.STRING, 7); err != nil {
+	if err = oprot.WriteFieldBegin("targetBranch", thrift.STRING, 7); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TargetBranch); err != nil {
@@ -735,7 +735,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField8(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("sync_mode", thrift.STRING, 8); err != nil {
+	if err = oprot.WriteFieldBegin("syncMode", thrift.STRING, 8); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SyncMode); err != nil {
@@ -769,7 +769,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField10(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("webhook_token", thrift.STRING, 10); err != nil {
+	if err = oprot.WriteFieldBegin("webhookToken", thrift.STRING, 10); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.WebhookToken); err != nil {
@@ -803,7 +803,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField12(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_tags", thrift.BOOL, 12); err != nil {
+	if err = oprot.WriteFieldBegin("gitTags", thrift.BOOL, 12); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitTags); err != nil {
@@ -820,7 +820,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField13(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_force", thrift.BOOL, 13); err != nil {
+	if err = oprot.WriteFieldBegin("gitForce", thrift.BOOL, 13); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitForce); err != nil {
@@ -837,7 +837,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField14(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_prune", thrift.BOOL, 14); err != nil {
+	if err = oprot.WriteFieldBegin("gitPrune", thrift.BOOL, 14); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitPrune); err != nil {
@@ -854,7 +854,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField15(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_no_verify", thrift.BOOL, 15); err != nil {
+	if err = oprot.WriteFieldBegin("gitNoVerify", thrift.BOOL, 15); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitNoVerify); err != nil {
@@ -871,7 +871,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField16(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("last_run_at", thrift.STRING, 16); err != nil {
+	if err = oprot.WriteFieldBegin("lastRunAt", thrift.STRING, 16); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.LastRunAt); err != nil {
@@ -888,7 +888,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField17(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("last_status", thrift.STRING, 17); err != nil {
+	if err = oprot.WriteFieldBegin("lastStatus", thrift.STRING, 17); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.LastStatus); err != nil {
@@ -905,7 +905,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncTaskInfo) writeField18(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("created_at", thrift.STRING, 18); err != nil {
+	if err = oprot.WriteFieldBegin("createdAt", thrift.STRING, 18); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.CreatedAt); err != nil {
@@ -930,9 +930,9 @@ func (p *SyncTaskInfo) String() string {
 }
 
 type ListTasksReq struct {
-	RepoKey  string `thrift:"repo_key,1" json:"repo_key" query:"repo_key"`
+	RepoKey  string `thrift:"repoKey,1" json:"repo_key" query:"repo_key"`
 	Page     int32  `thrift:"page,2" json:"page" query:"page"`
-	PageSize int32  `thrift:"page_size,3" json:"page_size" query:"page_size"`
+	PageSize int32  `thrift:"pageSize,3" json:"page_size" query:"page_size"`
 }
 
 func NewListTasksReq() *ListTasksReq {
@@ -955,9 +955,9 @@ func (p *ListTasksReq) GetPageSize() (v int32) {
 }
 
 var fieldIDToName_ListTasksReq = map[int16]string{
-	1: "repo_key",
+	1: "repoKey",
 	2: "page",
-	3: "page_size",
+	3: "pageSize",
 }
 
 func (p *ListTasksReq) Read(iprot thrift.TProtocol) (err error) {
@@ -1103,7 +1103,7 @@ WriteStructEndError:
 }
 
 func (p *ListTasksReq) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("repo_key", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("repoKey", thrift.STRING, 1); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.RepoKey); err != nil {
@@ -1137,7 +1137,7 @@ WriteFieldEndError:
 }
 
 func (p *ListTasksReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page_size", thrift.I32, 3); err != nil {
+	if err = oprot.WriteFieldBegin("pageSize", thrift.I32, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteI32(p.PageSize); err != nil {
@@ -1655,17 +1655,17 @@ func (p *GetTaskResp) String() string {
 
 type CreateTaskReq struct {
 	Name          string `thrift:"name,1" form:"name" json:"name" query:"name"`
-	SourceRepoKey string `thrift:"source_repo_key,2" form:"source_repo_key" json:"source_repo_key" query:"source_repo_key"`
-	SourceBranch  string `thrift:"source_branch,3" form:"source_branch" json:"source_branch" query:"source_branch"`
-	TargetRepoKey string `thrift:"target_repo_key,4" form:"target_repo_key" json:"target_repo_key" query:"target_repo_key"`
-	TargetBranch  string `thrift:"target_branch,5" form:"target_branch" json:"target_branch" query:"target_branch"`
-	SyncMode      string `thrift:"sync_mode,6" form:"sync_mode" json:"sync_mode" query:"sync_mode"`
+	SourceRepoKey string `thrift:"sourceRepoKey,2" form:"source_repo_key" json:"source_repo_key" query:"source_repo_key"`
+	SourceBranch  string `thrift:"sourceBranch,3" form:"source_branch" json:"source_branch" query:"source_branch"`
+	TargetRepoKey string `thrift:"targetRepoKey,4" form:"target_repo_key" json:"target_repo_key" query:"target_repo_key"`
+	TargetBranch  string `thrift:"targetBranch,5" form:"target_branch" json:"target_branch" query:"target_branch"`
+	SyncMode      string `thrift:"syncMode,6" form:"sync_mode" json:"sync_mode" query:"sync_mode"`
 	Cron          string `thrift:"cron,7" form:"cron" json:"cron" query:"cron"`
-	GitTags       bool   `thrift:"git_tags,8" form:"git_tags" json:"git_tags" query:"git_tags"`
-	GitForce      bool   `thrift:"git_force,9" form:"git_force" json:"git_force" query:"git_force"`
-	GitPrune      bool   `thrift:"git_prune,10" form:"git_prune" json:"git_prune" query:"git_prune"`
-	GitNoVerify   bool   `thrift:"git_no_verify,11" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
-	PushOptions   string `thrift:"push_options,12" form:"push_options" json:"push_options" query:"push_options"`
+	GitTags       bool   `thrift:"gitTags,8" form:"git_tags" json:"git_tags" query:"git_tags"`
+	GitForce      bool   `thrift:"gitForce,9" form:"git_force" json:"git_force" query:"git_force"`
+	GitPrune      bool   `thrift:"gitPrune,10" form:"git_prune" json:"git_prune" query:"git_prune"`
+	GitNoVerify   bool   `thrift:"gitNoVerify,11" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
+	PushOptions   string `thrift:"pushOptions,12" form:"push_options" json:"push_options" query:"push_options"`
 }
 
 func NewCreateTaskReq() *CreateTaskReq {
@@ -1725,17 +1725,17 @@ func (p *CreateTaskReq) GetPushOptions() (v string) {
 
 var fieldIDToName_CreateTaskReq = map[int16]string{
 	1:  "name",
-	2:  "source_repo_key",
-	3:  "source_branch",
-	4:  "target_repo_key",
-	5:  "target_branch",
-	6:  "sync_mode",
+	2:  "sourceRepoKey",
+	3:  "sourceBranch",
+	4:  "targetRepoKey",
+	5:  "targetBranch",
+	6:  "syncMode",
 	7:  "cron",
-	8:  "git_tags",
-	9:  "git_force",
-	10: "git_prune",
-	11: "git_no_verify",
-	12: "push_options",
+	8:  "gitTags",
+	9:  "gitForce",
+	10: "gitPrune",
+	11: "gitNoVerify",
+	12: "pushOptions",
 }
 
 func (p *CreateTaskReq) Read(iprot thrift.TProtocol) (err error) {
@@ -2105,7 +2105,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("source_repo_key", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("sourceRepoKey", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SourceRepoKey); err != nil {
@@ -2122,7 +2122,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("source_branch", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("sourceBranch", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SourceBranch); err != nil {
@@ -2139,7 +2139,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("target_repo_key", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("targetRepoKey", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TargetRepoKey); err != nil {
@@ -2156,7 +2156,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("target_branch", thrift.STRING, 5); err != nil {
+	if err = oprot.WriteFieldBegin("targetBranch", thrift.STRING, 5); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TargetBranch); err != nil {
@@ -2173,7 +2173,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("sync_mode", thrift.STRING, 6); err != nil {
+	if err = oprot.WriteFieldBegin("syncMode", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SyncMode); err != nil {
@@ -2207,7 +2207,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField8(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_tags", thrift.BOOL, 8); err != nil {
+	if err = oprot.WriteFieldBegin("gitTags", thrift.BOOL, 8); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitTags); err != nil {
@@ -2224,7 +2224,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField9(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_force", thrift.BOOL, 9); err != nil {
+	if err = oprot.WriteFieldBegin("gitForce", thrift.BOOL, 9); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitForce); err != nil {
@@ -2241,7 +2241,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField10(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_prune", thrift.BOOL, 10); err != nil {
+	if err = oprot.WriteFieldBegin("gitPrune", thrift.BOOL, 10); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitPrune); err != nil {
@@ -2258,7 +2258,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField11(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_no_verify", thrift.BOOL, 11); err != nil {
+	if err = oprot.WriteFieldBegin("gitNoVerify", thrift.BOOL, 11); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitNoVerify); err != nil {
@@ -2275,7 +2275,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateTaskReq) writeField12(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("push_options", thrift.STRING, 12); err != nil {
+	if err = oprot.WriteFieldBegin("pushOptions", thrift.STRING, 12); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.PushOptions); err != nil {
@@ -2448,16 +2448,16 @@ func (p *CreateTaskResp) String() string {
 type UpdateTaskReq struct {
 	Key          string `thrift:"key,1" form:"key" json:"key" query:"key"`
 	Name         string `thrift:"name,2" form:"name" json:"name" query:"name"`
-	SourceBranch string `thrift:"source_branch,3" form:"source_branch" json:"source_branch" query:"source_branch"`
-	TargetBranch string `thrift:"target_branch,4" form:"target_branch" json:"target_branch" query:"target_branch"`
-	SyncMode     string `thrift:"sync_mode,5" form:"sync_mode" json:"sync_mode" query:"sync_mode"`
+	SourceBranch string `thrift:"sourceBranch,3" form:"source_branch" json:"source_branch" query:"source_branch"`
+	TargetBranch string `thrift:"targetBranch,4" form:"target_branch" json:"target_branch" query:"target_branch"`
+	SyncMode     string `thrift:"syncMode,5" form:"sync_mode" json:"sync_mode" query:"sync_mode"`
 	Cron         string `thrift:"cron,6" form:"cron" json:"cron" query:"cron"`
 	Enabled      bool   `thrift:"enabled,7" form:"enabled" json:"enabled" query:"enabled"`
-	GitTags      bool   `thrift:"git_tags,8" form:"git_tags" json:"git_tags" query:"git_tags"`
-	GitForce     bool   `thrift:"git_force,9" form:"git_force" json:"git_force" query:"git_force"`
-	GitPrune     bool   `thrift:"git_prune,10" form:"git_prune" json:"git_prune" query:"git_prune"`
-	GitNoVerify  bool   `thrift:"git_no_verify,11" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
-	PushOptions  string `thrift:"push_options,12" form:"push_options" json:"push_options" query:"push_options"`
+	GitTags      bool   `thrift:"gitTags,8" form:"git_tags" json:"git_tags" query:"git_tags"`
+	GitForce     bool   `thrift:"gitForce,9" form:"git_force" json:"git_force" query:"git_force"`
+	GitPrune     bool   `thrift:"gitPrune,10" form:"git_prune" json:"git_prune" query:"git_prune"`
+	GitNoVerify  bool   `thrift:"gitNoVerify,11" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
+	PushOptions  string `thrift:"pushOptions,12" form:"push_options" json:"push_options" query:"push_options"`
 }
 
 func NewUpdateTaskReq() *UpdateTaskReq {
@@ -2518,16 +2518,16 @@ func (p *UpdateTaskReq) GetPushOptions() (v string) {
 var fieldIDToName_UpdateTaskReq = map[int16]string{
 	1:  "key",
 	2:  "name",
-	3:  "source_branch",
-	4:  "target_branch",
-	5:  "sync_mode",
+	3:  "sourceBranch",
+	4:  "targetBranch",
+	5:  "syncMode",
 	6:  "cron",
 	7:  "enabled",
-	8:  "git_tags",
-	9:  "git_force",
-	10: "git_prune",
-	11: "git_no_verify",
-	12: "push_options",
+	8:  "gitTags",
+	9:  "gitForce",
+	10: "gitPrune",
+	11: "gitNoVerify",
+	12: "pushOptions",
 }
 
 func (p *UpdateTaskReq) Read(iprot thrift.TProtocol) (err error) {
@@ -2914,7 +2914,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateTaskReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("source_branch", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("sourceBranch", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SourceBranch); err != nil {
@@ -2931,7 +2931,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateTaskReq) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("target_branch", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("targetBranch", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TargetBranch); err != nil {
@@ -2948,7 +2948,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateTaskReq) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("sync_mode", thrift.STRING, 5); err != nil {
+	if err = oprot.WriteFieldBegin("syncMode", thrift.STRING, 5); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SyncMode); err != nil {
@@ -2999,7 +2999,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateTaskReq) writeField8(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_tags", thrift.BOOL, 8); err != nil {
+	if err = oprot.WriteFieldBegin("gitTags", thrift.BOOL, 8); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitTags); err != nil {
@@ -3016,7 +3016,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateTaskReq) writeField9(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_force", thrift.BOOL, 9); err != nil {
+	if err = oprot.WriteFieldBegin("gitForce", thrift.BOOL, 9); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitForce); err != nil {
@@ -3033,7 +3033,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateTaskReq) writeField10(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_prune", thrift.BOOL, 10); err != nil {
+	if err = oprot.WriteFieldBegin("gitPrune", thrift.BOOL, 10); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitPrune); err != nil {
@@ -3050,7 +3050,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateTaskReq) writeField11(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("git_no_verify", thrift.BOOL, 11); err != nil {
+	if err = oprot.WriteFieldBegin("gitNoVerify", thrift.BOOL, 11); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.GitNoVerify); err != nil {
@@ -3067,7 +3067,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateTaskReq) writeField12(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("push_options", thrift.STRING, 12); err != nil {
+	if err = oprot.WriteFieldBegin("pushOptions", thrift.STRING, 12); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.PushOptions); err != nil {
@@ -3844,10 +3844,10 @@ func (p *RunTaskResp) String() string {
 }
 
 type PreviewSyncReq struct {
-	SourceRepoKey string `thrift:"source_repo_key,1" form:"source_repo_key" json:"source_repo_key" query:"source_repo_key"`
-	SourceBranch  string `thrift:"source_branch,2" form:"source_branch" json:"source_branch" query:"source_branch"`
-	TargetRepoKey string `thrift:"target_repo_key,3" form:"target_repo_key" json:"target_repo_key" query:"target_repo_key"`
-	TargetBranch  string `thrift:"target_branch,4" form:"target_branch" json:"target_branch" query:"target_branch"`
+	SourceRepoKey string `thrift:"sourceRepoKey,1" form:"source_repo_key" json:"source_repo_key" query:"source_repo_key"`
+	SourceBranch  string `thrift:"sourceBranch,2" form:"source_branch" json:"source_branch" query:"source_branch"`
+	TargetRepoKey string `thrift:"targetRepoKey,3" form:"target_repo_key" json:"target_repo_key" query:"target_repo_key"`
+	TargetBranch  string `thrift:"targetBranch,4" form:"target_branch" json:"target_branch" query:"target_branch"`
 }
 
 func NewPreviewSyncReq() *PreviewSyncReq {
@@ -3874,10 +3874,10 @@ func (p *PreviewSyncReq) GetTargetBranch() (v string) {
 }
 
 var fieldIDToName_PreviewSyncReq = map[int16]string{
-	1: "source_repo_key",
-	2: "source_branch",
-	3: "target_repo_key",
-	4: "target_branch",
+	1: "sourceRepoKey",
+	2: "sourceBranch",
+	3: "targetRepoKey",
+	4: "targetBranch",
 }
 
 func (p *PreviewSyncReq) Read(iprot thrift.TProtocol) (err error) {
@@ -4046,7 +4046,7 @@ WriteStructEndError:
 }
 
 func (p *PreviewSyncReq) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("source_repo_key", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("sourceRepoKey", thrift.STRING, 1); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SourceRepoKey); err != nil {
@@ -4063,7 +4063,7 @@ WriteFieldEndError:
 }
 
 func (p *PreviewSyncReq) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("source_branch", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("sourceBranch", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.SourceBranch); err != nil {
@@ -4080,7 +4080,7 @@ WriteFieldEndError:
 }
 
 func (p *PreviewSyncReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("target_repo_key", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("targetRepoKey", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TargetRepoKey); err != nil {
@@ -4097,7 +4097,7 @@ WriteFieldEndError:
 }
 
 func (p *PreviewSyncReq) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("target_branch", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("targetBranch", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TargetBranch); err != nil {
@@ -4122,11 +4122,11 @@ func (p *PreviewSyncReq) String() string {
 }
 
 type PreviewSyncResp struct {
-	CanSync      bool   `thrift:"can_sync,1" form:"can_sync" json:"can_sync" query:"can_sync"`
-	SourceExists bool   `thrift:"source_exists,2" form:"source_exists" json:"source_exists" query:"source_exists"`
-	TargetExists bool   `thrift:"target_exists,3" form:"target_exists" json:"target_exists" query:"target_exists"`
-	CommitCount  int32  `thrift:"commit_count,4" form:"commit_count" json:"commit_count" query:"commit_count"`
-	LatestCommit string `thrift:"latest_commit,5" form:"latest_commit" json:"latest_commit" query:"latest_commit"`
+	CanSync      bool   `thrift:"canSync,1" form:"can_sync" json:"can_sync" query:"can_sync"`
+	SourceExists bool   `thrift:"sourceExists,2" form:"source_exists" json:"source_exists" query:"source_exists"`
+	TargetExists bool   `thrift:"targetExists,3" form:"target_exists" json:"target_exists" query:"target_exists"`
+	CommitCount  int32  `thrift:"commitCount,4" form:"commit_count" json:"commit_count" query:"commit_count"`
+	LatestCommit string `thrift:"latestCommit,5" form:"latest_commit" json:"latest_commit" query:"latest_commit"`
 	Message      string `thrift:"message,6" form:"message" json:"message" query:"message"`
 }
 
@@ -4162,11 +4162,11 @@ func (p *PreviewSyncResp) GetMessage() (v string) {
 }
 
 var fieldIDToName_PreviewSyncResp = map[int16]string{
-	1: "can_sync",
-	2: "source_exists",
-	3: "target_exists",
-	4: "commit_count",
-	5: "latest_commit",
+	1: "canSync",
+	2: "sourceExists",
+	3: "targetExists",
+	4: "commitCount",
+	5: "latestCommit",
 	6: "message",
 }
 
@@ -4382,7 +4382,7 @@ WriteStructEndError:
 }
 
 func (p *PreviewSyncResp) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("can_sync", thrift.BOOL, 1); err != nil {
+	if err = oprot.WriteFieldBegin("canSync", thrift.BOOL, 1); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.CanSync); err != nil {
@@ -4399,7 +4399,7 @@ WriteFieldEndError:
 }
 
 func (p *PreviewSyncResp) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("source_exists", thrift.BOOL, 2); err != nil {
+	if err = oprot.WriteFieldBegin("sourceExists", thrift.BOOL, 2); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.SourceExists); err != nil {
@@ -4416,7 +4416,7 @@ WriteFieldEndError:
 }
 
 func (p *PreviewSyncResp) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("target_exists", thrift.BOOL, 3); err != nil {
+	if err = oprot.WriteFieldBegin("targetExists", thrift.BOOL, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteBool(p.TargetExists); err != nil {
@@ -4433,7 +4433,7 @@ WriteFieldEndError:
 }
 
 func (p *PreviewSyncResp) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("commit_count", thrift.I32, 4); err != nil {
+	if err = oprot.WriteFieldBegin("commitCount", thrift.I32, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteI32(p.CommitCount); err != nil {
@@ -4450,7 +4450,7 @@ WriteFieldEndError:
 }
 
 func (p *PreviewSyncResp) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("latest_commit", thrift.STRING, 5); err != nil {
+	if err = oprot.WriteFieldBegin("latestCommit", thrift.STRING, 5); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.LatestCommit); err != nil {
@@ -4491,34 +4491,22 @@ func (p *PreviewSyncResp) String() string {
 
 }
 
-type SyncRunStepInfo struct {
-	ID         int64  `thrift:"id,1" form:"id" json:"id" query:"id"`
-	StepName   string `thrift:"step_name,2" form:"step_name" json:"step_name" query:"step_name"`
-	Status     string `thrift:"status,3" form:"status" json:"status" query:"status"`
-	StartTime  string `thrift:"start_time,4" form:"start_time" json:"start_time" query:"start_time"`
-	EndTime    string `thrift:"end_time,5" form:"end_time" json:"end_time" query:"end_time"`
-	DurationMs int64  `thrift:"duration_ms,6" form:"duration_ms" json:"duration_ms" query:"duration_ms"`
-	ErrorMsg   string `thrift:"error_msg,7" form:"error_msg" json:"error_msg" query:"error_msg"`
-	ErrorType  string `thrift:"error_type,8" form:"error_type" json:"error_type" query:"error_type"`
-	RetryCount int32  `thrift:"retry_count,9" form:"retry_count" json:"retry_count" query:"retry_count"`
-}
-
 type SyncRunInfo struct {
 	ID             int64              `thrift:"id,1" form:"id" json:"id" query:"id"`
-	TaskKey        string             `thrift:"task_key,2" form:"task_key" json:"task_key" query:"task_key"`
-	TriggerSource  string             `thrift:"trigger_source,3" form:"trigger_source" json:"trigger_source" query:"trigger_source"`
+	TaskKey        string             `thrift:"taskKey,2" form:"task_key" json:"task_key" query:"task_key"`
+	TriggerSource  string             `thrift:"triggerSource,3" form:"trigger_source" json:"trigger_source" query:"trigger_source"`
 	Status         string             `thrift:"status,4" form:"status" json:"status" query:"status"`
-	StartTime      string             `thrift:"start_time,5" form:"start_time" json:"start_time" query:"start_time"`
-	EndTime        string             `thrift:"end_time,6" form:"end_time" json:"end_time" query:"end_time"`
-	CommitRange    string             `thrift:"commit_range,7" form:"commit_range" json:"commit_range" query:"commit_range"`
+	StartTime      string             `thrift:"startTime,5" form:"start_time" json:"start_time" query:"start_time"`
+	EndTime        string             `thrift:"endTime,6" form:"end_time" json:"end_time" query:"end_time"`
+	CommitRange    string             `thrift:"commitRange,7" form:"commit_range" json:"commit_range" query:"commit_range"`
 	Details        string             `thrift:"details,8" form:"details" json:"details" query:"details"`
-	ErrorMessage   string             `thrift:"error_message,9" form:"error_message" json:"error_message" query:"error_message"`
-	CreatedAt      string             `thrift:"created_at,10" form:"created_at" json:"created_at" query:"created_at"`
-	WebhookEventID *int64             `thrift:"webhook_event_id,11,optional" form:"webhook_event_id" json:"webhook_event_id,omitempty" query:"webhook_event_id"`
-	DurationMs     int64              `thrift:"duration_ms,12" form:"duration_ms" json:"duration_ms" query:"duration_ms"`
-	ErrorType      string             `thrift:"error_type,13" form:"error_type" json:"error_type" query:"error_type"`
-	RetryTotal     int32              `thrift:"retry_total,14" form:"retry_total" json:"retry_total" query:"retry_total"`
-	Steps          []*SyncRunStepInfo `thrift:"steps,15" form:"steps" json:"steps" query:"steps"`
+	ErrorMessage   string             `thrift:"errorMessage,9" form:"error_message" json:"error_message" query:"error_message"`
+	CreatedAt      string             `thrift:"createdAt,10" form:"created_at" json:"created_at" query:"created_at"`
+	WebhookEventId *int64             `thrift:"webhookEventId,11,optional" form:"webhook_event_id" json:"webhook_event_id,omitempty" query:"webhook_event_id"`
+	DurationMs     int64              `thrift:"durationMs,12" form:"duration_ms" json:"duration_ms" query:"duration_ms"`
+	ErrorType      string             `thrift:"errorType,13" form:"error_type" json:"error_type" query:"error_type"`
+	RetryTotal     int32              `thrift:"retryTotal,14" form:"retry_total" json:"retry_total" query:"retry_total"`
+	Steps          []*SyncRunStepInfo `thrift:"steps,15,default,list<SyncRunStepInfo>" form:"steps" json:"steps" query:"steps"`
 }
 
 func NewSyncRunInfo() *SyncRunInfo {
@@ -4568,17 +4556,51 @@ func (p *SyncRunInfo) GetCreatedAt() (v string) {
 	return p.CreatedAt
 }
 
+var SyncRunInfo_WebhookEventId_DEFAULT int64
+
+func (p *SyncRunInfo) GetWebhookEventId() (v int64) {
+	if !p.IsSetWebhookEventId() {
+		return SyncRunInfo_WebhookEventId_DEFAULT
+	}
+	return *p.WebhookEventId
+}
+
+func (p *SyncRunInfo) GetDurationMs() (v int64) {
+	return p.DurationMs
+}
+
+func (p *SyncRunInfo) GetErrorType() (v string) {
+	return p.ErrorType
+}
+
+func (p *SyncRunInfo) GetRetryTotal() (v int32) {
+	return p.RetryTotal
+}
+
+func (p *SyncRunInfo) GetSteps() (v []*SyncRunStepInfo) {
+	return p.Steps
+}
+
 var fieldIDToName_SyncRunInfo = map[int16]string{
 	1:  "id",
-	2:  "task_key",
-	3:  "trigger_source",
+	2:  "taskKey",
+	3:  "triggerSource",
 	4:  "status",
-	5:  "start_time",
-	6:  "end_time",
-	7:  "commit_range",
+	5:  "startTime",
+	6:  "endTime",
+	7:  "commitRange",
 	8:  "details",
-	9:  "error_message",
-	10: "created_at",
+	9:  "errorMessage",
+	10: "createdAt",
+	11: "webhookEventId",
+	12: "durationMs",
+	13: "errorType",
+	14: "retryTotal",
+	15: "steps",
+}
+
+func (p *SyncRunInfo) IsSetWebhookEventId() bool {
+	return p.WebhookEventId != nil
 }
 
 func (p *SyncRunInfo) Read(iprot thrift.TProtocol) (err error) {
@@ -4675,6 +4697,46 @@ func (p *SyncRunInfo) Read(iprot thrift.TProtocol) (err error) {
 		case 10:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField10(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 11:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField11(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 12:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField12(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 13:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField13(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 14:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField14(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 15:
+			if fieldTypeId == thrift.LIST {
+				if err = p.ReadField15(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -4819,6 +4881,73 @@ func (p *SyncRunInfo) ReadField10(iprot thrift.TProtocol) error {
 	p.CreatedAt = _field
 	return nil
 }
+func (p *SyncRunInfo) ReadField11(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.WebhookEventId = _field
+	return nil
+}
+func (p *SyncRunInfo) ReadField12(iprot thrift.TProtocol) error {
+
+	var _field int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.DurationMs = _field
+	return nil
+}
+func (p *SyncRunInfo) ReadField13(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.ErrorType = _field
+	return nil
+}
+func (p *SyncRunInfo) ReadField14(iprot thrift.TProtocol) error {
+
+	var _field int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.RetryTotal = _field
+	return nil
+}
+func (p *SyncRunInfo) ReadField15(iprot thrift.TProtocol) error {
+	_, size, err := iprot.ReadListBegin()
+	if err != nil {
+		return err
+	}
+	_field := make([]*SyncRunStepInfo, 0, size)
+	values := make([]SyncRunStepInfo, size)
+	for i := 0; i < size; i++ {
+		_elem := &values[i]
+		_elem.InitDefault()
+
+		if err := _elem.Read(iprot); err != nil {
+			return err
+		}
+
+		_field = append(_field, _elem)
+	}
+	if err := iprot.ReadListEnd(); err != nil {
+		return err
+	}
+	p.Steps = _field
+	return nil
+}
 
 func (p *SyncRunInfo) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -4866,6 +4995,26 @@ func (p *SyncRunInfo) Write(oprot thrift.TProtocol) (err error) {
 			fieldId = 10
 			goto WriteFieldError
 		}
+		if err = p.writeField11(oprot); err != nil {
+			fieldId = 11
+			goto WriteFieldError
+		}
+		if err = p.writeField12(oprot); err != nil {
+			fieldId = 12
+			goto WriteFieldError
+		}
+		if err = p.writeField13(oprot); err != nil {
+			fieldId = 13
+			goto WriteFieldError
+		}
+		if err = p.writeField14(oprot); err != nil {
+			fieldId = 14
+			goto WriteFieldError
+		}
+		if err = p.writeField15(oprot); err != nil {
+			fieldId = 15
+			goto WriteFieldError
+		}
 	}
 	if err = oprot.WriteFieldStop(); err != nil {
 		goto WriteFieldStopError
@@ -4902,7 +5051,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncRunInfo) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("task_key", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("taskKey", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TaskKey); err != nil {
@@ -4919,7 +5068,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncRunInfo) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("trigger_source", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("triggerSource", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TriggerSource); err != nil {
@@ -4953,7 +5102,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncRunInfo) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("start_time", thrift.STRING, 5); err != nil {
+	if err = oprot.WriteFieldBegin("startTime", thrift.STRING, 5); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.StartTime); err != nil {
@@ -4970,7 +5119,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncRunInfo) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("end_time", thrift.STRING, 6); err != nil {
+	if err = oprot.WriteFieldBegin("endTime", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.EndTime); err != nil {
@@ -4987,7 +5136,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncRunInfo) writeField7(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("commit_range", thrift.STRING, 7); err != nil {
+	if err = oprot.WriteFieldBegin("commitRange", thrift.STRING, 7); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.CommitRange); err != nil {
@@ -5021,7 +5170,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncRunInfo) writeField9(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("error_message", thrift.STRING, 9); err != nil {
+	if err = oprot.WriteFieldBegin("errorMessage", thrift.STRING, 9); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.ErrorMessage); err != nil {
@@ -5038,7 +5187,7 @@ WriteFieldEndError:
 }
 
 func (p *SyncRunInfo) writeField10(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("created_at", thrift.STRING, 10); err != nil {
+	if err = oprot.WriteFieldBegin("createdAt", thrift.STRING, 10); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.CreatedAt); err != nil {
@@ -5054,6 +5203,101 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 10 end error: ", p), err)
 }
 
+func (p *SyncRunInfo) writeField11(oprot thrift.TProtocol) (err error) {
+	if p.IsSetWebhookEventId() {
+		if err = oprot.WriteFieldBegin("webhookEventId", thrift.I64, 11); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.WebhookEventId); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 11 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 11 end error: ", p), err)
+}
+
+func (p *SyncRunInfo) writeField12(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("durationMs", thrift.I64, 12); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.DurationMs); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 12 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 12 end error: ", p), err)
+}
+
+func (p *SyncRunInfo) writeField13(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("errorType", thrift.STRING, 13); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.ErrorType); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 13 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 13 end error: ", p), err)
+}
+
+func (p *SyncRunInfo) writeField14(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("retryTotal", thrift.I32, 14); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI32(p.RetryTotal); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 14 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 14 end error: ", p), err)
+}
+
+func (p *SyncRunInfo) writeField15(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("steps", thrift.LIST, 15); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteListBegin(thrift.STRUCT, len(p.Steps)); err != nil {
+		return err
+	}
+	for _, v := range p.Steps {
+		if err := v.Write(oprot); err != nil {
+			return err
+		}
+	}
+	if err := oprot.WriteListEnd(); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 15 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 15 end error: ", p), err)
+}
+
 func (p *SyncRunInfo) String() string {
 	if p == nil {
 		return "<nil>"
@@ -5062,8 +5306,516 @@ func (p *SyncRunInfo) String() string {
 
 }
 
+type SyncRunStepInfo struct {
+	ID         int64  `thrift:"id,1" form:"id" json:"id" query:"id"`
+	StepName   string `thrift:"stepName,2" form:"step_name" json:"step_name" query:"step_name"`
+	Status     string `thrift:"status,3" form:"status" json:"status" query:"status"`
+	StartTime  string `thrift:"startTime,4" form:"start_time" json:"start_time" query:"start_time"`
+	EndTime    string `thrift:"endTime,5" form:"end_time" json:"end_time" query:"end_time"`
+	DurationMs int64  `thrift:"durationMs,6" form:"duration_ms" json:"duration_ms" query:"duration_ms"`
+	ErrorMsg   string `thrift:"errorMsg,7" form:"error_msg" json:"error_msg" query:"error_msg"`
+	ErrorType  string `thrift:"errorType,8" form:"error_type" json:"error_type" query:"error_type"`
+	RetryCount int32  `thrift:"retryCount,9" form:"retry_count" json:"retry_count" query:"retry_count"`
+}
+
+func NewSyncRunStepInfo() *SyncRunStepInfo {
+	return &SyncRunStepInfo{}
+}
+
+func (p *SyncRunStepInfo) InitDefault() {
+}
+
+func (p *SyncRunStepInfo) GetID() (v int64) {
+	return p.ID
+}
+
+func (p *SyncRunStepInfo) GetStepName() (v string) {
+	return p.StepName
+}
+
+func (p *SyncRunStepInfo) GetStatus() (v string) {
+	return p.Status
+}
+
+func (p *SyncRunStepInfo) GetStartTime() (v string) {
+	return p.StartTime
+}
+
+func (p *SyncRunStepInfo) GetEndTime() (v string) {
+	return p.EndTime
+}
+
+func (p *SyncRunStepInfo) GetDurationMs() (v int64) {
+	return p.DurationMs
+}
+
+func (p *SyncRunStepInfo) GetErrorMsg() (v string) {
+	return p.ErrorMsg
+}
+
+func (p *SyncRunStepInfo) GetErrorType() (v string) {
+	return p.ErrorType
+}
+
+func (p *SyncRunStepInfo) GetRetryCount() (v int32) {
+	return p.RetryCount
+}
+
+var fieldIDToName_SyncRunStepInfo = map[int16]string{
+	1: "id",
+	2: "stepName",
+	3: "status",
+	4: "startTime",
+	5: "endTime",
+	6: "durationMs",
+	7: "errorMsg",
+	8: "errorType",
+	9: "retryCount",
+}
+
+func (p *SyncRunStepInfo) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField5(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 6:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField6(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 7:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField7(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 8:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField8(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 9:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField9(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncRunStepInfo[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.ID = _field
+	return nil
+}
+func (p *SyncRunStepInfo) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.StepName = _field
+	return nil
+}
+func (p *SyncRunStepInfo) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.Status = _field
+	return nil
+}
+func (p *SyncRunStepInfo) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.StartTime = _field
+	return nil
+}
+func (p *SyncRunStepInfo) ReadField5(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.EndTime = _field
+	return nil
+}
+func (p *SyncRunStepInfo) ReadField6(iprot thrift.TProtocol) error {
+
+	var _field int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.DurationMs = _field
+	return nil
+}
+func (p *SyncRunStepInfo) ReadField7(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.ErrorMsg = _field
+	return nil
+}
+func (p *SyncRunStepInfo) ReadField8(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.ErrorType = _field
+	return nil
+}
+func (p *SyncRunStepInfo) ReadField9(iprot thrift.TProtocol) error {
+
+	var _field int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.RetryCount = _field
+	return nil
+}
+
+func (p *SyncRunStepInfo) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("SyncRunStepInfo"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
+			goto WriteFieldError
+		}
+		if err = p.writeField6(oprot); err != nil {
+			fieldId = 6
+			goto WriteFieldError
+		}
+		if err = p.writeField7(oprot); err != nil {
+			fieldId = 7
+			goto WriteFieldError
+		}
+		if err = p.writeField8(oprot); err != nil {
+			fieldId = 8
+			goto WriteFieldError
+		}
+		if err = p.writeField9(oprot); err != nil {
+			fieldId = 9
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("id", thrift.I64, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.ID); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField2(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("stepName", thrift.STRING, 2); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.StepName); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField3(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("status", thrift.STRING, 3); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.Status); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField4(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("startTime", thrift.STRING, 4); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.StartTime); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField5(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("endTime", thrift.STRING, 5); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.EndTime); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField6(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("durationMs", thrift.I64, 6); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.DurationMs); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField7(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("errorMsg", thrift.STRING, 7); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.ErrorMsg); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 7 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 7 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField8(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("errorType", thrift.STRING, 8); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.ErrorType); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 8 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 8 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) writeField9(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("retryCount", thrift.I32, 9); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI32(p.RetryCount); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 9 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 9 end error: ", p), err)
+}
+
+func (p *SyncRunStepInfo) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SyncRunStepInfo(%+v)", *p)
+
+}
+
 type ListHistoryReq struct {
-	TaskKey string `thrift:"task_key,1" json:"task_key" query:"task_key"`
+	TaskKey string `thrift:"taskKey,1" json:"task_key" query:"task_key"`
 	Limit   int32  `thrift:"limit,2" json:"limit" query:"limit"`
 }
 
@@ -5083,7 +5835,7 @@ func (p *ListHistoryReq) GetLimit() (v int32) {
 }
 
 var fieldIDToName_ListHistoryReq = map[int16]string{
-	1: "task_key",
+	1: "taskKey",
 	2: "limit",
 }
 
@@ -5207,7 +5959,7 @@ WriteStructEndError:
 }
 
 func (p *ListHistoryReq) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("task_key", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("taskKey", thrift.STRING, 1); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.TaskKey); err != nil {

@@ -20,9 +20,21 @@ export const useRepoStore = defineStore('repo', () => {
   async function fetchRepos(params?: RepoListParams) {
     loading.value = true
     try {
-      const data = await repoApi.list(params)
-      repos.value = data.repos || []
-      total.value = data.total || 0
+      const resp = await repoApi.list(params)
+      // Handle both old format (repos) and new format (list with pagination)
+      if (resp.data?.list) {
+        repos.value = resp.data.list
+        total.value = resp.data.pagination?.total || 0
+      } else if (resp.data?.repos) {
+        repos.value = resp.data.repos
+        total.value = resp.data.total || 0
+      } else if (resp.repos) {
+        repos.value = resp.repos
+        total.value = resp.total || 0
+      } else if (resp.list) {
+        repos.value = resp.list
+        total.value = resp.pagination?.total || 0
+      }
     } catch (e: any) {
       message.error(e.error || '获取仓库列表失败')
     } finally {
@@ -32,8 +44,9 @@ export const useRepoStore = defineStore('repo', () => {
 
   async function getRepo(key: string): Promise<Repo | null> {
     try {
-      const data = await repoApi.get(key)
-      return data.repo
+      const resp = await repoApi.get(key)
+      // Handle both old format and new format with nested data
+      return resp.data?.repo || resp.repo || null
     } catch (e: any) {
       message.error(e.error || '获取仓库详情失败')
       return null

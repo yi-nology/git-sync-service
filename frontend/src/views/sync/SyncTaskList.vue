@@ -120,9 +120,9 @@
         </template>
         <template v-if="column.key === 'repos'">
           <div class="repo-pair">
-            <span class="repo-key">{{ record.source_repo_key }}</span>
+            <span class="repo-key">{{ getRepoName(record.source_repo_key) }}</span>
             <ArrowRightOutlined style="color: #BFBFBF; font-size: 12px; margin: 0 4px;" />
-            <span class="repo-key">{{ record.target_repo_key }}</span>
+            <span class="repo-key">{{ getRepoName(record.target_repo_key) }}</span>
           </div>
         </template>
         <template v-if="column.key === 'branches'">
@@ -366,6 +366,11 @@ function filterRepoOption(input: string, option: any) {
   if (!repo) return false
   const search = input.toLowerCase()
   return repo.name.toLowerCase().includes(search) || repo.key.toLowerCase().includes(search)
+}
+
+function getRepoName(key: string): string {
+  const repo = repoStore.repos.find(r => r.key === key)
+  return repo?.name || key.substring(0, 8) + '...'
 }
 
 function buildParams() {

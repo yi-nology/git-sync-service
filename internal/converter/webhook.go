@@ -37,7 +37,7 @@ func ToEventInfo(e *model.WebhookEvent) *webhookmodel.WebhookEventInfo {
 		processedAt = e.ProcessedAt.Format("2006-01-02 15:04:05")
 	}
 	return &webhookmodel.WebhookEventInfo{
-		ID: int64(e.ID), EventID: e.EventID, RepoKey: e.RepoKey,
+		ID: int64(e.ID), EventId: e.EventID, RepoKey: e.RepoKey,
 		EventType: e.EventType, Source: e.Source, ActorName: e.ActorName,
 		Branch: e.Branch, CommitSha: e.CommitSHA, Status: e.Status,
 		ErrorMessage: e.ErrorMessage, ProcessedAt: processedAt,

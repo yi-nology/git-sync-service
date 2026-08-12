@@ -6,13 +6,13 @@ import (
 	"fmt"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 	"github.com/yi-nology/git-sync-service/biz/model/repo"
 	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	"github.com/yi-nology/git-sync-service/internal/service"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
-	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 )
 
 // ListReposRequest is the request struct for the ListRepos endpoint with filtering support.
@@ -26,7 +26,7 @@ type ListReposRequest struct {
 	SortOrder string `query:"sort_order" default:"desc"`
 }
 
-func ListRepos(ctx context.Context, c *app.RequestContext) {
+func List(ctx context.Context, c *app.RequestContext) {
 	var req ListReposRequest
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -60,7 +60,7 @@ func ListRepos(ctx context.Context, c *app.RequestContext) {
 	response.Paginated(c, converter.ToRepoInfoList(list), total, req.Page, req.PageSize)
 }
 
-func GetRepo(ctx context.Context, c *app.RequestContext) {
+func Get(ctx context.Context, c *app.RequestContext) {
 	var req repo.GetRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -83,19 +83,26 @@ func GetRepo(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.GetRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func CreateRepo(ctx context.Context, c *app.RequestContext) {
+func Create(ctx context.Context, c *app.RequestContext) {
 	var req repo.CreateRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
-	if req.Name == "" || req.RemoteURL == "" {
+	if req.Name == "" || req.RemoteUrl == "" {
 		response.BadRequest(c, "name and remoteUrl are required")
 		return
 	}
 
+	// Get platform_id from query parameter
+	platformIDStr := c.Query("platform_id")
+	var platformID uint
+	if platformIDStr != "" {
+		fmt.Sscanf(platformIDStr, "%d", &platformID)
+	}
+
 	r, err := GetSyncService().CreateRepo(ctx, &syncmodel.CreateRepoRequest{
-		Name: req.Name, RemoteURL: req.RemoteURL, AccessToken: req.AccessToken,
+		Name: req.Name, RemoteURL: req.RemoteUrl, AccessToken: req.AccessToken, PlatformID: platformID,
 	})
 	if err != nil {
 		if sdkprov.IsInvalidInput(err) {
@@ -108,7 +115,7 @@ func CreateRepo(ctx context.Context, c *app.RequestContext) {
 	response.Created(c, &repo.CreateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func UpdateRepo(ctx context.Context, c *app.RequestContext) {
+func Update(ctx context.Context, c *app.RequestContext) {
 	var req repo.UpdateRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -133,7 +140,7 @@ func UpdateRepo(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.UpdateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
-func DeleteRepo(ctx context.Context, c *app.RequestContext) {
+func Delete(ctx context.Context, c *app.RequestContext) {
 	var req repo.DeleteRepoReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -151,7 +158,7 @@ func DeleteRepo(ctx context.Context, c *app.RequestContext) {
 	response.NoContent(c)
 }
 
-func TestConnection(ctx context.Context, c *app.RequestContext) {
+func Test(ctx context.Context, c *app.RequestContext) {
 	var req repo.TestConnectionReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -170,7 +177,7 @@ func TestConnection(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &repo.TestConnectionResp{Success: result.Success, Message: result.Message})
 }
 
-func ListBranches(ctx context.Context, c *app.RequestContext) {
+func Branches(ctx context.Context, c *app.RequestContext) {
 	var req repo.ListBranchesReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())

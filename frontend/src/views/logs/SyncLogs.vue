@@ -479,23 +479,38 @@ function calculateStats(logList: SyncLog[]) {
 async function fetchLogs() {
   loading.value = true
   try {
-    const params: SyncLogRequest = {
-      page: pagination.current,
-      page_size: pagination.pageSize,
+    // 使用同步历史 API
+    const allLogs: any[] = []
+    for (const task of tasks.value) {
+      try {
+        const resp = await syncTaskApi.history({ task_key: task.key, limit: 50 })
+        const runs = resp.data?.runs || resp.runs || []
+        allLogs.push(...runs.map((r: any) => ({ ...r, task_name: task.name })))
+      } catch {
+        // ignore individual failures
+      }
     }
-    if (filters.taskKey) params.task_key = filters.taskKey
-    if (filters.status) params.status = filters.status
 
-    const resp = await logApi.listSync(params)
-    logs.value = resp.list || []
-    pagination.total = resp.pagination?.total || 0
+    // 按时间排序
+    allLogs.sort((a, b) => {
+      return new Date(b.start_time || 0).getTime() - new Date(a.start_time || 0).getTime()
+    })
 
+    // 应用筛选
+    let filtered = allLogs
+    if (filters.taskKey) {
+      filtered = filtered.filter(log => log.task_key === filters.taskKey)
+    }
+    if (filters.status) {
+      filtered = filtered.filter(log => log.status === filters.status)
+    }
+
+    logs.value = filtered
+    pagination.total = filtered.length
     calculateStats(logs.value)
   } catch (e: any) {
-    // If API not available, show mock data for demo
-    logs.value = generateMockLogs()
-    pagination.total = logs.value.length
-    calculateStats(logs.value)
+    console.error('Failed to fetch logs:', e)
+    logs.value = []
   } finally {
     loading.value = false
   }
@@ -504,7 +519,7 @@ async function fetchLogs() {
 async function fetchTasks() {
   try {
     const resp = await syncTaskApi.list({ page: 1, page_size: 100 })
-    tasks.value = resp.tasks || []
+    tasks.value = resp.data?.tasks || resp.tasks || []
   } catch {
     tasks.value = []
   }

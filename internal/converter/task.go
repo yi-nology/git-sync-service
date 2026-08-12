@@ -50,7 +50,7 @@ func ToSyncRunInfo(r *model.SyncRun) *taskmodel.SyncRunInfo {
 	}
 	if r.WebhookEventID != nil {
 		id := int64(*r.WebhookEventID)
-		info.WebhookEventID = &id
+		info.WebhookEventId = &id
 	}
 	if len(r.Steps) > 0 {
 		steps := make([]*model.SyncRunStep, len(r.Steps))

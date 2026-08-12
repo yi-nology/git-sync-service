@@ -14,7 +14,7 @@ import (
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
 
-func ListRules(ctx context.Context, c *app.RequestContext) {
+func RuleList(ctx context.Context, c *app.RequestContext) {
 	var req webhook.ListRulesReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -33,7 +33,7 @@ func ListRules(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &webhook.ListRulesResp{Rules: converter.ToRuleInfoList(list)})
 }
 
-func GetRule(ctx context.Context, c *app.RequestContext) {
+func RuleGet(ctx context.Context, c *app.RequestContext) {
 	var req webhook.GetRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -55,7 +55,7 @@ func GetRule(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &webhook.GetRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
-func CreateRule(ctx context.Context, c *app.RequestContext) {
+func RuleCreate(ctx context.Context, c *app.RequestContext) {
 	var req webhook.CreateRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -89,7 +89,7 @@ func CreateRule(ctx context.Context, c *app.RequestContext) {
 	response.Created(c, &webhook.CreateRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
-func UpdateRule(ctx context.Context, c *app.RequestContext) {
+func RuleUpdate(ctx context.Context, c *app.RequestContext) {
 	var req webhook.UpdateRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -127,7 +127,7 @@ func UpdateRule(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &webhook.UpdateRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
-func DeleteRule(ctx context.Context, c *app.RequestContext) {
+func RuleDelete(ctx context.Context, c *app.RequestContext) {
 	var req webhook.DeleteRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())

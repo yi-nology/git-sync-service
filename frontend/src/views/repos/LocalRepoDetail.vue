@@ -97,7 +97,7 @@
             >
               <div class="timeline-item">
                 <div class="timeline-header">
-                  <span class="timeline-task">{{ run.task_key }}</span>
+                  <span class="timeline-task">{{ getTaskName(run.task_key) }}</span>
                   <StatusBadge :status="run.status" />
                 </div>
                 <div class="timeline-meta">
@@ -192,6 +192,11 @@ const triggerLabel = (trigger: string) => {
   return map[trigger] || trigger
 }
 
+const getTaskName = (taskKey: string) => {
+  const task = tasks.value.find(t => t.key === taskKey)
+  return task?.name || taskKey.substring(0, 8) + '...'
+}
+
 onMounted(async () => {
   try {
     repo.value = await repoStore.getRepo(repoKey.value)
@@ -201,6 +206,10 @@ onMounted(async () => {
     }
     if (route.query.tab) {
       activeTab.value = route.query.tab as string
+      // 如果直接打开 history tab，加载历史数据
+      if (activeTab.value === 'history') {
+        await loadHistory()
+      }
     }
   } finally {
     loading.value = false
@@ -215,6 +224,13 @@ function handleTabChange(tab: string) {
 }
 
 async function loadHistory() {
+  // 确保 tasks 已经加载
+  if (tasks.value.length === 0) {
+    await taskStore.fetchTasks({ repo_key: repoKey.value })
+    tasks.value = taskStore.tasks
+  }
+
+  history.value = []
   for (const task of tasks.value) {
     try {
       await taskStore.fetchHistory(task.key, 20)

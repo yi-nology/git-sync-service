@@ -253,3 +253,103 @@ func _syncplatformreposMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _getMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _branchesMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _createMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deleteMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _testMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _updateMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _listMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _taskhistoryMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _taskpreviewMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _taskgetMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _taskcreateMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _taskdeleteMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _taskrunMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _taskupdateMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _tasklistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _rulegetMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _rulecreateMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _ruledeleteMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _ruleupdateMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _rulelistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

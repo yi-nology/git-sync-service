@@ -5,18 +5,18 @@ struct RepoInfo {
     2: string key (api.json="key")
     3: string name (api.json="name")
     4: string platform (api.json="platform")
-    5: string platform_owner (api.json="platform_owner")
-    6: string platform_repo (api.json="platform_repo")
-    7: string clone_url (api.json="clone_url")
-    8: string ssh_url (api.json="ssh_url")
-    9: string default_branch (api.json="default_branch")
+    5: string platformOwner (api.json="platform_owner")
+    6: string platformRepo (api.json="platform_repo")
+    7: string cloneUrl (api.json="clone_url")
+    8: string sshUrl (api.json="ssh_url")
+    9: string defaultBranch (api.json="default_branch")
     10: string status (api.json="status")
-    11: string created_at (api.json="created_at")
+    11: string createdAt (api.json="created_at")
 }
 
 struct ListReposReq {
     1: i32 page (api.query="page")
-    2: i32 page_size (api.query="page_size")
+    2: i32 pageSize (api.query="page_size")
 }
 
 struct ListReposResp {
@@ -34,8 +34,8 @@ struct GetRepoResp {
 
 struct CreateRepoReq {
     1: string name (api.json="name")
-    2: string remote_url (api.json="remote_url")
-    3: string access_token (api.json="access_token")
+    2: string remoteUrl (api.json="remote_url")
+    3: string accessToken (api.json="access_token")
 }
 
 struct CreateRepoResp {
@@ -45,7 +45,7 @@ struct CreateRepoResp {
 struct UpdateRepoReq {
     1: string key (api.json="key")
     2: string name (api.json="name")
-    3: string access_token (api.json="access_token")
+    3: string accessToken (api.json="access_token")
 }
 
 struct UpdateRepoResp {

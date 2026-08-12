@@ -4,6 +4,7 @@ type CreateRepoRequest struct {
 	Name        string `json:"name"`
 	RemoteURL   string `json:"remoteUrl"`
 	AccessToken string `json:"accessToken"`
+	PlatformID  uint   `json:"platformId"`
 }
 
 type UpdateRepoRequest struct {

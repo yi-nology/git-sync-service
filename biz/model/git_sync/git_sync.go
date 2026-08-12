@@ -12,19 +12,19 @@ import (
 )
 
 type RepoService interface {
-	ListRepos(ctx context.Context, req *repo.ListReposReq) (r *repo.ListReposResp, err error)
+	List(ctx context.Context, req *repo.ListReposReq) (r *repo.ListReposResp, err error)
 
-	GetRepo(ctx context.Context, req *repo.GetRepoReq) (r *repo.GetRepoResp, err error)
+	Get(ctx context.Context, req *repo.GetRepoReq) (r *repo.GetRepoResp, err error)
 
-	CreateRepo(ctx context.Context, req *repo.CreateRepoReq) (r *repo.CreateRepoResp, err error)
+	Create(ctx context.Context, req *repo.CreateRepoReq) (r *repo.CreateRepoResp, err error)
 
-	UpdateRepo(ctx context.Context, req *repo.UpdateRepoReq) (r *repo.UpdateRepoResp, err error)
+	Update(ctx context.Context, req *repo.UpdateRepoReq) (r *repo.UpdateRepoResp, err error)
 
-	DeleteRepo(ctx context.Context, req *repo.DeleteRepoReq) (r *repo.DeleteRepoResp, err error)
+	Delete(ctx context.Context, req *repo.DeleteRepoReq) (r *repo.DeleteRepoResp, err error)
 
-	TestConnection(ctx context.Context, req *repo.TestConnectionReq) (r *repo.TestConnectionResp, err error)
+	Test(ctx context.Context, req *repo.TestConnectionReq) (r *repo.TestConnectionResp, err error)
 
-	ListBranches(ctx context.Context, req *repo.ListBranchesReq) (r *repo.ListBranchesResp, err error)
+	Branches(ctx context.Context, req *repo.ListBranchesReq) (r *repo.ListBranchesResp, err error)
 }
 
 type RepoServiceClient struct {
@@ -53,86 +53,86 @@ func (p *RepoServiceClient) Client_() thrift.TClient {
 	return p.c
 }
 
-func (p *RepoServiceClient) ListRepos(ctx context.Context, req *repo.ListReposReq) (r *repo.ListReposResp, err error) {
-	var _args RepoServiceListReposArgs
+func (p *RepoServiceClient) List(ctx context.Context, req *repo.ListReposReq) (r *repo.ListReposResp, err error) {
+	var _args RepoServiceListArgs
 	_args.Req = req
-	var _result RepoServiceListReposResult
-	if err = p.Client_().Call(ctx, "ListRepos", &_args, &_result); err != nil {
+	var _result RepoServiceListResult
+	if err = p.Client_().Call(ctx, "List", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *RepoServiceClient) GetRepo(ctx context.Context, req *repo.GetRepoReq) (r *repo.GetRepoResp, err error) {
-	var _args RepoServiceGetRepoArgs
+func (p *RepoServiceClient) Get(ctx context.Context, req *repo.GetRepoReq) (r *repo.GetRepoResp, err error) {
+	var _args RepoServiceGetArgs
 	_args.Req = req
-	var _result RepoServiceGetRepoResult
-	if err = p.Client_().Call(ctx, "GetRepo", &_args, &_result); err != nil {
+	var _result RepoServiceGetResult
+	if err = p.Client_().Call(ctx, "Get", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *RepoServiceClient) CreateRepo(ctx context.Context, req *repo.CreateRepoReq) (r *repo.CreateRepoResp, err error) {
-	var _args RepoServiceCreateRepoArgs
+func (p *RepoServiceClient) Create(ctx context.Context, req *repo.CreateRepoReq) (r *repo.CreateRepoResp, err error) {
+	var _args RepoServiceCreateArgs
 	_args.Req = req
-	var _result RepoServiceCreateRepoResult
-	if err = p.Client_().Call(ctx, "CreateRepo", &_args, &_result); err != nil {
+	var _result RepoServiceCreateResult
+	if err = p.Client_().Call(ctx, "Create", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *RepoServiceClient) UpdateRepo(ctx context.Context, req *repo.UpdateRepoReq) (r *repo.UpdateRepoResp, err error) {
-	var _args RepoServiceUpdateRepoArgs
+func (p *RepoServiceClient) Update(ctx context.Context, req *repo.UpdateRepoReq) (r *repo.UpdateRepoResp, err error) {
+	var _args RepoServiceUpdateArgs
 	_args.Req = req
-	var _result RepoServiceUpdateRepoResult
-	if err = p.Client_().Call(ctx, "UpdateRepo", &_args, &_result); err != nil {
+	var _result RepoServiceUpdateResult
+	if err = p.Client_().Call(ctx, "Update", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *RepoServiceClient) DeleteRepo(ctx context.Context, req *repo.DeleteRepoReq) (r *repo.DeleteRepoResp, err error) {
-	var _args RepoServiceDeleteRepoArgs
+func (p *RepoServiceClient) Delete(ctx context.Context, req *repo.DeleteRepoReq) (r *repo.DeleteRepoResp, err error) {
+	var _args RepoServiceDeleteArgs
 	_args.Req = req
-	var _result RepoServiceDeleteRepoResult
-	if err = p.Client_().Call(ctx, "DeleteRepo", &_args, &_result); err != nil {
+	var _result RepoServiceDeleteResult
+	if err = p.Client_().Call(ctx, "Delete", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *RepoServiceClient) TestConnection(ctx context.Context, req *repo.TestConnectionReq) (r *repo.TestConnectionResp, err error) {
-	var _args RepoServiceTestConnectionArgs
+func (p *RepoServiceClient) Test(ctx context.Context, req *repo.TestConnectionReq) (r *repo.TestConnectionResp, err error) {
+	var _args RepoServiceTestArgs
 	_args.Req = req
-	var _result RepoServiceTestConnectionResult
-	if err = p.Client_().Call(ctx, "TestConnection", &_args, &_result); err != nil {
+	var _result RepoServiceTestResult
+	if err = p.Client_().Call(ctx, "Test", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *RepoServiceClient) ListBranches(ctx context.Context, req *repo.ListBranchesReq) (r *repo.ListBranchesResp, err error) {
-	var _args RepoServiceListBranchesArgs
+func (p *RepoServiceClient) Branches(ctx context.Context, req *repo.ListBranchesReq) (r *repo.ListBranchesResp, err error) {
+	var _args RepoServiceBranchesArgs
 	_args.Req = req
-	var _result RepoServiceListBranchesResult
-	if err = p.Client_().Call(ctx, "ListBranches", &_args, &_result); err != nil {
+	var _result RepoServiceBranchesResult
+	if err = p.Client_().Call(ctx, "Branches", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
 
 type SyncTaskService interface {
-	ListTasks(ctx context.Context, req *sync_task.ListTasksReq) (r *sync_task.ListTasksResp, err error)
+	TaskList(ctx context.Context, req *sync_task.ListTasksReq) (r *sync_task.ListTasksResp, err error)
 
-	GetTask(ctx context.Context, req *sync_task.GetTaskReq) (r *sync_task.GetTaskResp, err error)
+	TaskGet(ctx context.Context, req *sync_task.GetTaskReq) (r *sync_task.GetTaskResp, err error)
 
-	CreateTask(ctx context.Context, req *sync_task.CreateTaskReq) (r *sync_task.CreateTaskResp, err error)
+	TaskCreate(ctx context.Context, req *sync_task.CreateTaskReq) (r *sync_task.CreateTaskResp, err error)
 
-	UpdateTask(ctx context.Context, req *sync_task.UpdateTaskReq) (r *sync_task.UpdateTaskResp, err error)
+	TaskUpdate(ctx context.Context, req *sync_task.UpdateTaskReq) (r *sync_task.UpdateTaskResp, err error)
 
-	DeleteTask(ctx context.Context, req *sync_task.DeleteTaskReq) (r *sync_task.DeleteTaskResp, err error)
+	TaskDelete(ctx context.Context, req *sync_task.DeleteTaskReq) (r *sync_task.DeleteTaskResp, err error)
 
-	RunTask(ctx context.Context, req *sync_task.RunTaskReq) (r *sync_task.RunTaskResp, err error)
+	TaskRun(ctx context.Context, req *sync_task.RunTaskReq) (r *sync_task.RunTaskResp, err error)
 
-	PreviewSync(ctx context.Context, req *sync_task.PreviewSyncReq) (r *sync_task.PreviewSyncResp, err error)
+	TaskPreview(ctx context.Context, req *sync_task.PreviewSyncReq) (r *sync_task.PreviewSyncResp, err error)
 
-	ListHistory(ctx context.Context, req *sync_task.ListHistoryReq) (r *sync_task.ListHistoryResp, err error)
+	TaskHistory(ctx context.Context, req *sync_task.ListHistoryReq) (r *sync_task.ListHistoryResp, err error)
 }
 
 type SyncTaskServiceClient struct {
@@ -161,89 +161,89 @@ func (p *SyncTaskServiceClient) Client_() thrift.TClient {
 	return p.c
 }
 
-func (p *SyncTaskServiceClient) ListTasks(ctx context.Context, req *sync_task.ListTasksReq) (r *sync_task.ListTasksResp, err error) {
-	var _args SyncTaskServiceListTasksArgs
+func (p *SyncTaskServiceClient) TaskList(ctx context.Context, req *sync_task.ListTasksReq) (r *sync_task.ListTasksResp, err error) {
+	var _args SyncTaskServiceTaskListArgs
 	_args.Req = req
-	var _result SyncTaskServiceListTasksResult
-	if err = p.Client_().Call(ctx, "ListTasks", &_args, &_result); err != nil {
+	var _result SyncTaskServiceTaskListResult
+	if err = p.Client_().Call(ctx, "TaskList", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SyncTaskServiceClient) GetTask(ctx context.Context, req *sync_task.GetTaskReq) (r *sync_task.GetTaskResp, err error) {
-	var _args SyncTaskServiceGetTaskArgs
+func (p *SyncTaskServiceClient) TaskGet(ctx context.Context, req *sync_task.GetTaskReq) (r *sync_task.GetTaskResp, err error) {
+	var _args SyncTaskServiceTaskGetArgs
 	_args.Req = req
-	var _result SyncTaskServiceGetTaskResult
-	if err = p.Client_().Call(ctx, "GetTask", &_args, &_result); err != nil {
+	var _result SyncTaskServiceTaskGetResult
+	if err = p.Client_().Call(ctx, "TaskGet", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SyncTaskServiceClient) CreateTask(ctx context.Context, req *sync_task.CreateTaskReq) (r *sync_task.CreateTaskResp, err error) {
-	var _args SyncTaskServiceCreateTaskArgs
+func (p *SyncTaskServiceClient) TaskCreate(ctx context.Context, req *sync_task.CreateTaskReq) (r *sync_task.CreateTaskResp, err error) {
+	var _args SyncTaskServiceTaskCreateArgs
 	_args.Req = req
-	var _result SyncTaskServiceCreateTaskResult
-	if err = p.Client_().Call(ctx, "CreateTask", &_args, &_result); err != nil {
+	var _result SyncTaskServiceTaskCreateResult
+	if err = p.Client_().Call(ctx, "TaskCreate", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SyncTaskServiceClient) UpdateTask(ctx context.Context, req *sync_task.UpdateTaskReq) (r *sync_task.UpdateTaskResp, err error) {
-	var _args SyncTaskServiceUpdateTaskArgs
+func (p *SyncTaskServiceClient) TaskUpdate(ctx context.Context, req *sync_task.UpdateTaskReq) (r *sync_task.UpdateTaskResp, err error) {
+	var _args SyncTaskServiceTaskUpdateArgs
 	_args.Req = req
-	var _result SyncTaskServiceUpdateTaskResult
-	if err = p.Client_().Call(ctx, "UpdateTask", &_args, &_result); err != nil {
+	var _result SyncTaskServiceTaskUpdateResult
+	if err = p.Client_().Call(ctx, "TaskUpdate", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SyncTaskServiceClient) DeleteTask(ctx context.Context, req *sync_task.DeleteTaskReq) (r *sync_task.DeleteTaskResp, err error) {
-	var _args SyncTaskServiceDeleteTaskArgs
+func (p *SyncTaskServiceClient) TaskDelete(ctx context.Context, req *sync_task.DeleteTaskReq) (r *sync_task.DeleteTaskResp, err error) {
+	var _args SyncTaskServiceTaskDeleteArgs
 	_args.Req = req
-	var _result SyncTaskServiceDeleteTaskResult
-	if err = p.Client_().Call(ctx, "DeleteTask", &_args, &_result); err != nil {
+	var _result SyncTaskServiceTaskDeleteResult
+	if err = p.Client_().Call(ctx, "TaskDelete", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SyncTaskServiceClient) RunTask(ctx context.Context, req *sync_task.RunTaskReq) (r *sync_task.RunTaskResp, err error) {
-	var _args SyncTaskServiceRunTaskArgs
+func (p *SyncTaskServiceClient) TaskRun(ctx context.Context, req *sync_task.RunTaskReq) (r *sync_task.RunTaskResp, err error) {
+	var _args SyncTaskServiceTaskRunArgs
 	_args.Req = req
-	var _result SyncTaskServiceRunTaskResult
-	if err = p.Client_().Call(ctx, "RunTask", &_args, &_result); err != nil {
+	var _result SyncTaskServiceTaskRunResult
+	if err = p.Client_().Call(ctx, "TaskRun", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SyncTaskServiceClient) PreviewSync(ctx context.Context, req *sync_task.PreviewSyncReq) (r *sync_task.PreviewSyncResp, err error) {
-	var _args SyncTaskServicePreviewSyncArgs
+func (p *SyncTaskServiceClient) TaskPreview(ctx context.Context, req *sync_task.PreviewSyncReq) (r *sync_task.PreviewSyncResp, err error) {
+	var _args SyncTaskServiceTaskPreviewArgs
 	_args.Req = req
-	var _result SyncTaskServicePreviewSyncResult
-	if err = p.Client_().Call(ctx, "PreviewSync", &_args, &_result); err != nil {
+	var _result SyncTaskServiceTaskPreviewResult
+	if err = p.Client_().Call(ctx, "TaskPreview", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SyncTaskServiceClient) ListHistory(ctx context.Context, req *sync_task.ListHistoryReq) (r *sync_task.ListHistoryResp, err error) {
-	var _args SyncTaskServiceListHistoryArgs
+func (p *SyncTaskServiceClient) TaskHistory(ctx context.Context, req *sync_task.ListHistoryReq) (r *sync_task.ListHistoryResp, err error) {
+	var _args SyncTaskServiceTaskHistoryArgs
 	_args.Req = req
-	var _result SyncTaskServiceListHistoryResult
-	if err = p.Client_().Call(ctx, "ListHistory", &_args, &_result); err != nil {
+	var _result SyncTaskServiceTaskHistoryResult
+	if err = p.Client_().Call(ctx, "TaskHistory", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
 
 type WebhookService interface {
-	ListRules(ctx context.Context, req *webhook.ListRulesReq) (r *webhook.ListRulesResp, err error)
+	RuleList(ctx context.Context, req *webhook.ListRulesReq) (r *webhook.ListRulesResp, err error)
 
-	GetRule(ctx context.Context, req *webhook.GetRuleReq) (r *webhook.GetRuleResp, err error)
+	RuleGet(ctx context.Context, req *webhook.GetRuleReq) (r *webhook.GetRuleResp, err error)
 
-	CreateRule(ctx context.Context, req *webhook.CreateRuleReq) (r *webhook.CreateRuleResp, err error)
+	RuleCreate(ctx context.Context, req *webhook.CreateRuleReq) (r *webhook.CreateRuleResp, err error)
 
-	UpdateRule(ctx context.Context, req *webhook.UpdateRuleReq) (r *webhook.UpdateRuleResp, err error)
+	RuleUpdate(ctx context.Context, req *webhook.UpdateRuleReq) (r *webhook.UpdateRuleResp, err error)
 
-	DeleteRule(ctx context.Context, req *webhook.DeleteRuleReq) (r *webhook.DeleteRuleResp, err error)
+	RuleDelete(ctx context.Context, req *webhook.DeleteRuleReq) (r *webhook.DeleteRuleResp, err error)
 
 	ListEvents(ctx context.Context, req *webhook.ListEventsReq) (r *webhook.ListEventsResp, err error)
 
@@ -276,47 +276,47 @@ func (p *WebhookServiceClient) Client_() thrift.TClient {
 	return p.c
 }
 
-func (p *WebhookServiceClient) ListRules(ctx context.Context, req *webhook.ListRulesReq) (r *webhook.ListRulesResp, err error) {
-	var _args WebhookServiceListRulesArgs
+func (p *WebhookServiceClient) RuleList(ctx context.Context, req *webhook.ListRulesReq) (r *webhook.ListRulesResp, err error) {
+	var _args WebhookServiceRuleListArgs
 	_args.Req = req
-	var _result WebhookServiceListRulesResult
-	if err = p.Client_().Call(ctx, "ListRules", &_args, &_result); err != nil {
+	var _result WebhookServiceRuleListResult
+	if err = p.Client_().Call(ctx, "RuleList", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *WebhookServiceClient) GetRule(ctx context.Context, req *webhook.GetRuleReq) (r *webhook.GetRuleResp, err error) {
-	var _args WebhookServiceGetRuleArgs
+func (p *WebhookServiceClient) RuleGet(ctx context.Context, req *webhook.GetRuleReq) (r *webhook.GetRuleResp, err error) {
+	var _args WebhookServiceRuleGetArgs
 	_args.Req = req
-	var _result WebhookServiceGetRuleResult
-	if err = p.Client_().Call(ctx, "GetRule", &_args, &_result); err != nil {
+	var _result WebhookServiceRuleGetResult
+	if err = p.Client_().Call(ctx, "RuleGet", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *WebhookServiceClient) CreateRule(ctx context.Context, req *webhook.CreateRuleReq) (r *webhook.CreateRuleResp, err error) {
-	var _args WebhookServiceCreateRuleArgs
+func (p *WebhookServiceClient) RuleCreate(ctx context.Context, req *webhook.CreateRuleReq) (r *webhook.CreateRuleResp, err error) {
+	var _args WebhookServiceRuleCreateArgs
 	_args.Req = req
-	var _result WebhookServiceCreateRuleResult
-	if err = p.Client_().Call(ctx, "CreateRule", &_args, &_result); err != nil {
+	var _result WebhookServiceRuleCreateResult
+	if err = p.Client_().Call(ctx, "RuleCreate", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *WebhookServiceClient) UpdateRule(ctx context.Context, req *webhook.UpdateRuleReq) (r *webhook.UpdateRuleResp, err error) {
-	var _args WebhookServiceUpdateRuleArgs
+func (p *WebhookServiceClient) RuleUpdate(ctx context.Context, req *webhook.UpdateRuleReq) (r *webhook.UpdateRuleResp, err error) {
+	var _args WebhookServiceRuleUpdateArgs
 	_args.Req = req
-	var _result WebhookServiceUpdateRuleResult
-	if err = p.Client_().Call(ctx, "UpdateRule", &_args, &_result); err != nil {
+	var _result WebhookServiceRuleUpdateResult
+	if err = p.Client_().Call(ctx, "RuleUpdate", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *WebhookServiceClient) DeleteRule(ctx context.Context, req *webhook.DeleteRuleReq) (r *webhook.DeleteRuleResp, err error) {
-	var _args WebhookServiceDeleteRuleArgs
+func (p *WebhookServiceClient) RuleDelete(ctx context.Context, req *webhook.DeleteRuleReq) (r *webhook.DeleteRuleResp, err error) {
+	var _args WebhookServiceRuleDeleteArgs
 	_args.Req = req
-	var _result WebhookServiceDeleteRuleResult
-	if err = p.Client_().Call(ctx, "DeleteRule", &_args, &_result); err != nil {
+	var _result WebhookServiceRuleDeleteResult
+	if err = p.Client_().Call(ctx, "RuleDelete", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
@@ -360,13 +360,13 @@ func (p *RepoServiceProcessor) ProcessorMap() map[string]thrift.TProcessorFuncti
 
 func NewRepoServiceProcessor(handler RepoService) *RepoServiceProcessor {
 	self := &RepoServiceProcessor{handler: handler, processorMap: make(map[string]thrift.TProcessorFunction)}
-	self.AddToProcessorMap("ListRepos", &repoServiceProcessorListRepos{handler: handler})
-	self.AddToProcessorMap("GetRepo", &repoServiceProcessorGetRepo{handler: handler})
-	self.AddToProcessorMap("CreateRepo", &repoServiceProcessorCreateRepo{handler: handler})
-	self.AddToProcessorMap("UpdateRepo", &repoServiceProcessorUpdateRepo{handler: handler})
-	self.AddToProcessorMap("DeleteRepo", &repoServiceProcessorDeleteRepo{handler: handler})
-	self.AddToProcessorMap("TestConnection", &repoServiceProcessorTestConnection{handler: handler})
-	self.AddToProcessorMap("ListBranches", &repoServiceProcessorListBranches{handler: handler})
+	self.AddToProcessorMap("List", &repoServiceProcessorList{handler: handler})
+	self.AddToProcessorMap("Get", &repoServiceProcessorGet{handler: handler})
+	self.AddToProcessorMap("Create", &repoServiceProcessorCreate{handler: handler})
+	self.AddToProcessorMap("Update", &repoServiceProcessorUpdate{handler: handler})
+	self.AddToProcessorMap("Delete", &repoServiceProcessorDelete{handler: handler})
+	self.AddToProcessorMap("Test", &repoServiceProcessorTest{handler: handler})
+	self.AddToProcessorMap("Branches", &repoServiceProcessorBranches{handler: handler})
 	return self
 }
 func (p *RepoServiceProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -387,16 +387,16 @@ func (p *RepoServiceProcessor) Process(ctx context.Context, iprot, oprot thrift.
 	return false, x
 }
 
-type repoServiceProcessorListRepos struct {
+type repoServiceProcessorList struct {
 	handler RepoService
 }
 
-func (p *repoServiceProcessorListRepos) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := RepoServiceListReposArgs{}
+func (p *repoServiceProcessorList) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := RepoServiceListArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("ListRepos", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("List", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -405,11 +405,11 @@ func (p *repoServiceProcessorListRepos) Process(ctx context.Context, seqId int32
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := RepoServiceListReposResult{}
+	result := RepoServiceListResult{}
 	var retval *repo.ListReposResp
-	if retval, err2 = p.handler.ListRepos(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing ListRepos: "+err2.Error())
-		oprot.WriteMessageBegin("ListRepos", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.List(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing List: "+err2.Error())
+		oprot.WriteMessageBegin("List", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -417,7 +417,7 @@ func (p *repoServiceProcessorListRepos) Process(ctx context.Context, seqId int32
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("ListRepos", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("List", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -435,16 +435,16 @@ func (p *repoServiceProcessorListRepos) Process(ctx context.Context, seqId int32
 	return true, err
 }
 
-type repoServiceProcessorGetRepo struct {
+type repoServiceProcessorGet struct {
 	handler RepoService
 }
 
-func (p *repoServiceProcessorGetRepo) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := RepoServiceGetRepoArgs{}
+func (p *repoServiceProcessorGet) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := RepoServiceGetArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("GetRepo", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("Get", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -453,11 +453,11 @@ func (p *repoServiceProcessorGetRepo) Process(ctx context.Context, seqId int32, 
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := RepoServiceGetRepoResult{}
+	result := RepoServiceGetResult{}
 	var retval *repo.GetRepoResp
-	if retval, err2 = p.handler.GetRepo(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing GetRepo: "+err2.Error())
-		oprot.WriteMessageBegin("GetRepo", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.Get(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Get: "+err2.Error())
+		oprot.WriteMessageBegin("Get", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -465,7 +465,7 @@ func (p *repoServiceProcessorGetRepo) Process(ctx context.Context, seqId int32, 
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("GetRepo", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("Get", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -483,16 +483,16 @@ func (p *repoServiceProcessorGetRepo) Process(ctx context.Context, seqId int32, 
 	return true, err
 }
 
-type repoServiceProcessorCreateRepo struct {
+type repoServiceProcessorCreate struct {
 	handler RepoService
 }
 
-func (p *repoServiceProcessorCreateRepo) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := RepoServiceCreateRepoArgs{}
+func (p *repoServiceProcessorCreate) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := RepoServiceCreateArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("CreateRepo", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("Create", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -501,11 +501,11 @@ func (p *repoServiceProcessorCreateRepo) Process(ctx context.Context, seqId int3
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := RepoServiceCreateRepoResult{}
+	result := RepoServiceCreateResult{}
 	var retval *repo.CreateRepoResp
-	if retval, err2 = p.handler.CreateRepo(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing CreateRepo: "+err2.Error())
-		oprot.WriteMessageBegin("CreateRepo", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.Create(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Create: "+err2.Error())
+		oprot.WriteMessageBegin("Create", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -513,7 +513,7 @@ func (p *repoServiceProcessorCreateRepo) Process(ctx context.Context, seqId int3
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("CreateRepo", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("Create", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -531,16 +531,16 @@ func (p *repoServiceProcessorCreateRepo) Process(ctx context.Context, seqId int3
 	return true, err
 }
 
-type repoServiceProcessorUpdateRepo struct {
+type repoServiceProcessorUpdate struct {
 	handler RepoService
 }
 
-func (p *repoServiceProcessorUpdateRepo) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := RepoServiceUpdateRepoArgs{}
+func (p *repoServiceProcessorUpdate) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := RepoServiceUpdateArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("UpdateRepo", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("Update", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -549,11 +549,11 @@ func (p *repoServiceProcessorUpdateRepo) Process(ctx context.Context, seqId int3
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := RepoServiceUpdateRepoResult{}
+	result := RepoServiceUpdateResult{}
 	var retval *repo.UpdateRepoResp
-	if retval, err2 = p.handler.UpdateRepo(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing UpdateRepo: "+err2.Error())
-		oprot.WriteMessageBegin("UpdateRepo", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.Update(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Update: "+err2.Error())
+		oprot.WriteMessageBegin("Update", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -561,7 +561,7 @@ func (p *repoServiceProcessorUpdateRepo) Process(ctx context.Context, seqId int3
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("UpdateRepo", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("Update", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -579,16 +579,16 @@ func (p *repoServiceProcessorUpdateRepo) Process(ctx context.Context, seqId int3
 	return true, err
 }
 
-type repoServiceProcessorDeleteRepo struct {
+type repoServiceProcessorDelete struct {
 	handler RepoService
 }
 
-func (p *repoServiceProcessorDeleteRepo) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := RepoServiceDeleteRepoArgs{}
+func (p *repoServiceProcessorDelete) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := RepoServiceDeleteArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("DeleteRepo", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("Delete", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -597,11 +597,11 @@ func (p *repoServiceProcessorDeleteRepo) Process(ctx context.Context, seqId int3
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := RepoServiceDeleteRepoResult{}
+	result := RepoServiceDeleteResult{}
 	var retval *repo.DeleteRepoResp
-	if retval, err2 = p.handler.DeleteRepo(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing DeleteRepo: "+err2.Error())
-		oprot.WriteMessageBegin("DeleteRepo", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.Delete(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Delete: "+err2.Error())
+		oprot.WriteMessageBegin("Delete", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -609,7 +609,7 @@ func (p *repoServiceProcessorDeleteRepo) Process(ctx context.Context, seqId int3
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("DeleteRepo", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("Delete", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -627,16 +627,16 @@ func (p *repoServiceProcessorDeleteRepo) Process(ctx context.Context, seqId int3
 	return true, err
 }
 
-type repoServiceProcessorTestConnection struct {
+type repoServiceProcessorTest struct {
 	handler RepoService
 }
 
-func (p *repoServiceProcessorTestConnection) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := RepoServiceTestConnectionArgs{}
+func (p *repoServiceProcessorTest) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := RepoServiceTestArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("TestConnection", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("Test", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -645,11 +645,11 @@ func (p *repoServiceProcessorTestConnection) Process(ctx context.Context, seqId 
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := RepoServiceTestConnectionResult{}
+	result := RepoServiceTestResult{}
 	var retval *repo.TestConnectionResp
-	if retval, err2 = p.handler.TestConnection(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TestConnection: "+err2.Error())
-		oprot.WriteMessageBegin("TestConnection", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.Test(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Test: "+err2.Error())
+		oprot.WriteMessageBegin("Test", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -657,7 +657,7 @@ func (p *repoServiceProcessorTestConnection) Process(ctx context.Context, seqId 
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("TestConnection", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("Test", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -675,16 +675,16 @@ func (p *repoServiceProcessorTestConnection) Process(ctx context.Context, seqId 
 	return true, err
 }
 
-type repoServiceProcessorListBranches struct {
+type repoServiceProcessorBranches struct {
 	handler RepoService
 }
 
-func (p *repoServiceProcessorListBranches) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := RepoServiceListBranchesArgs{}
+func (p *repoServiceProcessorBranches) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := RepoServiceBranchesArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("ListBranches", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("Branches", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -693,11 +693,11 @@ func (p *repoServiceProcessorListBranches) Process(ctx context.Context, seqId in
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := RepoServiceListBranchesResult{}
+	result := RepoServiceBranchesResult{}
 	var retval *repo.ListBranchesResp
-	if retval, err2 = p.handler.ListBranches(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing ListBranches: "+err2.Error())
-		oprot.WriteMessageBegin("ListBranches", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.Branches(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing Branches: "+err2.Error())
+		oprot.WriteMessageBegin("Branches", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -705,7 +705,7 @@ func (p *repoServiceProcessorListBranches) Process(ctx context.Context, seqId in
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("ListBranches", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("Branches", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -723,35 +723,35 @@ func (p *repoServiceProcessorListBranches) Process(ctx context.Context, seqId in
 	return true, err
 }
 
-type RepoServiceListReposArgs struct {
+type RepoServiceListArgs struct {
 	Req *repo.ListReposReq `thrift:"req,1"`
 }
 
-func NewRepoServiceListReposArgs() *RepoServiceListReposArgs {
-	return &RepoServiceListReposArgs{}
+func NewRepoServiceListArgs() *RepoServiceListArgs {
+	return &RepoServiceListArgs{}
 }
 
-func (p *RepoServiceListReposArgs) InitDefault() {
+func (p *RepoServiceListArgs) InitDefault() {
 }
 
-var RepoServiceListReposArgs_Req_DEFAULT *repo.ListReposReq
+var RepoServiceListArgs_Req_DEFAULT *repo.ListReposReq
 
-func (p *RepoServiceListReposArgs) GetReq() (v *repo.ListReposReq) {
+func (p *RepoServiceListArgs) GetReq() (v *repo.ListReposReq) {
 	if !p.IsSetReq() {
-		return RepoServiceListReposArgs_Req_DEFAULT
+		return RepoServiceListArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_RepoServiceListReposArgs = map[int16]string{
+var fieldIDToName_RepoServiceListArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *RepoServiceListReposArgs) IsSetReq() bool {
+func (p *RepoServiceListArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *RepoServiceListReposArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceListArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -797,7 +797,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceListReposArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceListArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -807,7 +807,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceListReposArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *RepoServiceListArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := repo.NewListReposReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -816,9 +816,9 @@ func (p *RepoServiceListReposArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceListReposArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceListArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListRepos_args"); err != nil {
+	if err = oprot.WriteStructBegin("List_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -844,7 +844,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceListReposArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceListArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -861,43 +861,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *RepoServiceListReposArgs) String() string {
+func (p *RepoServiceListArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceListReposArgs(%+v)", *p)
+	return fmt.Sprintf("RepoServiceListArgs(%+v)", *p)
 
 }
 
-type RepoServiceListReposResult struct {
+type RepoServiceListResult struct {
 	Success *repo.ListReposResp `thrift:"success,0,optional"`
 }
 
-func NewRepoServiceListReposResult() *RepoServiceListReposResult {
-	return &RepoServiceListReposResult{}
+func NewRepoServiceListResult() *RepoServiceListResult {
+	return &RepoServiceListResult{}
 }
 
-func (p *RepoServiceListReposResult) InitDefault() {
+func (p *RepoServiceListResult) InitDefault() {
 }
 
-var RepoServiceListReposResult_Success_DEFAULT *repo.ListReposResp
+var RepoServiceListResult_Success_DEFAULT *repo.ListReposResp
 
-func (p *RepoServiceListReposResult) GetSuccess() (v *repo.ListReposResp) {
+func (p *RepoServiceListResult) GetSuccess() (v *repo.ListReposResp) {
 	if !p.IsSetSuccess() {
-		return RepoServiceListReposResult_Success_DEFAULT
+		return RepoServiceListResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_RepoServiceListReposResult = map[int16]string{
+var fieldIDToName_RepoServiceListResult = map[int16]string{
 	0: "success",
 }
 
-func (p *RepoServiceListReposResult) IsSetSuccess() bool {
+func (p *RepoServiceListResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *RepoServiceListReposResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceListResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -943,7 +943,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceListReposResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceListResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -953,7 +953,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceListReposResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *RepoServiceListResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := repo.NewListReposResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -962,9 +962,9 @@ func (p *RepoServiceListReposResult) ReadField0(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceListReposResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceListResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListRepos_result"); err != nil {
+	if err = oprot.WriteStructBegin("List_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -990,7 +990,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceListReposResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceListResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -1009,43 +1009,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *RepoServiceListReposResult) String() string {
+func (p *RepoServiceListResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceListReposResult(%+v)", *p)
+	return fmt.Sprintf("RepoServiceListResult(%+v)", *p)
 
 }
 
-type RepoServiceGetRepoArgs struct {
+type RepoServiceGetArgs struct {
 	Req *repo.GetRepoReq `thrift:"req,1"`
 }
 
-func NewRepoServiceGetRepoArgs() *RepoServiceGetRepoArgs {
-	return &RepoServiceGetRepoArgs{}
+func NewRepoServiceGetArgs() *RepoServiceGetArgs {
+	return &RepoServiceGetArgs{}
 }
 
-func (p *RepoServiceGetRepoArgs) InitDefault() {
+func (p *RepoServiceGetArgs) InitDefault() {
 }
 
-var RepoServiceGetRepoArgs_Req_DEFAULT *repo.GetRepoReq
+var RepoServiceGetArgs_Req_DEFAULT *repo.GetRepoReq
 
-func (p *RepoServiceGetRepoArgs) GetReq() (v *repo.GetRepoReq) {
+func (p *RepoServiceGetArgs) GetReq() (v *repo.GetRepoReq) {
 	if !p.IsSetReq() {
-		return RepoServiceGetRepoArgs_Req_DEFAULT
+		return RepoServiceGetArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_RepoServiceGetRepoArgs = map[int16]string{
+var fieldIDToName_RepoServiceGetArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *RepoServiceGetRepoArgs) IsSetReq() bool {
+func (p *RepoServiceGetArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *RepoServiceGetRepoArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceGetArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1091,7 +1091,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceGetRepoArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceGetArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1101,7 +1101,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceGetRepoArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *RepoServiceGetArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := repo.NewGetRepoReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -1110,9 +1110,9 @@ func (p *RepoServiceGetRepoArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceGetRepoArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceGetArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("GetRepo_args"); err != nil {
+	if err = oprot.WriteStructBegin("Get_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1138,7 +1138,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceGetRepoArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceGetArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -1155,43 +1155,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *RepoServiceGetRepoArgs) String() string {
+func (p *RepoServiceGetArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceGetRepoArgs(%+v)", *p)
+	return fmt.Sprintf("RepoServiceGetArgs(%+v)", *p)
 
 }
 
-type RepoServiceGetRepoResult struct {
+type RepoServiceGetResult struct {
 	Success *repo.GetRepoResp `thrift:"success,0,optional"`
 }
 
-func NewRepoServiceGetRepoResult() *RepoServiceGetRepoResult {
-	return &RepoServiceGetRepoResult{}
+func NewRepoServiceGetResult() *RepoServiceGetResult {
+	return &RepoServiceGetResult{}
 }
 
-func (p *RepoServiceGetRepoResult) InitDefault() {
+func (p *RepoServiceGetResult) InitDefault() {
 }
 
-var RepoServiceGetRepoResult_Success_DEFAULT *repo.GetRepoResp
+var RepoServiceGetResult_Success_DEFAULT *repo.GetRepoResp
 
-func (p *RepoServiceGetRepoResult) GetSuccess() (v *repo.GetRepoResp) {
+func (p *RepoServiceGetResult) GetSuccess() (v *repo.GetRepoResp) {
 	if !p.IsSetSuccess() {
-		return RepoServiceGetRepoResult_Success_DEFAULT
+		return RepoServiceGetResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_RepoServiceGetRepoResult = map[int16]string{
+var fieldIDToName_RepoServiceGetResult = map[int16]string{
 	0: "success",
 }
 
-func (p *RepoServiceGetRepoResult) IsSetSuccess() bool {
+func (p *RepoServiceGetResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *RepoServiceGetRepoResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceGetResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1237,7 +1237,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceGetRepoResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceGetResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1247,7 +1247,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceGetRepoResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *RepoServiceGetResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := repo.NewGetRepoResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -1256,9 +1256,9 @@ func (p *RepoServiceGetRepoResult) ReadField0(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceGetRepoResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceGetResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("GetRepo_result"); err != nil {
+	if err = oprot.WriteStructBegin("Get_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1284,7 +1284,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceGetRepoResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceGetResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -1303,43 +1303,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *RepoServiceGetRepoResult) String() string {
+func (p *RepoServiceGetResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceGetRepoResult(%+v)", *p)
+	return fmt.Sprintf("RepoServiceGetResult(%+v)", *p)
 
 }
 
-type RepoServiceCreateRepoArgs struct {
+type RepoServiceCreateArgs struct {
 	Req *repo.CreateRepoReq `thrift:"req,1"`
 }
 
-func NewRepoServiceCreateRepoArgs() *RepoServiceCreateRepoArgs {
-	return &RepoServiceCreateRepoArgs{}
+func NewRepoServiceCreateArgs() *RepoServiceCreateArgs {
+	return &RepoServiceCreateArgs{}
 }
 
-func (p *RepoServiceCreateRepoArgs) InitDefault() {
+func (p *RepoServiceCreateArgs) InitDefault() {
 }
 
-var RepoServiceCreateRepoArgs_Req_DEFAULT *repo.CreateRepoReq
+var RepoServiceCreateArgs_Req_DEFAULT *repo.CreateRepoReq
 
-func (p *RepoServiceCreateRepoArgs) GetReq() (v *repo.CreateRepoReq) {
+func (p *RepoServiceCreateArgs) GetReq() (v *repo.CreateRepoReq) {
 	if !p.IsSetReq() {
-		return RepoServiceCreateRepoArgs_Req_DEFAULT
+		return RepoServiceCreateArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_RepoServiceCreateRepoArgs = map[int16]string{
+var fieldIDToName_RepoServiceCreateArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *RepoServiceCreateRepoArgs) IsSetReq() bool {
+func (p *RepoServiceCreateArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *RepoServiceCreateRepoArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceCreateArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1385,7 +1385,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceCreateRepoArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceCreateArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1395,7 +1395,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceCreateRepoArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *RepoServiceCreateArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := repo.NewCreateRepoReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -1404,9 +1404,9 @@ func (p *RepoServiceCreateRepoArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceCreateRepoArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceCreateArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("CreateRepo_args"); err != nil {
+	if err = oprot.WriteStructBegin("Create_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1432,7 +1432,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceCreateRepoArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceCreateArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -1449,43 +1449,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *RepoServiceCreateRepoArgs) String() string {
+func (p *RepoServiceCreateArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceCreateRepoArgs(%+v)", *p)
+	return fmt.Sprintf("RepoServiceCreateArgs(%+v)", *p)
 
 }
 
-type RepoServiceCreateRepoResult struct {
+type RepoServiceCreateResult struct {
 	Success *repo.CreateRepoResp `thrift:"success,0,optional"`
 }
 
-func NewRepoServiceCreateRepoResult() *RepoServiceCreateRepoResult {
-	return &RepoServiceCreateRepoResult{}
+func NewRepoServiceCreateResult() *RepoServiceCreateResult {
+	return &RepoServiceCreateResult{}
 }
 
-func (p *RepoServiceCreateRepoResult) InitDefault() {
+func (p *RepoServiceCreateResult) InitDefault() {
 }
 
-var RepoServiceCreateRepoResult_Success_DEFAULT *repo.CreateRepoResp
+var RepoServiceCreateResult_Success_DEFAULT *repo.CreateRepoResp
 
-func (p *RepoServiceCreateRepoResult) GetSuccess() (v *repo.CreateRepoResp) {
+func (p *RepoServiceCreateResult) GetSuccess() (v *repo.CreateRepoResp) {
 	if !p.IsSetSuccess() {
-		return RepoServiceCreateRepoResult_Success_DEFAULT
+		return RepoServiceCreateResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_RepoServiceCreateRepoResult = map[int16]string{
+var fieldIDToName_RepoServiceCreateResult = map[int16]string{
 	0: "success",
 }
 
-func (p *RepoServiceCreateRepoResult) IsSetSuccess() bool {
+func (p *RepoServiceCreateResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *RepoServiceCreateRepoResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceCreateResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1531,7 +1531,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceCreateRepoResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceCreateResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1541,7 +1541,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceCreateRepoResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *RepoServiceCreateResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := repo.NewCreateRepoResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -1550,9 +1550,9 @@ func (p *RepoServiceCreateRepoResult) ReadField0(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceCreateRepoResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceCreateResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("CreateRepo_result"); err != nil {
+	if err = oprot.WriteStructBegin("Create_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1578,7 +1578,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceCreateRepoResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceCreateResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -1597,43 +1597,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *RepoServiceCreateRepoResult) String() string {
+func (p *RepoServiceCreateResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceCreateRepoResult(%+v)", *p)
+	return fmt.Sprintf("RepoServiceCreateResult(%+v)", *p)
 
 }
 
-type RepoServiceUpdateRepoArgs struct {
+type RepoServiceUpdateArgs struct {
 	Req *repo.UpdateRepoReq `thrift:"req,1"`
 }
 
-func NewRepoServiceUpdateRepoArgs() *RepoServiceUpdateRepoArgs {
-	return &RepoServiceUpdateRepoArgs{}
+func NewRepoServiceUpdateArgs() *RepoServiceUpdateArgs {
+	return &RepoServiceUpdateArgs{}
 }
 
-func (p *RepoServiceUpdateRepoArgs) InitDefault() {
+func (p *RepoServiceUpdateArgs) InitDefault() {
 }
 
-var RepoServiceUpdateRepoArgs_Req_DEFAULT *repo.UpdateRepoReq
+var RepoServiceUpdateArgs_Req_DEFAULT *repo.UpdateRepoReq
 
-func (p *RepoServiceUpdateRepoArgs) GetReq() (v *repo.UpdateRepoReq) {
+func (p *RepoServiceUpdateArgs) GetReq() (v *repo.UpdateRepoReq) {
 	if !p.IsSetReq() {
-		return RepoServiceUpdateRepoArgs_Req_DEFAULT
+		return RepoServiceUpdateArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_RepoServiceUpdateRepoArgs = map[int16]string{
+var fieldIDToName_RepoServiceUpdateArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *RepoServiceUpdateRepoArgs) IsSetReq() bool {
+func (p *RepoServiceUpdateArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *RepoServiceUpdateRepoArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceUpdateArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1679,7 +1679,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceUpdateRepoArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceUpdateArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1689,7 +1689,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceUpdateRepoArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *RepoServiceUpdateArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := repo.NewUpdateRepoReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -1698,9 +1698,9 @@ func (p *RepoServiceUpdateRepoArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceUpdateRepoArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceUpdateArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("UpdateRepo_args"); err != nil {
+	if err = oprot.WriteStructBegin("Update_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1726,7 +1726,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceUpdateRepoArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceUpdateArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -1743,43 +1743,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *RepoServiceUpdateRepoArgs) String() string {
+func (p *RepoServiceUpdateArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceUpdateRepoArgs(%+v)", *p)
+	return fmt.Sprintf("RepoServiceUpdateArgs(%+v)", *p)
 
 }
 
-type RepoServiceUpdateRepoResult struct {
+type RepoServiceUpdateResult struct {
 	Success *repo.UpdateRepoResp `thrift:"success,0,optional"`
 }
 
-func NewRepoServiceUpdateRepoResult() *RepoServiceUpdateRepoResult {
-	return &RepoServiceUpdateRepoResult{}
+func NewRepoServiceUpdateResult() *RepoServiceUpdateResult {
+	return &RepoServiceUpdateResult{}
 }
 
-func (p *RepoServiceUpdateRepoResult) InitDefault() {
+func (p *RepoServiceUpdateResult) InitDefault() {
 }
 
-var RepoServiceUpdateRepoResult_Success_DEFAULT *repo.UpdateRepoResp
+var RepoServiceUpdateResult_Success_DEFAULT *repo.UpdateRepoResp
 
-func (p *RepoServiceUpdateRepoResult) GetSuccess() (v *repo.UpdateRepoResp) {
+func (p *RepoServiceUpdateResult) GetSuccess() (v *repo.UpdateRepoResp) {
 	if !p.IsSetSuccess() {
-		return RepoServiceUpdateRepoResult_Success_DEFAULT
+		return RepoServiceUpdateResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_RepoServiceUpdateRepoResult = map[int16]string{
+var fieldIDToName_RepoServiceUpdateResult = map[int16]string{
 	0: "success",
 }
 
-func (p *RepoServiceUpdateRepoResult) IsSetSuccess() bool {
+func (p *RepoServiceUpdateResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *RepoServiceUpdateRepoResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceUpdateResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1825,7 +1825,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceUpdateRepoResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceUpdateResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1835,7 +1835,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceUpdateRepoResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *RepoServiceUpdateResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := repo.NewUpdateRepoResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -1844,9 +1844,9 @@ func (p *RepoServiceUpdateRepoResult) ReadField0(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceUpdateRepoResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceUpdateResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("UpdateRepo_result"); err != nil {
+	if err = oprot.WriteStructBegin("Update_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1872,7 +1872,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceUpdateRepoResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceUpdateResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -1891,43 +1891,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *RepoServiceUpdateRepoResult) String() string {
+func (p *RepoServiceUpdateResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceUpdateRepoResult(%+v)", *p)
+	return fmt.Sprintf("RepoServiceUpdateResult(%+v)", *p)
 
 }
 
-type RepoServiceDeleteRepoArgs struct {
+type RepoServiceDeleteArgs struct {
 	Req *repo.DeleteRepoReq `thrift:"req,1"`
 }
 
-func NewRepoServiceDeleteRepoArgs() *RepoServiceDeleteRepoArgs {
-	return &RepoServiceDeleteRepoArgs{}
+func NewRepoServiceDeleteArgs() *RepoServiceDeleteArgs {
+	return &RepoServiceDeleteArgs{}
 }
 
-func (p *RepoServiceDeleteRepoArgs) InitDefault() {
+func (p *RepoServiceDeleteArgs) InitDefault() {
 }
 
-var RepoServiceDeleteRepoArgs_Req_DEFAULT *repo.DeleteRepoReq
+var RepoServiceDeleteArgs_Req_DEFAULT *repo.DeleteRepoReq
 
-func (p *RepoServiceDeleteRepoArgs) GetReq() (v *repo.DeleteRepoReq) {
+func (p *RepoServiceDeleteArgs) GetReq() (v *repo.DeleteRepoReq) {
 	if !p.IsSetReq() {
-		return RepoServiceDeleteRepoArgs_Req_DEFAULT
+		return RepoServiceDeleteArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_RepoServiceDeleteRepoArgs = map[int16]string{
+var fieldIDToName_RepoServiceDeleteArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *RepoServiceDeleteRepoArgs) IsSetReq() bool {
+func (p *RepoServiceDeleteArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *RepoServiceDeleteRepoArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceDeleteArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1973,7 +1973,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceDeleteRepoArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceDeleteArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1983,7 +1983,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceDeleteRepoArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *RepoServiceDeleteArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := repo.NewDeleteRepoReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -1992,9 +1992,9 @@ func (p *RepoServiceDeleteRepoArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceDeleteRepoArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceDeleteArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("DeleteRepo_args"); err != nil {
+	if err = oprot.WriteStructBegin("Delete_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -2020,7 +2020,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceDeleteRepoArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceDeleteArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -2037,43 +2037,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *RepoServiceDeleteRepoArgs) String() string {
+func (p *RepoServiceDeleteArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceDeleteRepoArgs(%+v)", *p)
+	return fmt.Sprintf("RepoServiceDeleteArgs(%+v)", *p)
 
 }
 
-type RepoServiceDeleteRepoResult struct {
+type RepoServiceDeleteResult struct {
 	Success *repo.DeleteRepoResp `thrift:"success,0,optional"`
 }
 
-func NewRepoServiceDeleteRepoResult() *RepoServiceDeleteRepoResult {
-	return &RepoServiceDeleteRepoResult{}
+func NewRepoServiceDeleteResult() *RepoServiceDeleteResult {
+	return &RepoServiceDeleteResult{}
 }
 
-func (p *RepoServiceDeleteRepoResult) InitDefault() {
+func (p *RepoServiceDeleteResult) InitDefault() {
 }
 
-var RepoServiceDeleteRepoResult_Success_DEFAULT *repo.DeleteRepoResp
+var RepoServiceDeleteResult_Success_DEFAULT *repo.DeleteRepoResp
 
-func (p *RepoServiceDeleteRepoResult) GetSuccess() (v *repo.DeleteRepoResp) {
+func (p *RepoServiceDeleteResult) GetSuccess() (v *repo.DeleteRepoResp) {
 	if !p.IsSetSuccess() {
-		return RepoServiceDeleteRepoResult_Success_DEFAULT
+		return RepoServiceDeleteResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_RepoServiceDeleteRepoResult = map[int16]string{
+var fieldIDToName_RepoServiceDeleteResult = map[int16]string{
 	0: "success",
 }
 
-func (p *RepoServiceDeleteRepoResult) IsSetSuccess() bool {
+func (p *RepoServiceDeleteResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *RepoServiceDeleteRepoResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceDeleteResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -2119,7 +2119,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceDeleteRepoResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceDeleteResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -2129,7 +2129,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceDeleteRepoResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *RepoServiceDeleteResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := repo.NewDeleteRepoResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -2138,9 +2138,9 @@ func (p *RepoServiceDeleteRepoResult) ReadField0(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceDeleteRepoResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceDeleteResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("DeleteRepo_result"); err != nil {
+	if err = oprot.WriteStructBegin("Delete_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -2166,7 +2166,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceDeleteRepoResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceDeleteResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -2185,43 +2185,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *RepoServiceDeleteRepoResult) String() string {
+func (p *RepoServiceDeleteResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceDeleteRepoResult(%+v)", *p)
+	return fmt.Sprintf("RepoServiceDeleteResult(%+v)", *p)
 
 }
 
-type RepoServiceTestConnectionArgs struct {
+type RepoServiceTestArgs struct {
 	Req *repo.TestConnectionReq `thrift:"req,1"`
 }
 
-func NewRepoServiceTestConnectionArgs() *RepoServiceTestConnectionArgs {
-	return &RepoServiceTestConnectionArgs{}
+func NewRepoServiceTestArgs() *RepoServiceTestArgs {
+	return &RepoServiceTestArgs{}
 }
 
-func (p *RepoServiceTestConnectionArgs) InitDefault() {
+func (p *RepoServiceTestArgs) InitDefault() {
 }
 
-var RepoServiceTestConnectionArgs_Req_DEFAULT *repo.TestConnectionReq
+var RepoServiceTestArgs_Req_DEFAULT *repo.TestConnectionReq
 
-func (p *RepoServiceTestConnectionArgs) GetReq() (v *repo.TestConnectionReq) {
+func (p *RepoServiceTestArgs) GetReq() (v *repo.TestConnectionReq) {
 	if !p.IsSetReq() {
-		return RepoServiceTestConnectionArgs_Req_DEFAULT
+		return RepoServiceTestArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_RepoServiceTestConnectionArgs = map[int16]string{
+var fieldIDToName_RepoServiceTestArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *RepoServiceTestConnectionArgs) IsSetReq() bool {
+func (p *RepoServiceTestArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *RepoServiceTestConnectionArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceTestArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -2267,7 +2267,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceTestConnectionArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceTestArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -2277,7 +2277,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceTestConnectionArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *RepoServiceTestArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := repo.NewTestConnectionReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -2286,9 +2286,9 @@ func (p *RepoServiceTestConnectionArgs) ReadField1(iprot thrift.TProtocol) error
 	return nil
 }
 
-func (p *RepoServiceTestConnectionArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceTestArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("TestConnection_args"); err != nil {
+	if err = oprot.WriteStructBegin("Test_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -2314,7 +2314,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceTestConnectionArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceTestArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -2331,43 +2331,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *RepoServiceTestConnectionArgs) String() string {
+func (p *RepoServiceTestArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceTestConnectionArgs(%+v)", *p)
+	return fmt.Sprintf("RepoServiceTestArgs(%+v)", *p)
 
 }
 
-type RepoServiceTestConnectionResult struct {
+type RepoServiceTestResult struct {
 	Success *repo.TestConnectionResp `thrift:"success,0,optional"`
 }
 
-func NewRepoServiceTestConnectionResult() *RepoServiceTestConnectionResult {
-	return &RepoServiceTestConnectionResult{}
+func NewRepoServiceTestResult() *RepoServiceTestResult {
+	return &RepoServiceTestResult{}
 }
 
-func (p *RepoServiceTestConnectionResult) InitDefault() {
+func (p *RepoServiceTestResult) InitDefault() {
 }
 
-var RepoServiceTestConnectionResult_Success_DEFAULT *repo.TestConnectionResp
+var RepoServiceTestResult_Success_DEFAULT *repo.TestConnectionResp
 
-func (p *RepoServiceTestConnectionResult) GetSuccess() (v *repo.TestConnectionResp) {
+func (p *RepoServiceTestResult) GetSuccess() (v *repo.TestConnectionResp) {
 	if !p.IsSetSuccess() {
-		return RepoServiceTestConnectionResult_Success_DEFAULT
+		return RepoServiceTestResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_RepoServiceTestConnectionResult = map[int16]string{
+var fieldIDToName_RepoServiceTestResult = map[int16]string{
 	0: "success",
 }
 
-func (p *RepoServiceTestConnectionResult) IsSetSuccess() bool {
+func (p *RepoServiceTestResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *RepoServiceTestConnectionResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceTestResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -2413,7 +2413,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceTestConnectionResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceTestResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -2423,7 +2423,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceTestConnectionResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *RepoServiceTestResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := repo.NewTestConnectionResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -2432,9 +2432,9 @@ func (p *RepoServiceTestConnectionResult) ReadField0(iprot thrift.TProtocol) err
 	return nil
 }
 
-func (p *RepoServiceTestConnectionResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceTestResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("TestConnection_result"); err != nil {
+	if err = oprot.WriteStructBegin("Test_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -2460,7 +2460,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceTestConnectionResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceTestResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -2479,43 +2479,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *RepoServiceTestConnectionResult) String() string {
+func (p *RepoServiceTestResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceTestConnectionResult(%+v)", *p)
+	return fmt.Sprintf("RepoServiceTestResult(%+v)", *p)
 
 }
 
-type RepoServiceListBranchesArgs struct {
+type RepoServiceBranchesArgs struct {
 	Req *repo.ListBranchesReq `thrift:"req,1"`
 }
 
-func NewRepoServiceListBranchesArgs() *RepoServiceListBranchesArgs {
-	return &RepoServiceListBranchesArgs{}
+func NewRepoServiceBranchesArgs() *RepoServiceBranchesArgs {
+	return &RepoServiceBranchesArgs{}
 }
 
-func (p *RepoServiceListBranchesArgs) InitDefault() {
+func (p *RepoServiceBranchesArgs) InitDefault() {
 }
 
-var RepoServiceListBranchesArgs_Req_DEFAULT *repo.ListBranchesReq
+var RepoServiceBranchesArgs_Req_DEFAULT *repo.ListBranchesReq
 
-func (p *RepoServiceListBranchesArgs) GetReq() (v *repo.ListBranchesReq) {
+func (p *RepoServiceBranchesArgs) GetReq() (v *repo.ListBranchesReq) {
 	if !p.IsSetReq() {
-		return RepoServiceListBranchesArgs_Req_DEFAULT
+		return RepoServiceBranchesArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_RepoServiceListBranchesArgs = map[int16]string{
+var fieldIDToName_RepoServiceBranchesArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *RepoServiceListBranchesArgs) IsSetReq() bool {
+func (p *RepoServiceBranchesArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *RepoServiceListBranchesArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceBranchesArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -2561,7 +2561,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceListBranchesArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceBranchesArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -2571,7 +2571,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceListBranchesArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *RepoServiceBranchesArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := repo.NewListBranchesReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -2580,9 +2580,9 @@ func (p *RepoServiceListBranchesArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *RepoServiceListBranchesArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceBranchesArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListBranches_args"); err != nil {
+	if err = oprot.WriteStructBegin("Branches_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -2608,7 +2608,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceListBranchesArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceBranchesArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -2625,43 +2625,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *RepoServiceListBranchesArgs) String() string {
+func (p *RepoServiceBranchesArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceListBranchesArgs(%+v)", *p)
+	return fmt.Sprintf("RepoServiceBranchesArgs(%+v)", *p)
 
 }
 
-type RepoServiceListBranchesResult struct {
+type RepoServiceBranchesResult struct {
 	Success *repo.ListBranchesResp `thrift:"success,0,optional"`
 }
 
-func NewRepoServiceListBranchesResult() *RepoServiceListBranchesResult {
-	return &RepoServiceListBranchesResult{}
+func NewRepoServiceBranchesResult() *RepoServiceBranchesResult {
+	return &RepoServiceBranchesResult{}
 }
 
-func (p *RepoServiceListBranchesResult) InitDefault() {
+func (p *RepoServiceBranchesResult) InitDefault() {
 }
 
-var RepoServiceListBranchesResult_Success_DEFAULT *repo.ListBranchesResp
+var RepoServiceBranchesResult_Success_DEFAULT *repo.ListBranchesResp
 
-func (p *RepoServiceListBranchesResult) GetSuccess() (v *repo.ListBranchesResp) {
+func (p *RepoServiceBranchesResult) GetSuccess() (v *repo.ListBranchesResp) {
 	if !p.IsSetSuccess() {
-		return RepoServiceListBranchesResult_Success_DEFAULT
+		return RepoServiceBranchesResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_RepoServiceListBranchesResult = map[int16]string{
+var fieldIDToName_RepoServiceBranchesResult = map[int16]string{
 	0: "success",
 }
 
-func (p *RepoServiceListBranchesResult) IsSetSuccess() bool {
+func (p *RepoServiceBranchesResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *RepoServiceListBranchesResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *RepoServiceBranchesResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -2707,7 +2707,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceListBranchesResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RepoServiceBranchesResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -2717,7 +2717,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *RepoServiceListBranchesResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *RepoServiceBranchesResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := repo.NewListBranchesResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -2726,9 +2726,9 @@ func (p *RepoServiceListBranchesResult) ReadField0(iprot thrift.TProtocol) error
 	return nil
 }
 
-func (p *RepoServiceListBranchesResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceBranchesResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListBranches_result"); err != nil {
+	if err = oprot.WriteStructBegin("Branches_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -2754,7 +2754,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *RepoServiceListBranchesResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *RepoServiceBranchesResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -2773,11 +2773,11 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *RepoServiceListBranchesResult) String() string {
+func (p *RepoServiceBranchesResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("RepoServiceListBranchesResult(%+v)", *p)
+	return fmt.Sprintf("RepoServiceBranchesResult(%+v)", *p)
 
 }
 
@@ -2801,14 +2801,14 @@ func (p *SyncTaskServiceProcessor) ProcessorMap() map[string]thrift.TProcessorFu
 
 func NewSyncTaskServiceProcessor(handler SyncTaskService) *SyncTaskServiceProcessor {
 	self := &SyncTaskServiceProcessor{handler: handler, processorMap: make(map[string]thrift.TProcessorFunction)}
-	self.AddToProcessorMap("ListTasks", &syncTaskServiceProcessorListTasks{handler: handler})
-	self.AddToProcessorMap("GetTask", &syncTaskServiceProcessorGetTask{handler: handler})
-	self.AddToProcessorMap("CreateTask", &syncTaskServiceProcessorCreateTask{handler: handler})
-	self.AddToProcessorMap("UpdateTask", &syncTaskServiceProcessorUpdateTask{handler: handler})
-	self.AddToProcessorMap("DeleteTask", &syncTaskServiceProcessorDeleteTask{handler: handler})
-	self.AddToProcessorMap("RunTask", &syncTaskServiceProcessorRunTask{handler: handler})
-	self.AddToProcessorMap("PreviewSync", &syncTaskServiceProcessorPreviewSync{handler: handler})
-	self.AddToProcessorMap("ListHistory", &syncTaskServiceProcessorListHistory{handler: handler})
+	self.AddToProcessorMap("TaskList", &syncTaskServiceProcessorTaskList{handler: handler})
+	self.AddToProcessorMap("TaskGet", &syncTaskServiceProcessorTaskGet{handler: handler})
+	self.AddToProcessorMap("TaskCreate", &syncTaskServiceProcessorTaskCreate{handler: handler})
+	self.AddToProcessorMap("TaskUpdate", &syncTaskServiceProcessorTaskUpdate{handler: handler})
+	self.AddToProcessorMap("TaskDelete", &syncTaskServiceProcessorTaskDelete{handler: handler})
+	self.AddToProcessorMap("TaskRun", &syncTaskServiceProcessorTaskRun{handler: handler})
+	self.AddToProcessorMap("TaskPreview", &syncTaskServiceProcessorTaskPreview{handler: handler})
+	self.AddToProcessorMap("TaskHistory", &syncTaskServiceProcessorTaskHistory{handler: handler})
 	return self
 }
 func (p *SyncTaskServiceProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -2829,16 +2829,16 @@ func (p *SyncTaskServiceProcessor) Process(ctx context.Context, iprot, oprot thr
 	return false, x
 }
 
-type syncTaskServiceProcessorListTasks struct {
+type syncTaskServiceProcessorTaskList struct {
 	handler SyncTaskService
 }
 
-func (p *syncTaskServiceProcessorListTasks) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SyncTaskServiceListTasksArgs{}
+func (p *syncTaskServiceProcessorTaskList) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SyncTaskServiceTaskListArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("ListTasks", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("TaskList", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -2847,11 +2847,11 @@ func (p *syncTaskServiceProcessorListTasks) Process(ctx context.Context, seqId i
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SyncTaskServiceListTasksResult{}
+	result := SyncTaskServiceTaskListResult{}
 	var retval *sync_task.ListTasksResp
-	if retval, err2 = p.handler.ListTasks(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing ListTasks: "+err2.Error())
-		oprot.WriteMessageBegin("ListTasks", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.TaskList(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TaskList: "+err2.Error())
+		oprot.WriteMessageBegin("TaskList", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -2859,7 +2859,7 @@ func (p *syncTaskServiceProcessorListTasks) Process(ctx context.Context, seqId i
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("ListTasks", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("TaskList", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -2877,16 +2877,16 @@ func (p *syncTaskServiceProcessorListTasks) Process(ctx context.Context, seqId i
 	return true, err
 }
 
-type syncTaskServiceProcessorGetTask struct {
+type syncTaskServiceProcessorTaskGet struct {
 	handler SyncTaskService
 }
 
-func (p *syncTaskServiceProcessorGetTask) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SyncTaskServiceGetTaskArgs{}
+func (p *syncTaskServiceProcessorTaskGet) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SyncTaskServiceTaskGetArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("GetTask", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("TaskGet", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -2895,11 +2895,11 @@ func (p *syncTaskServiceProcessorGetTask) Process(ctx context.Context, seqId int
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SyncTaskServiceGetTaskResult{}
+	result := SyncTaskServiceTaskGetResult{}
 	var retval *sync_task.GetTaskResp
-	if retval, err2 = p.handler.GetTask(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing GetTask: "+err2.Error())
-		oprot.WriteMessageBegin("GetTask", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.TaskGet(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TaskGet: "+err2.Error())
+		oprot.WriteMessageBegin("TaskGet", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -2907,7 +2907,7 @@ func (p *syncTaskServiceProcessorGetTask) Process(ctx context.Context, seqId int
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("GetTask", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("TaskGet", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -2925,16 +2925,16 @@ func (p *syncTaskServiceProcessorGetTask) Process(ctx context.Context, seqId int
 	return true, err
 }
 
-type syncTaskServiceProcessorCreateTask struct {
+type syncTaskServiceProcessorTaskCreate struct {
 	handler SyncTaskService
 }
 
-func (p *syncTaskServiceProcessorCreateTask) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SyncTaskServiceCreateTaskArgs{}
+func (p *syncTaskServiceProcessorTaskCreate) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SyncTaskServiceTaskCreateArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("CreateTask", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("TaskCreate", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -2943,11 +2943,11 @@ func (p *syncTaskServiceProcessorCreateTask) Process(ctx context.Context, seqId 
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SyncTaskServiceCreateTaskResult{}
+	result := SyncTaskServiceTaskCreateResult{}
 	var retval *sync_task.CreateTaskResp
-	if retval, err2 = p.handler.CreateTask(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing CreateTask: "+err2.Error())
-		oprot.WriteMessageBegin("CreateTask", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.TaskCreate(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TaskCreate: "+err2.Error())
+		oprot.WriteMessageBegin("TaskCreate", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -2955,7 +2955,7 @@ func (p *syncTaskServiceProcessorCreateTask) Process(ctx context.Context, seqId 
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("CreateTask", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("TaskCreate", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -2973,16 +2973,16 @@ func (p *syncTaskServiceProcessorCreateTask) Process(ctx context.Context, seqId 
 	return true, err
 }
 
-type syncTaskServiceProcessorUpdateTask struct {
+type syncTaskServiceProcessorTaskUpdate struct {
 	handler SyncTaskService
 }
 
-func (p *syncTaskServiceProcessorUpdateTask) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SyncTaskServiceUpdateTaskArgs{}
+func (p *syncTaskServiceProcessorTaskUpdate) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SyncTaskServiceTaskUpdateArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("UpdateTask", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("TaskUpdate", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -2991,11 +2991,11 @@ func (p *syncTaskServiceProcessorUpdateTask) Process(ctx context.Context, seqId 
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SyncTaskServiceUpdateTaskResult{}
+	result := SyncTaskServiceTaskUpdateResult{}
 	var retval *sync_task.UpdateTaskResp
-	if retval, err2 = p.handler.UpdateTask(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing UpdateTask: "+err2.Error())
-		oprot.WriteMessageBegin("UpdateTask", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.TaskUpdate(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TaskUpdate: "+err2.Error())
+		oprot.WriteMessageBegin("TaskUpdate", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3003,7 +3003,7 @@ func (p *syncTaskServiceProcessorUpdateTask) Process(ctx context.Context, seqId 
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("UpdateTask", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("TaskUpdate", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -3021,16 +3021,16 @@ func (p *syncTaskServiceProcessorUpdateTask) Process(ctx context.Context, seqId 
 	return true, err
 }
 
-type syncTaskServiceProcessorDeleteTask struct {
+type syncTaskServiceProcessorTaskDelete struct {
 	handler SyncTaskService
 }
 
-func (p *syncTaskServiceProcessorDeleteTask) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SyncTaskServiceDeleteTaskArgs{}
+func (p *syncTaskServiceProcessorTaskDelete) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SyncTaskServiceTaskDeleteArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("DeleteTask", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("TaskDelete", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3039,11 +3039,11 @@ func (p *syncTaskServiceProcessorDeleteTask) Process(ctx context.Context, seqId 
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SyncTaskServiceDeleteTaskResult{}
+	result := SyncTaskServiceTaskDeleteResult{}
 	var retval *sync_task.DeleteTaskResp
-	if retval, err2 = p.handler.DeleteTask(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing DeleteTask: "+err2.Error())
-		oprot.WriteMessageBegin("DeleteTask", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.TaskDelete(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TaskDelete: "+err2.Error())
+		oprot.WriteMessageBegin("TaskDelete", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3051,7 +3051,7 @@ func (p *syncTaskServiceProcessorDeleteTask) Process(ctx context.Context, seqId 
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("DeleteTask", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("TaskDelete", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -3069,16 +3069,16 @@ func (p *syncTaskServiceProcessorDeleteTask) Process(ctx context.Context, seqId 
 	return true, err
 }
 
-type syncTaskServiceProcessorRunTask struct {
+type syncTaskServiceProcessorTaskRun struct {
 	handler SyncTaskService
 }
 
-func (p *syncTaskServiceProcessorRunTask) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SyncTaskServiceRunTaskArgs{}
+func (p *syncTaskServiceProcessorTaskRun) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SyncTaskServiceTaskRunArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("RunTask", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("TaskRun", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3087,11 +3087,11 @@ func (p *syncTaskServiceProcessorRunTask) Process(ctx context.Context, seqId int
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SyncTaskServiceRunTaskResult{}
+	result := SyncTaskServiceTaskRunResult{}
 	var retval *sync_task.RunTaskResp
-	if retval, err2 = p.handler.RunTask(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RunTask: "+err2.Error())
-		oprot.WriteMessageBegin("RunTask", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.TaskRun(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TaskRun: "+err2.Error())
+		oprot.WriteMessageBegin("TaskRun", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3099,7 +3099,7 @@ func (p *syncTaskServiceProcessorRunTask) Process(ctx context.Context, seqId int
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("RunTask", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("TaskRun", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -3117,16 +3117,16 @@ func (p *syncTaskServiceProcessorRunTask) Process(ctx context.Context, seqId int
 	return true, err
 }
 
-type syncTaskServiceProcessorPreviewSync struct {
+type syncTaskServiceProcessorTaskPreview struct {
 	handler SyncTaskService
 }
 
-func (p *syncTaskServiceProcessorPreviewSync) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SyncTaskServicePreviewSyncArgs{}
+func (p *syncTaskServiceProcessorTaskPreview) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SyncTaskServiceTaskPreviewArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("PreviewSync", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("TaskPreview", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3135,11 +3135,11 @@ func (p *syncTaskServiceProcessorPreviewSync) Process(ctx context.Context, seqId
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SyncTaskServicePreviewSyncResult{}
+	result := SyncTaskServiceTaskPreviewResult{}
 	var retval *sync_task.PreviewSyncResp
-	if retval, err2 = p.handler.PreviewSync(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing PreviewSync: "+err2.Error())
-		oprot.WriteMessageBegin("PreviewSync", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.TaskPreview(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TaskPreview: "+err2.Error())
+		oprot.WriteMessageBegin("TaskPreview", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3147,7 +3147,7 @@ func (p *syncTaskServiceProcessorPreviewSync) Process(ctx context.Context, seqId
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("PreviewSync", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("TaskPreview", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -3165,16 +3165,16 @@ func (p *syncTaskServiceProcessorPreviewSync) Process(ctx context.Context, seqId
 	return true, err
 }
 
-type syncTaskServiceProcessorListHistory struct {
+type syncTaskServiceProcessorTaskHistory struct {
 	handler SyncTaskService
 }
 
-func (p *syncTaskServiceProcessorListHistory) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SyncTaskServiceListHistoryArgs{}
+func (p *syncTaskServiceProcessorTaskHistory) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SyncTaskServiceTaskHistoryArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("ListHistory", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("TaskHistory", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3183,11 +3183,11 @@ func (p *syncTaskServiceProcessorListHistory) Process(ctx context.Context, seqId
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SyncTaskServiceListHistoryResult{}
+	result := SyncTaskServiceTaskHistoryResult{}
 	var retval *sync_task.ListHistoryResp
-	if retval, err2 = p.handler.ListHistory(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing ListHistory: "+err2.Error())
-		oprot.WriteMessageBegin("ListHistory", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.TaskHistory(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing TaskHistory: "+err2.Error())
+		oprot.WriteMessageBegin("TaskHistory", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -3195,7 +3195,7 @@ func (p *syncTaskServiceProcessorListHistory) Process(ctx context.Context, seqId
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("ListHistory", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("TaskHistory", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -3213,35 +3213,35 @@ func (p *syncTaskServiceProcessorListHistory) Process(ctx context.Context, seqId
 	return true, err
 }
 
-type SyncTaskServiceListTasksArgs struct {
+type SyncTaskServiceTaskListArgs struct {
 	Req *sync_task.ListTasksReq `thrift:"req,1"`
 }
 
-func NewSyncTaskServiceListTasksArgs() *SyncTaskServiceListTasksArgs {
-	return &SyncTaskServiceListTasksArgs{}
+func NewSyncTaskServiceTaskListArgs() *SyncTaskServiceTaskListArgs {
+	return &SyncTaskServiceTaskListArgs{}
 }
 
-func (p *SyncTaskServiceListTasksArgs) InitDefault() {
+func (p *SyncTaskServiceTaskListArgs) InitDefault() {
 }
 
-var SyncTaskServiceListTasksArgs_Req_DEFAULT *sync_task.ListTasksReq
+var SyncTaskServiceTaskListArgs_Req_DEFAULT *sync_task.ListTasksReq
 
-func (p *SyncTaskServiceListTasksArgs) GetReq() (v *sync_task.ListTasksReq) {
+func (p *SyncTaskServiceTaskListArgs) GetReq() (v *sync_task.ListTasksReq) {
 	if !p.IsSetReq() {
-		return SyncTaskServiceListTasksArgs_Req_DEFAULT
+		return SyncTaskServiceTaskListArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_SyncTaskServiceListTasksArgs = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskListArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SyncTaskServiceListTasksArgs) IsSetReq() bool {
+func (p *SyncTaskServiceTaskListArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SyncTaskServiceListTasksArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskListArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -3287,7 +3287,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceListTasksArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskListArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -3297,7 +3297,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListTasksArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskListArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := sync_task.NewListTasksReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -3306,9 +3306,9 @@ func (p *SyncTaskServiceListTasksArgs) ReadField1(iprot thrift.TProtocol) error 
 	return nil
 }
 
-func (p *SyncTaskServiceListTasksArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskListArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListTasks_args"); err != nil {
+	if err = oprot.WriteStructBegin("TaskList_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -3334,7 +3334,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListTasksArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskListArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -3351,43 +3351,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListTasksArgs) String() string {
+func (p *SyncTaskServiceTaskListArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceListTasksArgs(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskListArgs(%+v)", *p)
 
 }
 
-type SyncTaskServiceListTasksResult struct {
+type SyncTaskServiceTaskListResult struct {
 	Success *sync_task.ListTasksResp `thrift:"success,0,optional"`
 }
 
-func NewSyncTaskServiceListTasksResult() *SyncTaskServiceListTasksResult {
-	return &SyncTaskServiceListTasksResult{}
+func NewSyncTaskServiceTaskListResult() *SyncTaskServiceTaskListResult {
+	return &SyncTaskServiceTaskListResult{}
 }
 
-func (p *SyncTaskServiceListTasksResult) InitDefault() {
+func (p *SyncTaskServiceTaskListResult) InitDefault() {
 }
 
-var SyncTaskServiceListTasksResult_Success_DEFAULT *sync_task.ListTasksResp
+var SyncTaskServiceTaskListResult_Success_DEFAULT *sync_task.ListTasksResp
 
-func (p *SyncTaskServiceListTasksResult) GetSuccess() (v *sync_task.ListTasksResp) {
+func (p *SyncTaskServiceTaskListResult) GetSuccess() (v *sync_task.ListTasksResp) {
 	if !p.IsSetSuccess() {
-		return SyncTaskServiceListTasksResult_Success_DEFAULT
+		return SyncTaskServiceTaskListResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_SyncTaskServiceListTasksResult = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskListResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SyncTaskServiceListTasksResult) IsSetSuccess() bool {
+func (p *SyncTaskServiceTaskListResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SyncTaskServiceListTasksResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskListResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -3433,7 +3433,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceListTasksResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskListResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -3443,7 +3443,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListTasksResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskListResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := sync_task.NewListTasksResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -3452,9 +3452,9 @@ func (p *SyncTaskServiceListTasksResult) ReadField0(iprot thrift.TProtocol) erro
 	return nil
 }
 
-func (p *SyncTaskServiceListTasksResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskListResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListTasks_result"); err != nil {
+	if err = oprot.WriteStructBegin("TaskList_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -3480,7 +3480,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListTasksResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskListResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -3499,43 +3499,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListTasksResult) String() string {
+func (p *SyncTaskServiceTaskListResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceListTasksResult(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskListResult(%+v)", *p)
 
 }
 
-type SyncTaskServiceGetTaskArgs struct {
+type SyncTaskServiceTaskGetArgs struct {
 	Req *sync_task.GetTaskReq `thrift:"req,1"`
 }
 
-func NewSyncTaskServiceGetTaskArgs() *SyncTaskServiceGetTaskArgs {
-	return &SyncTaskServiceGetTaskArgs{}
+func NewSyncTaskServiceTaskGetArgs() *SyncTaskServiceTaskGetArgs {
+	return &SyncTaskServiceTaskGetArgs{}
 }
 
-func (p *SyncTaskServiceGetTaskArgs) InitDefault() {
+func (p *SyncTaskServiceTaskGetArgs) InitDefault() {
 }
 
-var SyncTaskServiceGetTaskArgs_Req_DEFAULT *sync_task.GetTaskReq
+var SyncTaskServiceTaskGetArgs_Req_DEFAULT *sync_task.GetTaskReq
 
-func (p *SyncTaskServiceGetTaskArgs) GetReq() (v *sync_task.GetTaskReq) {
+func (p *SyncTaskServiceTaskGetArgs) GetReq() (v *sync_task.GetTaskReq) {
 	if !p.IsSetReq() {
-		return SyncTaskServiceGetTaskArgs_Req_DEFAULT
+		return SyncTaskServiceTaskGetArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_SyncTaskServiceGetTaskArgs = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskGetArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SyncTaskServiceGetTaskArgs) IsSetReq() bool {
+func (p *SyncTaskServiceTaskGetArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SyncTaskServiceGetTaskArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskGetArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -3581,7 +3581,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceGetTaskArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskGetArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -3591,7 +3591,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceGetTaskArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskGetArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := sync_task.NewGetTaskReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -3600,9 +3600,9 @@ func (p *SyncTaskServiceGetTaskArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *SyncTaskServiceGetTaskArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskGetArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("GetTask_args"); err != nil {
+	if err = oprot.WriteStructBegin("TaskGet_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -3628,7 +3628,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceGetTaskArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskGetArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -3645,43 +3645,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceGetTaskArgs) String() string {
+func (p *SyncTaskServiceTaskGetArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceGetTaskArgs(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskGetArgs(%+v)", *p)
 
 }
 
-type SyncTaskServiceGetTaskResult struct {
+type SyncTaskServiceTaskGetResult struct {
 	Success *sync_task.GetTaskResp `thrift:"success,0,optional"`
 }
 
-func NewSyncTaskServiceGetTaskResult() *SyncTaskServiceGetTaskResult {
-	return &SyncTaskServiceGetTaskResult{}
+func NewSyncTaskServiceTaskGetResult() *SyncTaskServiceTaskGetResult {
+	return &SyncTaskServiceTaskGetResult{}
 }
 
-func (p *SyncTaskServiceGetTaskResult) InitDefault() {
+func (p *SyncTaskServiceTaskGetResult) InitDefault() {
 }
 
-var SyncTaskServiceGetTaskResult_Success_DEFAULT *sync_task.GetTaskResp
+var SyncTaskServiceTaskGetResult_Success_DEFAULT *sync_task.GetTaskResp
 
-func (p *SyncTaskServiceGetTaskResult) GetSuccess() (v *sync_task.GetTaskResp) {
+func (p *SyncTaskServiceTaskGetResult) GetSuccess() (v *sync_task.GetTaskResp) {
 	if !p.IsSetSuccess() {
-		return SyncTaskServiceGetTaskResult_Success_DEFAULT
+		return SyncTaskServiceTaskGetResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_SyncTaskServiceGetTaskResult = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskGetResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SyncTaskServiceGetTaskResult) IsSetSuccess() bool {
+func (p *SyncTaskServiceTaskGetResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SyncTaskServiceGetTaskResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskGetResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -3727,7 +3727,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceGetTaskResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskGetResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -3737,7 +3737,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceGetTaskResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskGetResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := sync_task.NewGetTaskResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -3746,9 +3746,9 @@ func (p *SyncTaskServiceGetTaskResult) ReadField0(iprot thrift.TProtocol) error 
 	return nil
 }
 
-func (p *SyncTaskServiceGetTaskResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskGetResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("GetTask_result"); err != nil {
+	if err = oprot.WriteStructBegin("TaskGet_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -3774,7 +3774,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceGetTaskResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskGetResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -3793,43 +3793,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceGetTaskResult) String() string {
+func (p *SyncTaskServiceTaskGetResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceGetTaskResult(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskGetResult(%+v)", *p)
 
 }
 
-type SyncTaskServiceCreateTaskArgs struct {
+type SyncTaskServiceTaskCreateArgs struct {
 	Req *sync_task.CreateTaskReq `thrift:"req,1"`
 }
 
-func NewSyncTaskServiceCreateTaskArgs() *SyncTaskServiceCreateTaskArgs {
-	return &SyncTaskServiceCreateTaskArgs{}
+func NewSyncTaskServiceTaskCreateArgs() *SyncTaskServiceTaskCreateArgs {
+	return &SyncTaskServiceTaskCreateArgs{}
 }
 
-func (p *SyncTaskServiceCreateTaskArgs) InitDefault() {
+func (p *SyncTaskServiceTaskCreateArgs) InitDefault() {
 }
 
-var SyncTaskServiceCreateTaskArgs_Req_DEFAULT *sync_task.CreateTaskReq
+var SyncTaskServiceTaskCreateArgs_Req_DEFAULT *sync_task.CreateTaskReq
 
-func (p *SyncTaskServiceCreateTaskArgs) GetReq() (v *sync_task.CreateTaskReq) {
+func (p *SyncTaskServiceTaskCreateArgs) GetReq() (v *sync_task.CreateTaskReq) {
 	if !p.IsSetReq() {
-		return SyncTaskServiceCreateTaskArgs_Req_DEFAULT
+		return SyncTaskServiceTaskCreateArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_SyncTaskServiceCreateTaskArgs = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskCreateArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SyncTaskServiceCreateTaskArgs) IsSetReq() bool {
+func (p *SyncTaskServiceTaskCreateArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SyncTaskServiceCreateTaskArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskCreateArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -3875,7 +3875,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceCreateTaskArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskCreateArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -3885,7 +3885,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceCreateTaskArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskCreateArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := sync_task.NewCreateTaskReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -3894,9 +3894,9 @@ func (p *SyncTaskServiceCreateTaskArgs) ReadField1(iprot thrift.TProtocol) error
 	return nil
 }
 
-func (p *SyncTaskServiceCreateTaskArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskCreateArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("CreateTask_args"); err != nil {
+	if err = oprot.WriteStructBegin("TaskCreate_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -3922,7 +3922,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceCreateTaskArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskCreateArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -3939,43 +3939,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceCreateTaskArgs) String() string {
+func (p *SyncTaskServiceTaskCreateArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceCreateTaskArgs(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskCreateArgs(%+v)", *p)
 
 }
 
-type SyncTaskServiceCreateTaskResult struct {
+type SyncTaskServiceTaskCreateResult struct {
 	Success *sync_task.CreateTaskResp `thrift:"success,0,optional"`
 }
 
-func NewSyncTaskServiceCreateTaskResult() *SyncTaskServiceCreateTaskResult {
-	return &SyncTaskServiceCreateTaskResult{}
+func NewSyncTaskServiceTaskCreateResult() *SyncTaskServiceTaskCreateResult {
+	return &SyncTaskServiceTaskCreateResult{}
 }
 
-func (p *SyncTaskServiceCreateTaskResult) InitDefault() {
+func (p *SyncTaskServiceTaskCreateResult) InitDefault() {
 }
 
-var SyncTaskServiceCreateTaskResult_Success_DEFAULT *sync_task.CreateTaskResp
+var SyncTaskServiceTaskCreateResult_Success_DEFAULT *sync_task.CreateTaskResp
 
-func (p *SyncTaskServiceCreateTaskResult) GetSuccess() (v *sync_task.CreateTaskResp) {
+func (p *SyncTaskServiceTaskCreateResult) GetSuccess() (v *sync_task.CreateTaskResp) {
 	if !p.IsSetSuccess() {
-		return SyncTaskServiceCreateTaskResult_Success_DEFAULT
+		return SyncTaskServiceTaskCreateResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_SyncTaskServiceCreateTaskResult = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskCreateResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SyncTaskServiceCreateTaskResult) IsSetSuccess() bool {
+func (p *SyncTaskServiceTaskCreateResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SyncTaskServiceCreateTaskResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskCreateResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -4021,7 +4021,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceCreateTaskResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskCreateResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -4031,7 +4031,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceCreateTaskResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskCreateResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := sync_task.NewCreateTaskResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -4040,9 +4040,9 @@ func (p *SyncTaskServiceCreateTaskResult) ReadField0(iprot thrift.TProtocol) err
 	return nil
 }
 
-func (p *SyncTaskServiceCreateTaskResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskCreateResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("CreateTask_result"); err != nil {
+	if err = oprot.WriteStructBegin("TaskCreate_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -4068,7 +4068,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceCreateTaskResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskCreateResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -4087,43 +4087,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceCreateTaskResult) String() string {
+func (p *SyncTaskServiceTaskCreateResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceCreateTaskResult(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskCreateResult(%+v)", *p)
 
 }
 
-type SyncTaskServiceUpdateTaskArgs struct {
+type SyncTaskServiceTaskUpdateArgs struct {
 	Req *sync_task.UpdateTaskReq `thrift:"req,1"`
 }
 
-func NewSyncTaskServiceUpdateTaskArgs() *SyncTaskServiceUpdateTaskArgs {
-	return &SyncTaskServiceUpdateTaskArgs{}
+func NewSyncTaskServiceTaskUpdateArgs() *SyncTaskServiceTaskUpdateArgs {
+	return &SyncTaskServiceTaskUpdateArgs{}
 }
 
-func (p *SyncTaskServiceUpdateTaskArgs) InitDefault() {
+func (p *SyncTaskServiceTaskUpdateArgs) InitDefault() {
 }
 
-var SyncTaskServiceUpdateTaskArgs_Req_DEFAULT *sync_task.UpdateTaskReq
+var SyncTaskServiceTaskUpdateArgs_Req_DEFAULT *sync_task.UpdateTaskReq
 
-func (p *SyncTaskServiceUpdateTaskArgs) GetReq() (v *sync_task.UpdateTaskReq) {
+func (p *SyncTaskServiceTaskUpdateArgs) GetReq() (v *sync_task.UpdateTaskReq) {
 	if !p.IsSetReq() {
-		return SyncTaskServiceUpdateTaskArgs_Req_DEFAULT
+		return SyncTaskServiceTaskUpdateArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_SyncTaskServiceUpdateTaskArgs = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskUpdateArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SyncTaskServiceUpdateTaskArgs) IsSetReq() bool {
+func (p *SyncTaskServiceTaskUpdateArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SyncTaskServiceUpdateTaskArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskUpdateArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -4169,7 +4169,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceUpdateTaskArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskUpdateArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -4179,7 +4179,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceUpdateTaskArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskUpdateArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := sync_task.NewUpdateTaskReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -4188,9 +4188,9 @@ func (p *SyncTaskServiceUpdateTaskArgs) ReadField1(iprot thrift.TProtocol) error
 	return nil
 }
 
-func (p *SyncTaskServiceUpdateTaskArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskUpdateArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("UpdateTask_args"); err != nil {
+	if err = oprot.WriteStructBegin("TaskUpdate_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -4216,7 +4216,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceUpdateTaskArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskUpdateArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -4233,43 +4233,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceUpdateTaskArgs) String() string {
+func (p *SyncTaskServiceTaskUpdateArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceUpdateTaskArgs(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskUpdateArgs(%+v)", *p)
 
 }
 
-type SyncTaskServiceUpdateTaskResult struct {
+type SyncTaskServiceTaskUpdateResult struct {
 	Success *sync_task.UpdateTaskResp `thrift:"success,0,optional"`
 }
 
-func NewSyncTaskServiceUpdateTaskResult() *SyncTaskServiceUpdateTaskResult {
-	return &SyncTaskServiceUpdateTaskResult{}
+func NewSyncTaskServiceTaskUpdateResult() *SyncTaskServiceTaskUpdateResult {
+	return &SyncTaskServiceTaskUpdateResult{}
 }
 
-func (p *SyncTaskServiceUpdateTaskResult) InitDefault() {
+func (p *SyncTaskServiceTaskUpdateResult) InitDefault() {
 }
 
-var SyncTaskServiceUpdateTaskResult_Success_DEFAULT *sync_task.UpdateTaskResp
+var SyncTaskServiceTaskUpdateResult_Success_DEFAULT *sync_task.UpdateTaskResp
 
-func (p *SyncTaskServiceUpdateTaskResult) GetSuccess() (v *sync_task.UpdateTaskResp) {
+func (p *SyncTaskServiceTaskUpdateResult) GetSuccess() (v *sync_task.UpdateTaskResp) {
 	if !p.IsSetSuccess() {
-		return SyncTaskServiceUpdateTaskResult_Success_DEFAULT
+		return SyncTaskServiceTaskUpdateResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_SyncTaskServiceUpdateTaskResult = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskUpdateResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SyncTaskServiceUpdateTaskResult) IsSetSuccess() bool {
+func (p *SyncTaskServiceTaskUpdateResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SyncTaskServiceUpdateTaskResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskUpdateResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -4315,7 +4315,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceUpdateTaskResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskUpdateResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -4325,7 +4325,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceUpdateTaskResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskUpdateResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := sync_task.NewUpdateTaskResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -4334,9 +4334,9 @@ func (p *SyncTaskServiceUpdateTaskResult) ReadField0(iprot thrift.TProtocol) err
 	return nil
 }
 
-func (p *SyncTaskServiceUpdateTaskResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskUpdateResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("UpdateTask_result"); err != nil {
+	if err = oprot.WriteStructBegin("TaskUpdate_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -4362,7 +4362,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceUpdateTaskResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskUpdateResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -4381,43 +4381,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceUpdateTaskResult) String() string {
+func (p *SyncTaskServiceTaskUpdateResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceUpdateTaskResult(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskUpdateResult(%+v)", *p)
 
 }
 
-type SyncTaskServiceDeleteTaskArgs struct {
+type SyncTaskServiceTaskDeleteArgs struct {
 	Req *sync_task.DeleteTaskReq `thrift:"req,1"`
 }
 
-func NewSyncTaskServiceDeleteTaskArgs() *SyncTaskServiceDeleteTaskArgs {
-	return &SyncTaskServiceDeleteTaskArgs{}
+func NewSyncTaskServiceTaskDeleteArgs() *SyncTaskServiceTaskDeleteArgs {
+	return &SyncTaskServiceTaskDeleteArgs{}
 }
 
-func (p *SyncTaskServiceDeleteTaskArgs) InitDefault() {
+func (p *SyncTaskServiceTaskDeleteArgs) InitDefault() {
 }
 
-var SyncTaskServiceDeleteTaskArgs_Req_DEFAULT *sync_task.DeleteTaskReq
+var SyncTaskServiceTaskDeleteArgs_Req_DEFAULT *sync_task.DeleteTaskReq
 
-func (p *SyncTaskServiceDeleteTaskArgs) GetReq() (v *sync_task.DeleteTaskReq) {
+func (p *SyncTaskServiceTaskDeleteArgs) GetReq() (v *sync_task.DeleteTaskReq) {
 	if !p.IsSetReq() {
-		return SyncTaskServiceDeleteTaskArgs_Req_DEFAULT
+		return SyncTaskServiceTaskDeleteArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_SyncTaskServiceDeleteTaskArgs = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskDeleteArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SyncTaskServiceDeleteTaskArgs) IsSetReq() bool {
+func (p *SyncTaskServiceTaskDeleteArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SyncTaskServiceDeleteTaskArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskDeleteArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -4463,7 +4463,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceDeleteTaskArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskDeleteArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -4473,7 +4473,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceDeleteTaskArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskDeleteArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := sync_task.NewDeleteTaskReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -4482,9 +4482,9 @@ func (p *SyncTaskServiceDeleteTaskArgs) ReadField1(iprot thrift.TProtocol) error
 	return nil
 }
 
-func (p *SyncTaskServiceDeleteTaskArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskDeleteArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("DeleteTask_args"); err != nil {
+	if err = oprot.WriteStructBegin("TaskDelete_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -4510,7 +4510,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceDeleteTaskArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskDeleteArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -4527,43 +4527,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceDeleteTaskArgs) String() string {
+func (p *SyncTaskServiceTaskDeleteArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceDeleteTaskArgs(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskDeleteArgs(%+v)", *p)
 
 }
 
-type SyncTaskServiceDeleteTaskResult struct {
+type SyncTaskServiceTaskDeleteResult struct {
 	Success *sync_task.DeleteTaskResp `thrift:"success,0,optional"`
 }
 
-func NewSyncTaskServiceDeleteTaskResult() *SyncTaskServiceDeleteTaskResult {
-	return &SyncTaskServiceDeleteTaskResult{}
+func NewSyncTaskServiceTaskDeleteResult() *SyncTaskServiceTaskDeleteResult {
+	return &SyncTaskServiceTaskDeleteResult{}
 }
 
-func (p *SyncTaskServiceDeleteTaskResult) InitDefault() {
+func (p *SyncTaskServiceTaskDeleteResult) InitDefault() {
 }
 
-var SyncTaskServiceDeleteTaskResult_Success_DEFAULT *sync_task.DeleteTaskResp
+var SyncTaskServiceTaskDeleteResult_Success_DEFAULT *sync_task.DeleteTaskResp
 
-func (p *SyncTaskServiceDeleteTaskResult) GetSuccess() (v *sync_task.DeleteTaskResp) {
+func (p *SyncTaskServiceTaskDeleteResult) GetSuccess() (v *sync_task.DeleteTaskResp) {
 	if !p.IsSetSuccess() {
-		return SyncTaskServiceDeleteTaskResult_Success_DEFAULT
+		return SyncTaskServiceTaskDeleteResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_SyncTaskServiceDeleteTaskResult = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskDeleteResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SyncTaskServiceDeleteTaskResult) IsSetSuccess() bool {
+func (p *SyncTaskServiceTaskDeleteResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SyncTaskServiceDeleteTaskResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskDeleteResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -4609,7 +4609,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceDeleteTaskResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskDeleteResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -4619,7 +4619,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceDeleteTaskResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskDeleteResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := sync_task.NewDeleteTaskResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -4628,9 +4628,9 @@ func (p *SyncTaskServiceDeleteTaskResult) ReadField0(iprot thrift.TProtocol) err
 	return nil
 }
 
-func (p *SyncTaskServiceDeleteTaskResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskDeleteResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("DeleteTask_result"); err != nil {
+	if err = oprot.WriteStructBegin("TaskDelete_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -4656,7 +4656,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceDeleteTaskResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskDeleteResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -4675,43 +4675,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceDeleteTaskResult) String() string {
+func (p *SyncTaskServiceTaskDeleteResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceDeleteTaskResult(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskDeleteResult(%+v)", *p)
 
 }
 
-type SyncTaskServiceRunTaskArgs struct {
+type SyncTaskServiceTaskRunArgs struct {
 	Req *sync_task.RunTaskReq `thrift:"req,1"`
 }
 
-func NewSyncTaskServiceRunTaskArgs() *SyncTaskServiceRunTaskArgs {
-	return &SyncTaskServiceRunTaskArgs{}
+func NewSyncTaskServiceTaskRunArgs() *SyncTaskServiceTaskRunArgs {
+	return &SyncTaskServiceTaskRunArgs{}
 }
 
-func (p *SyncTaskServiceRunTaskArgs) InitDefault() {
+func (p *SyncTaskServiceTaskRunArgs) InitDefault() {
 }
 
-var SyncTaskServiceRunTaskArgs_Req_DEFAULT *sync_task.RunTaskReq
+var SyncTaskServiceTaskRunArgs_Req_DEFAULT *sync_task.RunTaskReq
 
-func (p *SyncTaskServiceRunTaskArgs) GetReq() (v *sync_task.RunTaskReq) {
+func (p *SyncTaskServiceTaskRunArgs) GetReq() (v *sync_task.RunTaskReq) {
 	if !p.IsSetReq() {
-		return SyncTaskServiceRunTaskArgs_Req_DEFAULT
+		return SyncTaskServiceTaskRunArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_SyncTaskServiceRunTaskArgs = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskRunArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SyncTaskServiceRunTaskArgs) IsSetReq() bool {
+func (p *SyncTaskServiceTaskRunArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SyncTaskServiceRunTaskArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskRunArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -4757,7 +4757,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceRunTaskArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskRunArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -4767,7 +4767,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceRunTaskArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskRunArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := sync_task.NewRunTaskReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -4776,9 +4776,9 @@ func (p *SyncTaskServiceRunTaskArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *SyncTaskServiceRunTaskArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskRunArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("RunTask_args"); err != nil {
+	if err = oprot.WriteStructBegin("TaskRun_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -4804,7 +4804,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceRunTaskArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskRunArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -4821,43 +4821,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceRunTaskArgs) String() string {
+func (p *SyncTaskServiceTaskRunArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceRunTaskArgs(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskRunArgs(%+v)", *p)
 
 }
 
-type SyncTaskServiceRunTaskResult struct {
+type SyncTaskServiceTaskRunResult struct {
 	Success *sync_task.RunTaskResp `thrift:"success,0,optional"`
 }
 
-func NewSyncTaskServiceRunTaskResult() *SyncTaskServiceRunTaskResult {
-	return &SyncTaskServiceRunTaskResult{}
+func NewSyncTaskServiceTaskRunResult() *SyncTaskServiceTaskRunResult {
+	return &SyncTaskServiceTaskRunResult{}
 }
 
-func (p *SyncTaskServiceRunTaskResult) InitDefault() {
+func (p *SyncTaskServiceTaskRunResult) InitDefault() {
 }
 
-var SyncTaskServiceRunTaskResult_Success_DEFAULT *sync_task.RunTaskResp
+var SyncTaskServiceTaskRunResult_Success_DEFAULT *sync_task.RunTaskResp
 
-func (p *SyncTaskServiceRunTaskResult) GetSuccess() (v *sync_task.RunTaskResp) {
+func (p *SyncTaskServiceTaskRunResult) GetSuccess() (v *sync_task.RunTaskResp) {
 	if !p.IsSetSuccess() {
-		return SyncTaskServiceRunTaskResult_Success_DEFAULT
+		return SyncTaskServiceTaskRunResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_SyncTaskServiceRunTaskResult = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskRunResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SyncTaskServiceRunTaskResult) IsSetSuccess() bool {
+func (p *SyncTaskServiceTaskRunResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SyncTaskServiceRunTaskResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskRunResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -4903,7 +4903,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceRunTaskResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskRunResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -4913,7 +4913,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceRunTaskResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskRunResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := sync_task.NewRunTaskResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -4922,9 +4922,9 @@ func (p *SyncTaskServiceRunTaskResult) ReadField0(iprot thrift.TProtocol) error 
 	return nil
 }
 
-func (p *SyncTaskServiceRunTaskResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskRunResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("RunTask_result"); err != nil {
+	if err = oprot.WriteStructBegin("TaskRun_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -4950,7 +4950,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceRunTaskResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskRunResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -4969,43 +4969,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceRunTaskResult) String() string {
+func (p *SyncTaskServiceTaskRunResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceRunTaskResult(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskRunResult(%+v)", *p)
 
 }
 
-type SyncTaskServicePreviewSyncArgs struct {
+type SyncTaskServiceTaskPreviewArgs struct {
 	Req *sync_task.PreviewSyncReq `thrift:"req,1"`
 }
 
-func NewSyncTaskServicePreviewSyncArgs() *SyncTaskServicePreviewSyncArgs {
-	return &SyncTaskServicePreviewSyncArgs{}
+func NewSyncTaskServiceTaskPreviewArgs() *SyncTaskServiceTaskPreviewArgs {
+	return &SyncTaskServiceTaskPreviewArgs{}
 }
 
-func (p *SyncTaskServicePreviewSyncArgs) InitDefault() {
+func (p *SyncTaskServiceTaskPreviewArgs) InitDefault() {
 }
 
-var SyncTaskServicePreviewSyncArgs_Req_DEFAULT *sync_task.PreviewSyncReq
+var SyncTaskServiceTaskPreviewArgs_Req_DEFAULT *sync_task.PreviewSyncReq
 
-func (p *SyncTaskServicePreviewSyncArgs) GetReq() (v *sync_task.PreviewSyncReq) {
+func (p *SyncTaskServiceTaskPreviewArgs) GetReq() (v *sync_task.PreviewSyncReq) {
 	if !p.IsSetReq() {
-		return SyncTaskServicePreviewSyncArgs_Req_DEFAULT
+		return SyncTaskServiceTaskPreviewArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_SyncTaskServicePreviewSyncArgs = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskPreviewArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SyncTaskServicePreviewSyncArgs) IsSetReq() bool {
+func (p *SyncTaskServiceTaskPreviewArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SyncTaskServicePreviewSyncArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskPreviewArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -5051,7 +5051,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServicePreviewSyncArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskPreviewArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -5061,7 +5061,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServicePreviewSyncArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskPreviewArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := sync_task.NewPreviewSyncReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -5070,9 +5070,9 @@ func (p *SyncTaskServicePreviewSyncArgs) ReadField1(iprot thrift.TProtocol) erro
 	return nil
 }
 
-func (p *SyncTaskServicePreviewSyncArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskPreviewArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("PreviewSync_args"); err != nil {
+	if err = oprot.WriteStructBegin("TaskPreview_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -5098,7 +5098,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServicePreviewSyncArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskPreviewArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -5115,43 +5115,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SyncTaskServicePreviewSyncArgs) String() string {
+func (p *SyncTaskServiceTaskPreviewArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServicePreviewSyncArgs(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskPreviewArgs(%+v)", *p)
 
 }
 
-type SyncTaskServicePreviewSyncResult struct {
+type SyncTaskServiceTaskPreviewResult struct {
 	Success *sync_task.PreviewSyncResp `thrift:"success,0,optional"`
 }
 
-func NewSyncTaskServicePreviewSyncResult() *SyncTaskServicePreviewSyncResult {
-	return &SyncTaskServicePreviewSyncResult{}
+func NewSyncTaskServiceTaskPreviewResult() *SyncTaskServiceTaskPreviewResult {
+	return &SyncTaskServiceTaskPreviewResult{}
 }
 
-func (p *SyncTaskServicePreviewSyncResult) InitDefault() {
+func (p *SyncTaskServiceTaskPreviewResult) InitDefault() {
 }
 
-var SyncTaskServicePreviewSyncResult_Success_DEFAULT *sync_task.PreviewSyncResp
+var SyncTaskServiceTaskPreviewResult_Success_DEFAULT *sync_task.PreviewSyncResp
 
-func (p *SyncTaskServicePreviewSyncResult) GetSuccess() (v *sync_task.PreviewSyncResp) {
+func (p *SyncTaskServiceTaskPreviewResult) GetSuccess() (v *sync_task.PreviewSyncResp) {
 	if !p.IsSetSuccess() {
-		return SyncTaskServicePreviewSyncResult_Success_DEFAULT
+		return SyncTaskServiceTaskPreviewResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_SyncTaskServicePreviewSyncResult = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskPreviewResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SyncTaskServicePreviewSyncResult) IsSetSuccess() bool {
+func (p *SyncTaskServiceTaskPreviewResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SyncTaskServicePreviewSyncResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskPreviewResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -5197,7 +5197,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServicePreviewSyncResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskPreviewResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -5207,7 +5207,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServicePreviewSyncResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskPreviewResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := sync_task.NewPreviewSyncResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -5216,9 +5216,9 @@ func (p *SyncTaskServicePreviewSyncResult) ReadField0(iprot thrift.TProtocol) er
 	return nil
 }
 
-func (p *SyncTaskServicePreviewSyncResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskPreviewResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("PreviewSync_result"); err != nil {
+	if err = oprot.WriteStructBegin("TaskPreview_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -5244,7 +5244,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServicePreviewSyncResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskPreviewResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -5263,43 +5263,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SyncTaskServicePreviewSyncResult) String() string {
+func (p *SyncTaskServiceTaskPreviewResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServicePreviewSyncResult(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskPreviewResult(%+v)", *p)
 
 }
 
-type SyncTaskServiceListHistoryArgs struct {
+type SyncTaskServiceTaskHistoryArgs struct {
 	Req *sync_task.ListHistoryReq `thrift:"req,1"`
 }
 
-func NewSyncTaskServiceListHistoryArgs() *SyncTaskServiceListHistoryArgs {
-	return &SyncTaskServiceListHistoryArgs{}
+func NewSyncTaskServiceTaskHistoryArgs() *SyncTaskServiceTaskHistoryArgs {
+	return &SyncTaskServiceTaskHistoryArgs{}
 }
 
-func (p *SyncTaskServiceListHistoryArgs) InitDefault() {
+func (p *SyncTaskServiceTaskHistoryArgs) InitDefault() {
 }
 
-var SyncTaskServiceListHistoryArgs_Req_DEFAULT *sync_task.ListHistoryReq
+var SyncTaskServiceTaskHistoryArgs_Req_DEFAULT *sync_task.ListHistoryReq
 
-func (p *SyncTaskServiceListHistoryArgs) GetReq() (v *sync_task.ListHistoryReq) {
+func (p *SyncTaskServiceTaskHistoryArgs) GetReq() (v *sync_task.ListHistoryReq) {
 	if !p.IsSetReq() {
-		return SyncTaskServiceListHistoryArgs_Req_DEFAULT
+		return SyncTaskServiceTaskHistoryArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_SyncTaskServiceListHistoryArgs = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskHistoryArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SyncTaskServiceListHistoryArgs) IsSetReq() bool {
+func (p *SyncTaskServiceTaskHistoryArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SyncTaskServiceListHistoryArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskHistoryArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -5345,7 +5345,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceListHistoryArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskHistoryArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -5355,7 +5355,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListHistoryArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskHistoryArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := sync_task.NewListHistoryReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -5364,9 +5364,9 @@ func (p *SyncTaskServiceListHistoryArgs) ReadField1(iprot thrift.TProtocol) erro
 	return nil
 }
 
-func (p *SyncTaskServiceListHistoryArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskHistoryArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListHistory_args"); err != nil {
+	if err = oprot.WriteStructBegin("TaskHistory_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -5392,7 +5392,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListHistoryArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskHistoryArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -5409,43 +5409,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListHistoryArgs) String() string {
+func (p *SyncTaskServiceTaskHistoryArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceListHistoryArgs(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskHistoryArgs(%+v)", *p)
 
 }
 
-type SyncTaskServiceListHistoryResult struct {
+type SyncTaskServiceTaskHistoryResult struct {
 	Success *sync_task.ListHistoryResp `thrift:"success,0,optional"`
 }
 
-func NewSyncTaskServiceListHistoryResult() *SyncTaskServiceListHistoryResult {
-	return &SyncTaskServiceListHistoryResult{}
+func NewSyncTaskServiceTaskHistoryResult() *SyncTaskServiceTaskHistoryResult {
+	return &SyncTaskServiceTaskHistoryResult{}
 }
 
-func (p *SyncTaskServiceListHistoryResult) InitDefault() {
+func (p *SyncTaskServiceTaskHistoryResult) InitDefault() {
 }
 
-var SyncTaskServiceListHistoryResult_Success_DEFAULT *sync_task.ListHistoryResp
+var SyncTaskServiceTaskHistoryResult_Success_DEFAULT *sync_task.ListHistoryResp
 
-func (p *SyncTaskServiceListHistoryResult) GetSuccess() (v *sync_task.ListHistoryResp) {
+func (p *SyncTaskServiceTaskHistoryResult) GetSuccess() (v *sync_task.ListHistoryResp) {
 	if !p.IsSetSuccess() {
-		return SyncTaskServiceListHistoryResult_Success_DEFAULT
+		return SyncTaskServiceTaskHistoryResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_SyncTaskServiceListHistoryResult = map[int16]string{
+var fieldIDToName_SyncTaskServiceTaskHistoryResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SyncTaskServiceListHistoryResult) IsSetSuccess() bool {
+func (p *SyncTaskServiceTaskHistoryResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SyncTaskServiceListHistoryResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskHistoryResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -5491,7 +5491,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceListHistoryResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SyncTaskServiceTaskHistoryResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -5501,7 +5501,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListHistoryResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *SyncTaskServiceTaskHistoryResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := sync_task.NewListHistoryResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -5510,9 +5510,9 @@ func (p *SyncTaskServiceListHistoryResult) ReadField0(iprot thrift.TProtocol) er
 	return nil
 }
 
-func (p *SyncTaskServiceListHistoryResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskHistoryResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListHistory_result"); err != nil {
+	if err = oprot.WriteStructBegin("TaskHistory_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -5538,7 +5538,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListHistoryResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SyncTaskServiceTaskHistoryResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -5557,11 +5557,11 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SyncTaskServiceListHistoryResult) String() string {
+func (p *SyncTaskServiceTaskHistoryResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SyncTaskServiceListHistoryResult(%+v)", *p)
+	return fmt.Sprintf("SyncTaskServiceTaskHistoryResult(%+v)", *p)
 
 }
 
@@ -5585,11 +5585,11 @@ func (p *WebhookServiceProcessor) ProcessorMap() map[string]thrift.TProcessorFun
 
 func NewWebhookServiceProcessor(handler WebhookService) *WebhookServiceProcessor {
 	self := &WebhookServiceProcessor{handler: handler, processorMap: make(map[string]thrift.TProcessorFunction)}
-	self.AddToProcessorMap("ListRules", &webhookServiceProcessorListRules{handler: handler})
-	self.AddToProcessorMap("GetRule", &webhookServiceProcessorGetRule{handler: handler})
-	self.AddToProcessorMap("CreateRule", &webhookServiceProcessorCreateRule{handler: handler})
-	self.AddToProcessorMap("UpdateRule", &webhookServiceProcessorUpdateRule{handler: handler})
-	self.AddToProcessorMap("DeleteRule", &webhookServiceProcessorDeleteRule{handler: handler})
+	self.AddToProcessorMap("RuleList", &webhookServiceProcessorRuleList{handler: handler})
+	self.AddToProcessorMap("RuleGet", &webhookServiceProcessorRuleGet{handler: handler})
+	self.AddToProcessorMap("RuleCreate", &webhookServiceProcessorRuleCreate{handler: handler})
+	self.AddToProcessorMap("RuleUpdate", &webhookServiceProcessorRuleUpdate{handler: handler})
+	self.AddToProcessorMap("RuleDelete", &webhookServiceProcessorRuleDelete{handler: handler})
 	self.AddToProcessorMap("ListEvents", &webhookServiceProcessorListEvents{handler: handler})
 	self.AddToProcessorMap("RetryEvent", &webhookServiceProcessorRetryEvent{handler: handler})
 	return self
@@ -5612,16 +5612,16 @@ func (p *WebhookServiceProcessor) Process(ctx context.Context, iprot, oprot thri
 	return false, x
 }
 
-type webhookServiceProcessorListRules struct {
+type webhookServiceProcessorRuleList struct {
 	handler WebhookService
 }
 
-func (p *webhookServiceProcessorListRules) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := WebhookServiceListRulesArgs{}
+func (p *webhookServiceProcessorRuleList) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := WebhookServiceRuleListArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("ListRules", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("RuleList", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5630,11 +5630,11 @@ func (p *webhookServiceProcessorListRules) Process(ctx context.Context, seqId in
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := WebhookServiceListRulesResult{}
+	result := WebhookServiceRuleListResult{}
 	var retval *webhook.ListRulesResp
-	if retval, err2 = p.handler.ListRules(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing ListRules: "+err2.Error())
-		oprot.WriteMessageBegin("ListRules", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.RuleList(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RuleList: "+err2.Error())
+		oprot.WriteMessageBegin("RuleList", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5642,7 +5642,7 @@ func (p *webhookServiceProcessorListRules) Process(ctx context.Context, seqId in
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("ListRules", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("RuleList", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -5660,16 +5660,16 @@ func (p *webhookServiceProcessorListRules) Process(ctx context.Context, seqId in
 	return true, err
 }
 
-type webhookServiceProcessorGetRule struct {
+type webhookServiceProcessorRuleGet struct {
 	handler WebhookService
 }
 
-func (p *webhookServiceProcessorGetRule) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := WebhookServiceGetRuleArgs{}
+func (p *webhookServiceProcessorRuleGet) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := WebhookServiceRuleGetArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("GetRule", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("RuleGet", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5678,11 +5678,11 @@ func (p *webhookServiceProcessorGetRule) Process(ctx context.Context, seqId int3
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := WebhookServiceGetRuleResult{}
+	result := WebhookServiceRuleGetResult{}
 	var retval *webhook.GetRuleResp
-	if retval, err2 = p.handler.GetRule(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing GetRule: "+err2.Error())
-		oprot.WriteMessageBegin("GetRule", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.RuleGet(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RuleGet: "+err2.Error())
+		oprot.WriteMessageBegin("RuleGet", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5690,7 +5690,7 @@ func (p *webhookServiceProcessorGetRule) Process(ctx context.Context, seqId int3
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("GetRule", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("RuleGet", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -5708,16 +5708,16 @@ func (p *webhookServiceProcessorGetRule) Process(ctx context.Context, seqId int3
 	return true, err
 }
 
-type webhookServiceProcessorCreateRule struct {
+type webhookServiceProcessorRuleCreate struct {
 	handler WebhookService
 }
 
-func (p *webhookServiceProcessorCreateRule) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := WebhookServiceCreateRuleArgs{}
+func (p *webhookServiceProcessorRuleCreate) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := WebhookServiceRuleCreateArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("CreateRule", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("RuleCreate", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5726,11 +5726,11 @@ func (p *webhookServiceProcessorCreateRule) Process(ctx context.Context, seqId i
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := WebhookServiceCreateRuleResult{}
+	result := WebhookServiceRuleCreateResult{}
 	var retval *webhook.CreateRuleResp
-	if retval, err2 = p.handler.CreateRule(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing CreateRule: "+err2.Error())
-		oprot.WriteMessageBegin("CreateRule", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.RuleCreate(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RuleCreate: "+err2.Error())
+		oprot.WriteMessageBegin("RuleCreate", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5738,7 +5738,7 @@ func (p *webhookServiceProcessorCreateRule) Process(ctx context.Context, seqId i
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("CreateRule", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("RuleCreate", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -5756,16 +5756,16 @@ func (p *webhookServiceProcessorCreateRule) Process(ctx context.Context, seqId i
 	return true, err
 }
 
-type webhookServiceProcessorUpdateRule struct {
+type webhookServiceProcessorRuleUpdate struct {
 	handler WebhookService
 }
 
-func (p *webhookServiceProcessorUpdateRule) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := WebhookServiceUpdateRuleArgs{}
+func (p *webhookServiceProcessorRuleUpdate) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := WebhookServiceRuleUpdateArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("UpdateRule", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("RuleUpdate", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5774,11 +5774,11 @@ func (p *webhookServiceProcessorUpdateRule) Process(ctx context.Context, seqId i
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := WebhookServiceUpdateRuleResult{}
+	result := WebhookServiceRuleUpdateResult{}
 	var retval *webhook.UpdateRuleResp
-	if retval, err2 = p.handler.UpdateRule(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing UpdateRule: "+err2.Error())
-		oprot.WriteMessageBegin("UpdateRule", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.RuleUpdate(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RuleUpdate: "+err2.Error())
+		oprot.WriteMessageBegin("RuleUpdate", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5786,7 +5786,7 @@ func (p *webhookServiceProcessorUpdateRule) Process(ctx context.Context, seqId i
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("UpdateRule", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("RuleUpdate", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -5804,16 +5804,16 @@ func (p *webhookServiceProcessorUpdateRule) Process(ctx context.Context, seqId i
 	return true, err
 }
 
-type webhookServiceProcessorDeleteRule struct {
+type webhookServiceProcessorRuleDelete struct {
 	handler WebhookService
 }
 
-func (p *webhookServiceProcessorDeleteRule) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := WebhookServiceDeleteRuleArgs{}
+func (p *webhookServiceProcessorRuleDelete) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := WebhookServiceRuleDeleteArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("DeleteRule", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("RuleDelete", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5822,11 +5822,11 @@ func (p *webhookServiceProcessorDeleteRule) Process(ctx context.Context, seqId i
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := WebhookServiceDeleteRuleResult{}
+	result := WebhookServiceRuleDeleteResult{}
 	var retval *webhook.DeleteRuleResp
-	if retval, err2 = p.handler.DeleteRule(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing DeleteRule: "+err2.Error())
-		oprot.WriteMessageBegin("DeleteRule", thrift.EXCEPTION, seqId)
+	if retval, err2 = p.handler.RuleDelete(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RuleDelete: "+err2.Error())
+		oprot.WriteMessageBegin("RuleDelete", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -5834,7 +5834,7 @@ func (p *webhookServiceProcessorDeleteRule) Process(ctx context.Context, seqId i
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("DeleteRule", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("RuleDelete", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -5948,35 +5948,35 @@ func (p *webhookServiceProcessorRetryEvent) Process(ctx context.Context, seqId i
 	return true, err
 }
 
-type WebhookServiceListRulesArgs struct {
+type WebhookServiceRuleListArgs struct {
 	Req *webhook.ListRulesReq `thrift:"req,1"`
 }
 
-func NewWebhookServiceListRulesArgs() *WebhookServiceListRulesArgs {
-	return &WebhookServiceListRulesArgs{}
+func NewWebhookServiceRuleListArgs() *WebhookServiceRuleListArgs {
+	return &WebhookServiceRuleListArgs{}
 }
 
-func (p *WebhookServiceListRulesArgs) InitDefault() {
+func (p *WebhookServiceRuleListArgs) InitDefault() {
 }
 
-var WebhookServiceListRulesArgs_Req_DEFAULT *webhook.ListRulesReq
+var WebhookServiceRuleListArgs_Req_DEFAULT *webhook.ListRulesReq
 
-func (p *WebhookServiceListRulesArgs) GetReq() (v *webhook.ListRulesReq) {
+func (p *WebhookServiceRuleListArgs) GetReq() (v *webhook.ListRulesReq) {
 	if !p.IsSetReq() {
-		return WebhookServiceListRulesArgs_Req_DEFAULT
+		return WebhookServiceRuleListArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_WebhookServiceListRulesArgs = map[int16]string{
+var fieldIDToName_WebhookServiceRuleListArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *WebhookServiceListRulesArgs) IsSetReq() bool {
+func (p *WebhookServiceRuleListArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *WebhookServiceListRulesArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleListArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -6022,7 +6022,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceListRulesArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleListArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -6032,7 +6032,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceListRulesArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleListArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := webhook.NewListRulesReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -6041,9 +6041,9 @@ func (p *WebhookServiceListRulesArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *WebhookServiceListRulesArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleListArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListRules_args"); err != nil {
+	if err = oprot.WriteStructBegin("RuleList_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -6069,7 +6069,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceListRulesArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleListArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -6086,43 +6086,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *WebhookServiceListRulesArgs) String() string {
+func (p *WebhookServiceRuleListArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceListRulesArgs(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleListArgs(%+v)", *p)
 
 }
 
-type WebhookServiceListRulesResult struct {
+type WebhookServiceRuleListResult struct {
 	Success *webhook.ListRulesResp `thrift:"success,0,optional"`
 }
 
-func NewWebhookServiceListRulesResult() *WebhookServiceListRulesResult {
-	return &WebhookServiceListRulesResult{}
+func NewWebhookServiceRuleListResult() *WebhookServiceRuleListResult {
+	return &WebhookServiceRuleListResult{}
 }
 
-func (p *WebhookServiceListRulesResult) InitDefault() {
+func (p *WebhookServiceRuleListResult) InitDefault() {
 }
 
-var WebhookServiceListRulesResult_Success_DEFAULT *webhook.ListRulesResp
+var WebhookServiceRuleListResult_Success_DEFAULT *webhook.ListRulesResp
 
-func (p *WebhookServiceListRulesResult) GetSuccess() (v *webhook.ListRulesResp) {
+func (p *WebhookServiceRuleListResult) GetSuccess() (v *webhook.ListRulesResp) {
 	if !p.IsSetSuccess() {
-		return WebhookServiceListRulesResult_Success_DEFAULT
+		return WebhookServiceRuleListResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_WebhookServiceListRulesResult = map[int16]string{
+var fieldIDToName_WebhookServiceRuleListResult = map[int16]string{
 	0: "success",
 }
 
-func (p *WebhookServiceListRulesResult) IsSetSuccess() bool {
+func (p *WebhookServiceRuleListResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *WebhookServiceListRulesResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleListResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -6168,7 +6168,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceListRulesResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleListResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -6178,7 +6178,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceListRulesResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleListResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := webhook.NewListRulesResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -6187,9 +6187,9 @@ func (p *WebhookServiceListRulesResult) ReadField0(iprot thrift.TProtocol) error
 	return nil
 }
 
-func (p *WebhookServiceListRulesResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleListResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("ListRules_result"); err != nil {
+	if err = oprot.WriteStructBegin("RuleList_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -6215,7 +6215,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceListRulesResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleListResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -6234,43 +6234,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *WebhookServiceListRulesResult) String() string {
+func (p *WebhookServiceRuleListResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceListRulesResult(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleListResult(%+v)", *p)
 
 }
 
-type WebhookServiceGetRuleArgs struct {
+type WebhookServiceRuleGetArgs struct {
 	Req *webhook.GetRuleReq `thrift:"req,1"`
 }
 
-func NewWebhookServiceGetRuleArgs() *WebhookServiceGetRuleArgs {
-	return &WebhookServiceGetRuleArgs{}
+func NewWebhookServiceRuleGetArgs() *WebhookServiceRuleGetArgs {
+	return &WebhookServiceRuleGetArgs{}
 }
 
-func (p *WebhookServiceGetRuleArgs) InitDefault() {
+func (p *WebhookServiceRuleGetArgs) InitDefault() {
 }
 
-var WebhookServiceGetRuleArgs_Req_DEFAULT *webhook.GetRuleReq
+var WebhookServiceRuleGetArgs_Req_DEFAULT *webhook.GetRuleReq
 
-func (p *WebhookServiceGetRuleArgs) GetReq() (v *webhook.GetRuleReq) {
+func (p *WebhookServiceRuleGetArgs) GetReq() (v *webhook.GetRuleReq) {
 	if !p.IsSetReq() {
-		return WebhookServiceGetRuleArgs_Req_DEFAULT
+		return WebhookServiceRuleGetArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_WebhookServiceGetRuleArgs = map[int16]string{
+var fieldIDToName_WebhookServiceRuleGetArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *WebhookServiceGetRuleArgs) IsSetReq() bool {
+func (p *WebhookServiceRuleGetArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *WebhookServiceGetRuleArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleGetArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -6316,7 +6316,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceGetRuleArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleGetArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -6326,7 +6326,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceGetRuleArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleGetArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := webhook.NewGetRuleReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -6335,9 +6335,9 @@ func (p *WebhookServiceGetRuleArgs) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *WebhookServiceGetRuleArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleGetArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("GetRule_args"); err != nil {
+	if err = oprot.WriteStructBegin("RuleGet_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -6363,7 +6363,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceGetRuleArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleGetArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -6380,43 +6380,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *WebhookServiceGetRuleArgs) String() string {
+func (p *WebhookServiceRuleGetArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceGetRuleArgs(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleGetArgs(%+v)", *p)
 
 }
 
-type WebhookServiceGetRuleResult struct {
+type WebhookServiceRuleGetResult struct {
 	Success *webhook.GetRuleResp `thrift:"success,0,optional"`
 }
 
-func NewWebhookServiceGetRuleResult() *WebhookServiceGetRuleResult {
-	return &WebhookServiceGetRuleResult{}
+func NewWebhookServiceRuleGetResult() *WebhookServiceRuleGetResult {
+	return &WebhookServiceRuleGetResult{}
 }
 
-func (p *WebhookServiceGetRuleResult) InitDefault() {
+func (p *WebhookServiceRuleGetResult) InitDefault() {
 }
 
-var WebhookServiceGetRuleResult_Success_DEFAULT *webhook.GetRuleResp
+var WebhookServiceRuleGetResult_Success_DEFAULT *webhook.GetRuleResp
 
-func (p *WebhookServiceGetRuleResult) GetSuccess() (v *webhook.GetRuleResp) {
+func (p *WebhookServiceRuleGetResult) GetSuccess() (v *webhook.GetRuleResp) {
 	if !p.IsSetSuccess() {
-		return WebhookServiceGetRuleResult_Success_DEFAULT
+		return WebhookServiceRuleGetResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_WebhookServiceGetRuleResult = map[int16]string{
+var fieldIDToName_WebhookServiceRuleGetResult = map[int16]string{
 	0: "success",
 }
 
-func (p *WebhookServiceGetRuleResult) IsSetSuccess() bool {
+func (p *WebhookServiceRuleGetResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *WebhookServiceGetRuleResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleGetResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -6462,7 +6462,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceGetRuleResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleGetResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -6472,7 +6472,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceGetRuleResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleGetResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := webhook.NewGetRuleResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -6481,9 +6481,9 @@ func (p *WebhookServiceGetRuleResult) ReadField0(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *WebhookServiceGetRuleResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleGetResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("GetRule_result"); err != nil {
+	if err = oprot.WriteStructBegin("RuleGet_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -6509,7 +6509,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceGetRuleResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleGetResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -6528,43 +6528,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *WebhookServiceGetRuleResult) String() string {
+func (p *WebhookServiceRuleGetResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceGetRuleResult(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleGetResult(%+v)", *p)
 
 }
 
-type WebhookServiceCreateRuleArgs struct {
+type WebhookServiceRuleCreateArgs struct {
 	Req *webhook.CreateRuleReq `thrift:"req,1"`
 }
 
-func NewWebhookServiceCreateRuleArgs() *WebhookServiceCreateRuleArgs {
-	return &WebhookServiceCreateRuleArgs{}
+func NewWebhookServiceRuleCreateArgs() *WebhookServiceRuleCreateArgs {
+	return &WebhookServiceRuleCreateArgs{}
 }
 
-func (p *WebhookServiceCreateRuleArgs) InitDefault() {
+func (p *WebhookServiceRuleCreateArgs) InitDefault() {
 }
 
-var WebhookServiceCreateRuleArgs_Req_DEFAULT *webhook.CreateRuleReq
+var WebhookServiceRuleCreateArgs_Req_DEFAULT *webhook.CreateRuleReq
 
-func (p *WebhookServiceCreateRuleArgs) GetReq() (v *webhook.CreateRuleReq) {
+func (p *WebhookServiceRuleCreateArgs) GetReq() (v *webhook.CreateRuleReq) {
 	if !p.IsSetReq() {
-		return WebhookServiceCreateRuleArgs_Req_DEFAULT
+		return WebhookServiceRuleCreateArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_WebhookServiceCreateRuleArgs = map[int16]string{
+var fieldIDToName_WebhookServiceRuleCreateArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *WebhookServiceCreateRuleArgs) IsSetReq() bool {
+func (p *WebhookServiceRuleCreateArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *WebhookServiceCreateRuleArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleCreateArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -6610,7 +6610,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceCreateRuleArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleCreateArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -6620,7 +6620,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceCreateRuleArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleCreateArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := webhook.NewCreateRuleReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -6629,9 +6629,9 @@ func (p *WebhookServiceCreateRuleArgs) ReadField1(iprot thrift.TProtocol) error 
 	return nil
 }
 
-func (p *WebhookServiceCreateRuleArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleCreateArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("CreateRule_args"); err != nil {
+	if err = oprot.WriteStructBegin("RuleCreate_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -6657,7 +6657,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceCreateRuleArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleCreateArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -6674,43 +6674,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *WebhookServiceCreateRuleArgs) String() string {
+func (p *WebhookServiceRuleCreateArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceCreateRuleArgs(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleCreateArgs(%+v)", *p)
 
 }
 
-type WebhookServiceCreateRuleResult struct {
+type WebhookServiceRuleCreateResult struct {
 	Success *webhook.CreateRuleResp `thrift:"success,0,optional"`
 }
 
-func NewWebhookServiceCreateRuleResult() *WebhookServiceCreateRuleResult {
-	return &WebhookServiceCreateRuleResult{}
+func NewWebhookServiceRuleCreateResult() *WebhookServiceRuleCreateResult {
+	return &WebhookServiceRuleCreateResult{}
 }
 
-func (p *WebhookServiceCreateRuleResult) InitDefault() {
+func (p *WebhookServiceRuleCreateResult) InitDefault() {
 }
 
-var WebhookServiceCreateRuleResult_Success_DEFAULT *webhook.CreateRuleResp
+var WebhookServiceRuleCreateResult_Success_DEFAULT *webhook.CreateRuleResp
 
-func (p *WebhookServiceCreateRuleResult) GetSuccess() (v *webhook.CreateRuleResp) {
+func (p *WebhookServiceRuleCreateResult) GetSuccess() (v *webhook.CreateRuleResp) {
 	if !p.IsSetSuccess() {
-		return WebhookServiceCreateRuleResult_Success_DEFAULT
+		return WebhookServiceRuleCreateResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_WebhookServiceCreateRuleResult = map[int16]string{
+var fieldIDToName_WebhookServiceRuleCreateResult = map[int16]string{
 	0: "success",
 }
 
-func (p *WebhookServiceCreateRuleResult) IsSetSuccess() bool {
+func (p *WebhookServiceRuleCreateResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *WebhookServiceCreateRuleResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleCreateResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -6756,7 +6756,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceCreateRuleResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleCreateResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -6766,7 +6766,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceCreateRuleResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleCreateResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := webhook.NewCreateRuleResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -6775,9 +6775,9 @@ func (p *WebhookServiceCreateRuleResult) ReadField0(iprot thrift.TProtocol) erro
 	return nil
 }
 
-func (p *WebhookServiceCreateRuleResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleCreateResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("CreateRule_result"); err != nil {
+	if err = oprot.WriteStructBegin("RuleCreate_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -6803,7 +6803,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceCreateRuleResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleCreateResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -6822,43 +6822,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *WebhookServiceCreateRuleResult) String() string {
+func (p *WebhookServiceRuleCreateResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceCreateRuleResult(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleCreateResult(%+v)", *p)
 
 }
 
-type WebhookServiceUpdateRuleArgs struct {
+type WebhookServiceRuleUpdateArgs struct {
 	Req *webhook.UpdateRuleReq `thrift:"req,1"`
 }
 
-func NewWebhookServiceUpdateRuleArgs() *WebhookServiceUpdateRuleArgs {
-	return &WebhookServiceUpdateRuleArgs{}
+func NewWebhookServiceRuleUpdateArgs() *WebhookServiceRuleUpdateArgs {
+	return &WebhookServiceRuleUpdateArgs{}
 }
 
-func (p *WebhookServiceUpdateRuleArgs) InitDefault() {
+func (p *WebhookServiceRuleUpdateArgs) InitDefault() {
 }
 
-var WebhookServiceUpdateRuleArgs_Req_DEFAULT *webhook.UpdateRuleReq
+var WebhookServiceRuleUpdateArgs_Req_DEFAULT *webhook.UpdateRuleReq
 
-func (p *WebhookServiceUpdateRuleArgs) GetReq() (v *webhook.UpdateRuleReq) {
+func (p *WebhookServiceRuleUpdateArgs) GetReq() (v *webhook.UpdateRuleReq) {
 	if !p.IsSetReq() {
-		return WebhookServiceUpdateRuleArgs_Req_DEFAULT
+		return WebhookServiceRuleUpdateArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_WebhookServiceUpdateRuleArgs = map[int16]string{
+var fieldIDToName_WebhookServiceRuleUpdateArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *WebhookServiceUpdateRuleArgs) IsSetReq() bool {
+func (p *WebhookServiceRuleUpdateArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *WebhookServiceUpdateRuleArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleUpdateArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -6904,7 +6904,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceUpdateRuleArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleUpdateArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -6914,7 +6914,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceUpdateRuleArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleUpdateArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := webhook.NewUpdateRuleReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -6923,9 +6923,9 @@ func (p *WebhookServiceUpdateRuleArgs) ReadField1(iprot thrift.TProtocol) error 
 	return nil
 }
 
-func (p *WebhookServiceUpdateRuleArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleUpdateArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("UpdateRule_args"); err != nil {
+	if err = oprot.WriteStructBegin("RuleUpdate_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -6951,7 +6951,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceUpdateRuleArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleUpdateArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -6968,43 +6968,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *WebhookServiceUpdateRuleArgs) String() string {
+func (p *WebhookServiceRuleUpdateArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceUpdateRuleArgs(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleUpdateArgs(%+v)", *p)
 
 }
 
-type WebhookServiceUpdateRuleResult struct {
+type WebhookServiceRuleUpdateResult struct {
 	Success *webhook.UpdateRuleResp `thrift:"success,0,optional"`
 }
 
-func NewWebhookServiceUpdateRuleResult() *WebhookServiceUpdateRuleResult {
-	return &WebhookServiceUpdateRuleResult{}
+func NewWebhookServiceRuleUpdateResult() *WebhookServiceRuleUpdateResult {
+	return &WebhookServiceRuleUpdateResult{}
 }
 
-func (p *WebhookServiceUpdateRuleResult) InitDefault() {
+func (p *WebhookServiceRuleUpdateResult) InitDefault() {
 }
 
-var WebhookServiceUpdateRuleResult_Success_DEFAULT *webhook.UpdateRuleResp
+var WebhookServiceRuleUpdateResult_Success_DEFAULT *webhook.UpdateRuleResp
 
-func (p *WebhookServiceUpdateRuleResult) GetSuccess() (v *webhook.UpdateRuleResp) {
+func (p *WebhookServiceRuleUpdateResult) GetSuccess() (v *webhook.UpdateRuleResp) {
 	if !p.IsSetSuccess() {
-		return WebhookServiceUpdateRuleResult_Success_DEFAULT
+		return WebhookServiceRuleUpdateResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_WebhookServiceUpdateRuleResult = map[int16]string{
+var fieldIDToName_WebhookServiceRuleUpdateResult = map[int16]string{
 	0: "success",
 }
 
-func (p *WebhookServiceUpdateRuleResult) IsSetSuccess() bool {
+func (p *WebhookServiceRuleUpdateResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *WebhookServiceUpdateRuleResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleUpdateResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -7050,7 +7050,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceUpdateRuleResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleUpdateResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -7060,7 +7060,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceUpdateRuleResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleUpdateResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := webhook.NewUpdateRuleResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -7069,9 +7069,9 @@ func (p *WebhookServiceUpdateRuleResult) ReadField0(iprot thrift.TProtocol) erro
 	return nil
 }
 
-func (p *WebhookServiceUpdateRuleResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleUpdateResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("UpdateRule_result"); err != nil {
+	if err = oprot.WriteStructBegin("RuleUpdate_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -7097,7 +7097,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceUpdateRuleResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleUpdateResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -7116,43 +7116,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *WebhookServiceUpdateRuleResult) String() string {
+func (p *WebhookServiceRuleUpdateResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceUpdateRuleResult(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleUpdateResult(%+v)", *p)
 
 }
 
-type WebhookServiceDeleteRuleArgs struct {
+type WebhookServiceRuleDeleteArgs struct {
 	Req *webhook.DeleteRuleReq `thrift:"req,1"`
 }
 
-func NewWebhookServiceDeleteRuleArgs() *WebhookServiceDeleteRuleArgs {
-	return &WebhookServiceDeleteRuleArgs{}
+func NewWebhookServiceRuleDeleteArgs() *WebhookServiceRuleDeleteArgs {
+	return &WebhookServiceRuleDeleteArgs{}
 }
 
-func (p *WebhookServiceDeleteRuleArgs) InitDefault() {
+func (p *WebhookServiceRuleDeleteArgs) InitDefault() {
 }
 
-var WebhookServiceDeleteRuleArgs_Req_DEFAULT *webhook.DeleteRuleReq
+var WebhookServiceRuleDeleteArgs_Req_DEFAULT *webhook.DeleteRuleReq
 
-func (p *WebhookServiceDeleteRuleArgs) GetReq() (v *webhook.DeleteRuleReq) {
+func (p *WebhookServiceRuleDeleteArgs) GetReq() (v *webhook.DeleteRuleReq) {
 	if !p.IsSetReq() {
-		return WebhookServiceDeleteRuleArgs_Req_DEFAULT
+		return WebhookServiceRuleDeleteArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-var fieldIDToName_WebhookServiceDeleteRuleArgs = map[int16]string{
+var fieldIDToName_WebhookServiceRuleDeleteArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *WebhookServiceDeleteRuleArgs) IsSetReq() bool {
+func (p *WebhookServiceRuleDeleteArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *WebhookServiceDeleteRuleArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleDeleteArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -7198,7 +7198,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceDeleteRuleArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleDeleteArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -7208,7 +7208,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceDeleteRuleArgs) ReadField1(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleDeleteArgs) ReadField1(iprot thrift.TProtocol) error {
 	_field := webhook.NewDeleteRuleReq()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -7217,9 +7217,9 @@ func (p *WebhookServiceDeleteRuleArgs) ReadField1(iprot thrift.TProtocol) error 
 	return nil
 }
 
-func (p *WebhookServiceDeleteRuleArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleDeleteArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("DeleteRule_args"); err != nil {
+	if err = oprot.WriteStructBegin("RuleDelete_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -7245,7 +7245,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceDeleteRuleArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleDeleteArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -7262,43 +7262,43 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *WebhookServiceDeleteRuleArgs) String() string {
+func (p *WebhookServiceRuleDeleteArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceDeleteRuleArgs(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleDeleteArgs(%+v)", *p)
 
 }
 
-type WebhookServiceDeleteRuleResult struct {
+type WebhookServiceRuleDeleteResult struct {
 	Success *webhook.DeleteRuleResp `thrift:"success,0,optional"`
 }
 
-func NewWebhookServiceDeleteRuleResult() *WebhookServiceDeleteRuleResult {
-	return &WebhookServiceDeleteRuleResult{}
+func NewWebhookServiceRuleDeleteResult() *WebhookServiceRuleDeleteResult {
+	return &WebhookServiceRuleDeleteResult{}
 }
 
-func (p *WebhookServiceDeleteRuleResult) InitDefault() {
+func (p *WebhookServiceRuleDeleteResult) InitDefault() {
 }
 
-var WebhookServiceDeleteRuleResult_Success_DEFAULT *webhook.DeleteRuleResp
+var WebhookServiceRuleDeleteResult_Success_DEFAULT *webhook.DeleteRuleResp
 
-func (p *WebhookServiceDeleteRuleResult) GetSuccess() (v *webhook.DeleteRuleResp) {
+func (p *WebhookServiceRuleDeleteResult) GetSuccess() (v *webhook.DeleteRuleResp) {
 	if !p.IsSetSuccess() {
-		return WebhookServiceDeleteRuleResult_Success_DEFAULT
+		return WebhookServiceRuleDeleteResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-var fieldIDToName_WebhookServiceDeleteRuleResult = map[int16]string{
+var fieldIDToName_WebhookServiceRuleDeleteResult = map[int16]string{
 	0: "success",
 }
 
-func (p *WebhookServiceDeleteRuleResult) IsSetSuccess() bool {
+func (p *WebhookServiceRuleDeleteResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *WebhookServiceDeleteRuleResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleDeleteResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -7344,7 +7344,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceDeleteRuleResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WebhookServiceRuleDeleteResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -7354,7 +7354,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *WebhookServiceDeleteRuleResult) ReadField0(iprot thrift.TProtocol) error {
+func (p *WebhookServiceRuleDeleteResult) ReadField0(iprot thrift.TProtocol) error {
 	_field := webhook.NewDeleteRuleResp()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -7363,9 +7363,9 @@ func (p *WebhookServiceDeleteRuleResult) ReadField0(iprot thrift.TProtocol) erro
 	return nil
 }
 
-func (p *WebhookServiceDeleteRuleResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleDeleteResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("DeleteRule_result"); err != nil {
+	if err = oprot.WriteStructBegin("RuleDelete_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -7391,7 +7391,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *WebhookServiceDeleteRuleResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *WebhookServiceRuleDeleteResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -7410,11 +7410,11 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *WebhookServiceDeleteRuleResult) String() string {
+func (p *WebhookServiceRuleDeleteResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("WebhookServiceDeleteRuleResult(%+v)", *p)
+	return fmt.Sprintf("WebhookServiceRuleDeleteResult(%+v)", *p)
 
 }
 

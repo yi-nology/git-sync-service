@@ -70,7 +70,7 @@ func NewService(cfg *Config) (*Service, error) {
 	eventDAO := dao.NewWebhookEventDAO(db)
 	platformDAO := dao.NewPlatformDAO(db)
 
-	repoService := NewRepoService(repoDAO, providerMgr)
+	repoService := NewRepoService(repoDAO, platformDAO, providerMgr)
 	taskService := NewTaskService(taskDAO, runDAO, runStepDAO, repoDAO)
 	webhookService := NewWebhookService(ruleDAO, eventDAO, repoDAO)
 	platformService := NewPlatformService(platformDAO, repoDAO, providerMgr)
@@ -166,6 +166,11 @@ func (s *Service) UpdateTaskLastRun(task *model.SyncTask, run *model.SyncRun) er
 // GetRepoByKey returns a repository by key. Satisfies executor.RepoProvider.
 func (s *Service) GetRepoByKey(key string) (*model.Repo, error) {
 	return s.repos.GetRepoByKey(key)
+}
+
+// GetPlatformByID returns a platform by ID. Satisfies executor.PlatformProvider.
+func (s *Service) GetPlatformByID(id uint) (*model.Platform, error) {
+	return s.platforms.GetPlatformByID(context.Background(), id)
 }
 
 // HealthCheck checks the health of all dependencies.

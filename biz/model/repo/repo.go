@@ -12,13 +12,13 @@ type RepoInfo struct {
 	Key           string `thrift:"key,2" form:"key" json:"key" query:"key"`
 	Name          string `thrift:"name,3" form:"name" json:"name" query:"name"`
 	Platform      string `thrift:"platform,4" form:"platform" json:"platform" query:"platform"`
-	PlatformOwner string `thrift:"platform_owner,5" form:"platform_owner" json:"platform_owner" query:"platform_owner"`
-	PlatformRepo  string `thrift:"platform_repo,6" form:"platform_repo" json:"platform_repo" query:"platform_repo"`
-	CloneURL      string `thrift:"clone_url,7" form:"clone_url" json:"clone_url" query:"clone_url"`
-	SSHURL        string `thrift:"ssh_url,8" form:"ssh_url" json:"ssh_url" query:"ssh_url"`
-	DefaultBranch string `thrift:"default_branch,9" form:"default_branch" json:"default_branch" query:"default_branch"`
+	PlatformOwner string `thrift:"platformOwner,5" form:"platform_owner" json:"platform_owner" query:"platform_owner"`
+	PlatformRepo  string `thrift:"platformRepo,6" form:"platform_repo" json:"platform_repo" query:"platform_repo"`
+	CloneUrl      string `thrift:"cloneUrl,7" form:"clone_url" json:"clone_url" query:"clone_url"`
+	SshUrl        string `thrift:"sshUrl,8" form:"ssh_url" json:"ssh_url" query:"ssh_url"`
+	DefaultBranch string `thrift:"defaultBranch,9" form:"default_branch" json:"default_branch" query:"default_branch"`
 	Status        string `thrift:"status,10" form:"status" json:"status" query:"status"`
-	CreatedAt     string `thrift:"created_at,11" form:"created_at" json:"created_at" query:"created_at"`
+	CreatedAt     string `thrift:"createdAt,11" form:"created_at" json:"created_at" query:"created_at"`
 }
 
 func NewRepoInfo() *RepoInfo {
@@ -52,12 +52,12 @@ func (p *RepoInfo) GetPlatformRepo() (v string) {
 	return p.PlatformRepo
 }
 
-func (p *RepoInfo) GetCloneURL() (v string) {
-	return p.CloneURL
+func (p *RepoInfo) GetCloneUrl() (v string) {
+	return p.CloneUrl
 }
 
-func (p *RepoInfo) GetSSHURL() (v string) {
-	return p.SSHURL
+func (p *RepoInfo) GetSshUrl() (v string) {
+	return p.SshUrl
 }
 
 func (p *RepoInfo) GetDefaultBranch() (v string) {
@@ -77,13 +77,13 @@ var fieldIDToName_RepoInfo = map[int16]string{
 	2:  "key",
 	3:  "name",
 	4:  "platform",
-	5:  "platform_owner",
-	6:  "platform_repo",
-	7:  "clone_url",
-	8:  "ssh_url",
-	9:  "default_branch",
+	5:  "platformOwner",
+	6:  "platformRepo",
+	7:  "cloneUrl",
+	8:  "sshUrl",
+	9:  "defaultBranch",
 	10: "status",
-	11: "created_at",
+	11: "createdAt",
 }
 
 func (p *RepoInfo) Read(iprot thrift.TProtocol) (err error) {
@@ -296,7 +296,7 @@ func (p *RepoInfo) ReadField7(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.CloneURL = _field
+	p.CloneUrl = _field
 	return nil
 }
 func (p *RepoInfo) ReadField8(iprot thrift.TProtocol) error {
@@ -307,7 +307,7 @@ func (p *RepoInfo) ReadField8(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.SSHURL = _field
+	p.SshUrl = _field
 	return nil
 }
 func (p *RepoInfo) ReadField9(iprot thrift.TProtocol) error {
@@ -481,7 +481,7 @@ WriteFieldEndError:
 }
 
 func (p *RepoInfo) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("platform_owner", thrift.STRING, 5); err != nil {
+	if err = oprot.WriteFieldBegin("platformOwner", thrift.STRING, 5); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.PlatformOwner); err != nil {
@@ -498,7 +498,7 @@ WriteFieldEndError:
 }
 
 func (p *RepoInfo) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("platform_repo", thrift.STRING, 6); err != nil {
+	if err = oprot.WriteFieldBegin("platformRepo", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.PlatformRepo); err != nil {
@@ -515,10 +515,10 @@ WriteFieldEndError:
 }
 
 func (p *RepoInfo) writeField7(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("clone_url", thrift.STRING, 7); err != nil {
+	if err = oprot.WriteFieldBegin("cloneUrl", thrift.STRING, 7); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.CloneURL); err != nil {
+	if err := oprot.WriteString(p.CloneUrl); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -532,10 +532,10 @@ WriteFieldEndError:
 }
 
 func (p *RepoInfo) writeField8(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("ssh_url", thrift.STRING, 8); err != nil {
+	if err = oprot.WriteFieldBegin("sshUrl", thrift.STRING, 8); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.SSHURL); err != nil {
+	if err := oprot.WriteString(p.SshUrl); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -549,7 +549,7 @@ WriteFieldEndError:
 }
 
 func (p *RepoInfo) writeField9(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("default_branch", thrift.STRING, 9); err != nil {
+	if err = oprot.WriteFieldBegin("defaultBranch", thrift.STRING, 9); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.DefaultBranch); err != nil {
@@ -583,7 +583,7 @@ WriteFieldEndError:
 }
 
 func (p *RepoInfo) writeField11(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("created_at", thrift.STRING, 11); err != nil {
+	if err = oprot.WriteFieldBegin("createdAt", thrift.STRING, 11); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.CreatedAt); err != nil {
@@ -609,7 +609,7 @@ func (p *RepoInfo) String() string {
 
 type ListReposReq struct {
 	Page     int32 `thrift:"page,1" json:"page" query:"page"`
-	PageSize int32 `thrift:"page_size,2" json:"page_size" query:"page_size"`
+	PageSize int32 `thrift:"pageSize,2" json:"page_size" query:"page_size"`
 }
 
 func NewListReposReq() *ListReposReq {
@@ -629,7 +629,7 @@ func (p *ListReposReq) GetPageSize() (v int32) {
 
 var fieldIDToName_ListReposReq = map[int16]string{
 	1: "page",
-	2: "page_size",
+	2: "pageSize",
 }
 
 func (p *ListReposReq) Read(iprot thrift.TProtocol) (err error) {
@@ -769,7 +769,7 @@ WriteFieldEndError:
 }
 
 func (p *ListReposReq) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page_size", thrift.I32, 2); err != nil {
+	if err = oprot.WriteFieldBegin("pageSize", thrift.I32, 2); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteI32(p.PageSize); err != nil {
@@ -1287,8 +1287,8 @@ func (p *GetRepoResp) String() string {
 
 type CreateRepoReq struct {
 	Name        string `thrift:"name,1" form:"name" json:"name" query:"name"`
-	RemoteURL   string `thrift:"remote_url,2" form:"remote_url" json:"remote_url" query:"remote_url"`
-	AccessToken string `thrift:"access_token,3" form:"access_token" json:"access_token" query:"access_token"`
+	RemoteUrl   string `thrift:"remoteUrl,2" form:"remote_url" json:"remote_url" query:"remote_url"`
+	AccessToken string `thrift:"accessToken,3" form:"access_token" json:"access_token" query:"access_token"`
 }
 
 func NewCreateRepoReq() *CreateRepoReq {
@@ -1302,8 +1302,8 @@ func (p *CreateRepoReq) GetName() (v string) {
 	return p.Name
 }
 
-func (p *CreateRepoReq) GetRemoteURL() (v string) {
-	return p.RemoteURL
+func (p *CreateRepoReq) GetRemoteUrl() (v string) {
+	return p.RemoteUrl
 }
 
 func (p *CreateRepoReq) GetAccessToken() (v string) {
@@ -1312,8 +1312,8 @@ func (p *CreateRepoReq) GetAccessToken() (v string) {
 
 var fieldIDToName_CreateRepoReq = map[int16]string{
 	1: "name",
-	2: "remote_url",
-	3: "access_token",
+	2: "remoteUrl",
+	3: "accessToken",
 }
 
 func (p *CreateRepoReq) Read(iprot thrift.TProtocol) (err error) {
@@ -1407,7 +1407,7 @@ func (p *CreateRepoReq) ReadField2(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.RemoteURL = _field
+	p.RemoteUrl = _field
 	return nil
 }
 func (p *CreateRepoReq) ReadField3(iprot thrift.TProtocol) error {
@@ -1476,10 +1476,10 @@ WriteFieldEndError:
 }
 
 func (p *CreateRepoReq) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("remote_url", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("remoteUrl", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.RemoteURL); err != nil {
+	if err := oprot.WriteString(p.RemoteUrl); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1493,7 +1493,7 @@ WriteFieldEndError:
 }
 
 func (p *CreateRepoReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("access_token", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("accessToken", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.AccessToken); err != nil {
@@ -1666,7 +1666,7 @@ func (p *CreateRepoResp) String() string {
 type UpdateRepoReq struct {
 	Key         string `thrift:"key,1" form:"key" json:"key" query:"key"`
 	Name        string `thrift:"name,2" form:"name" json:"name" query:"name"`
-	AccessToken string `thrift:"access_token,3" form:"access_token" json:"access_token" query:"access_token"`
+	AccessToken string `thrift:"accessToken,3" form:"access_token" json:"access_token" query:"access_token"`
 }
 
 func NewUpdateRepoReq() *UpdateRepoReq {
@@ -1691,7 +1691,7 @@ func (p *UpdateRepoReq) GetAccessToken() (v string) {
 var fieldIDToName_UpdateRepoReq = map[int16]string{
 	1: "key",
 	2: "name",
-	3: "access_token",
+	3: "accessToken",
 }
 
 func (p *UpdateRepoReq) Read(iprot thrift.TProtocol) (err error) {
@@ -1871,7 +1871,7 @@ WriteFieldEndError:
 }
 
 func (p *UpdateRepoReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("access_token", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("accessToken", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.AccessToken); err != nil {

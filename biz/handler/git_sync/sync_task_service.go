@@ -14,7 +14,7 @@ import (
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
 )
 
-func ListTasks(ctx context.Context, c *app.RequestContext) {
+func TaskList(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.ListTasksReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -34,7 +34,7 @@ func ListTasks(ctx context.Context, c *app.RequestContext) {
 	})
 }
 
-func GetTask(ctx context.Context, c *app.RequestContext) {
+func TaskGet(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.GetTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -57,7 +57,7 @@ func GetTask(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &sync_task.GetTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
-func CreateTask(ctx context.Context, c *app.RequestContext) {
+func TaskCreate(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.CreateTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -82,7 +82,7 @@ func CreateTask(ctx context.Context, c *app.RequestContext) {
 	response.Created(c, &sync_task.CreateTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
-func UpdateTask(ctx context.Context, c *app.RequestContext) {
+func TaskUpdate(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.UpdateTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -110,7 +110,7 @@ func UpdateTask(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &sync_task.UpdateTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
-func DeleteTask(ctx context.Context, c *app.RequestContext) {
+func TaskDelete(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.DeleteTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -127,7 +127,7 @@ func DeleteTask(ctx context.Context, c *app.RequestContext) {
 	response.NoContent(c)
 }
 
-func RunTask(ctx context.Context, c *app.RequestContext) {
+func TaskRun(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.RunTaskReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -144,7 +144,7 @@ func RunTask(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &sync_task.RunTaskResp{Success: true, Message: "task started"})
 }
 
-func PreviewSync(ctx context.Context, c *app.RequestContext) {
+func TaskPreview(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.PreviewSyncReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -170,7 +170,7 @@ func PreviewSync(ctx context.Context, c *app.RequestContext) {
 	})
 }
 
-func ListHistory(ctx context.Context, c *app.RequestContext) {
+func TaskHistory(ctx context.Context, c *app.RequestContext) {
 	var req sync_task.ListHistoryReq
 	if err := c.BindAndValidate(&req); err != nil {
 		response.BadRequest(c, err.Error())
