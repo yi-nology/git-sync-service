@@ -37,7 +37,7 @@ func TestOperationLogDAO_CreateAndList(t *testing.T) {
 	}
 
 	// List all (newest first)
-	got, total, err := d.List(DefaultPagination(0, 50), OperationLogFilter{})
+	got, total, err := d.List(DefaultPagination(0, 50), &OperationLogFilter{})
 	if err != nil {
 		t.Fatalf("list failed: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestOperationLogDAO_CreateAndList(t *testing.T) {
 	}
 
 	// Filter by action
-	got, total, err = d.List(DefaultPagination(0, 50), OperationLogFilter{Action: "create"})
+	got, total, err = d.List(DefaultPagination(0, 50), &OperationLogFilter{Action: "create"})
 	if err != nil {
 		t.Fatalf("list by action failed: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestOperationLogDAO_CreateAndList(t *testing.T) {
 	}
 
 	// Filter by actor
-	got, total, err = d.List(DefaultPagination(0, 50), OperationLogFilter{Actor: "admin"})
+	got, total, err = d.List(DefaultPagination(0, 50), &OperationLogFilter{Actor: "admin"})
 	if err != nil {
 		t.Fatalf("list by actor failed: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestOperationLogDAO_CreateAndList(t *testing.T) {
 	}
 
 	// Search on resource/detail
-	got, total, err = d.List(DefaultPagination(0, 50), OperationLogFilter{Search: "webhook"})
+	got, total, err = d.List(DefaultPagination(0, 50), &OperationLogFilter{Search: "webhook"})
 	if err != nil {
 		t.Fatalf("search failed: %v", err)
 	}
@@ -76,7 +76,7 @@ func TestOperationLogDAO_CreateAndList(t *testing.T) {
 	}
 
 	// Pagination
-	got, total, err = d.List(DefaultPagination(0, 2), OperationLogFilter{})
+	got, total, err = d.List(DefaultPagination(0, 2), &OperationLogFilter{})
 	if err != nil {
 		t.Fatalf("paginated list failed: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestOperationLogDAO_DateFilterAndCount(t *testing.T) {
 	}
 
 	today := now.Format("2006-01-02")
-	got, total, err := d.List(DefaultPagination(0, 50), OperationLogFilter{StartDate: today, EndDate: today})
+	got, total, err := d.List(DefaultPagination(0, 50), &OperationLogFilter{StartDate: today, EndDate: today})
 	if err != nil {
 		t.Fatalf("date filter list failed: %v", err)
 	}

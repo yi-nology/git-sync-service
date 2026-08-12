@@ -52,7 +52,7 @@ func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
 		EndDate:   req.EndDate,
 	}
 
-	list, total, err := GetSyncService().ListOperations(ctx, offset, limit, filter)
+	list, total, err := GetSyncService().ListOperations(ctx, offset, limit, &filter)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return

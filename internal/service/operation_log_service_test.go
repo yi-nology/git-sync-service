@@ -33,7 +33,7 @@ func TestOperationLogService_RecordAndList(t *testing.T) {
 		t.Fatalf("record failed: %v", err)
 	}
 
-	got, total, err := svc.List(nil, 0, 50, dao.OperationLogFilter{})
+	got, total, err := svc.List(nil, 0, 50, &&&dao.OperationLogFilter{})
 	if err != nil {
 		t.Fatalf("list failed: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestOperationLogService_RecordAndList(t *testing.T) {
 	}
 
 	// filter by actor
-	_, total, err = svc.List(nil, 0, 50, dao.OperationLogFilter{Actor: "ops"})
+	_, total, err = svc.List(nil, 0, 50, &&dao.OperationLogFilter{Actor: "ops"})
 	if err != nil {
 		t.Fatalf("list filter failed: %v", err)
 	}

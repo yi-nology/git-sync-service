@@ -30,7 +30,7 @@ func (d *OperationLogDAO) Create(log *model.OperationLog) error {
 }
 
 // List 按过滤条件分页查询审计日志，返回列表与总数。
-func (d *OperationLogDAO) List(page Pagination, filter OperationLogFilter) ([]*model.OperationLog, int64, error) {
+func (d *OperationLogDAO) List(page Pagination, filter *OperationLogFilter) ([]*model.OperationLog, int64, error) {
 	var logs []*model.OperationLog
 	var total int64
 
