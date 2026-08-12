@@ -51,7 +51,7 @@ func List(ctx context.Context, c *app.RequestContext) {
 		OrderBy:  req.SortOrder,
 	}
 
-	list, total, err := GetSyncService().ListReposWithFilter(ctx, offset, limit, filter)
+	list, total, err := GetSyncService().ListReposWithFilter(ctx, offset, limit, &filter)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
