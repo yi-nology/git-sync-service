@@ -69,87 +69,12 @@ func _repoMw() []app.HandlerFunc {
 	return nil
 }
 
-func _getrepoMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _listbranchesMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _createrepoMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _deleterepoMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _testconnectionMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _updaterepoMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _listreposMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
 func _syncMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
 
-func _listhistoryMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _previewsyncMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
 func _taskMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _gettaskMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _createtaskMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _deletetaskMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _runtaskMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _updatetaskMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _listtasksMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
@@ -169,87 +94,12 @@ func _ruleMw() []app.HandlerFunc {
 	return nil
 }
 
-func _getruleMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _createruleMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _deleteruleMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _updateruleMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _listrulesMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
 func _eventMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
 
 func _retryeventMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _platformMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _getplatformMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _createplatformMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _updateplatformMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _deleteplatformMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _testplatformconnectionMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _setdefaultplatformMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _listplatformsMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _listplatformreposMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _syncplatformreposMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }

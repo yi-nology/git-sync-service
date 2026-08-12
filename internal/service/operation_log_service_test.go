@@ -26,15 +26,16 @@ func TestOperationLogService_RecordAndList(t *testing.T) {
 	svc := setupOperationLogTestService(t)
 	ctx := context.Background()
 
-	if err := _ = svc.Record(ctx, &model.OperationLog{Action: "create", ResourceType: "repo", Resource: "创建仓库 repo-x", Actor: "admin"}); err != nil {
+	// Record some operations
+	if err := svc.Record(ctx, &model.OperationLog{Action: "create", ResourceType: "repo", Resource: "创建仓库 repo-x", Actor: "admin"}); err != nil {
 		t.Fatalf("record failed: %v", err)
 	}
 
-	// 缺省 status 应被填为 success
-	if err := _ = svc.Record(ctx, &model.OperationLog{Action: "delete", ResourceType: "task", Resource: "删除任务 t1", Actor: "ops"}); err != nil {
+	if err := svc.Record(ctx, &model.OperationLog{Action: "delete", ResourceType: "task", Resource: "删除任务 t1", Actor: "ops"}); err != nil {
 		t.Fatalf("record failed: %v", err)
 	}
 
+	// List all
 	filter := &dao.OperationLogFilter{}
 	got, total, err := svc.List(ctx, 0, 50, filter)
 	if err != nil {
@@ -43,10 +44,13 @@ func TestOperationLogService_RecordAndList(t *testing.T) {
 	if total != 2 || len(got) != 2 {
 		t.Fatalf("expected 2, got total=%d len=%d", total, len(got))
 	}
-	// newest first → 删除任务 t1
+
+	// Check ordering (newest first)
 	if got[0].Resource != "删除任务 t1" {
 		t.Fatalf("expected newest first, got %+v", got[0])
 	}
+
+	// Check default status
 	if got[0].Status != model.StatusSuccess {
 		t.Fatalf("expected default status success, got %q", got[0].Status)
 	}
@@ -56,7 +60,7 @@ func TestOperationLogService_Stats(t *testing.T) {
 	svc := setupOperationLogTestService(t)
 	ctx := context.Background()
 
-	// 添加一些测试数据
+	// Add some test data
 	_ = svc.Record(ctx, &model.OperationLog{Action: "create", ResourceType: "repo", Resource: "test1", Actor: "admin"})
 	_ = svc.Record(ctx, &model.OperationLog{Action: "update", ResourceType: "task", Resource: "test2", Actor: "user"})
 
