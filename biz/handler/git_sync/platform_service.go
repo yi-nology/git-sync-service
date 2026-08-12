@@ -8,15 +8,10 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/google/uuid"
 	platform "github.com/yi-nology/git-sync-service/biz/model/platform"
+	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
-
-// PlatformListResponse 平台列表响应
-type PlatformListResponse struct {
-	Platforms []*model.Platform `json:"platforms"`
-	Total     int64             `json:"total"`
-}
 
 // CreatePlatform 创建平台
 func CreatePlatform(ctx context.Context, c *app.RequestContext) {
@@ -56,8 +51,8 @@ func CreatePlatform(ctx context.Context, c *app.RequestContext) {
 	}
 
 	recordAudit(ctx, c, "create", "platform", p.Key, "创建平台 "+p.Name)
-	response.Created(c, map[string]interface{}{
-		"platform": p,
+	response.Created(c, &platform.CreatePlatformResp{
+		Platform: converter.ToPlatformInfo(p),
 	})
 }
 
@@ -79,8 +74,8 @@ func GetPlatform(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	response.Success(c, map[string]interface{}{
-		"platform": p,
+	response.Success(c, &platform.GetPlatformResp{
+		Platform: converter.ToPlatformInfo(p),
 	})
 }
 
@@ -92,8 +87,8 @@ func ListPlatforms(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	response.Success(c, &PlatformListResponse{
-		Platforms: platforms,
+	response.Success(c, &platform.ListPlatformsResp{
+		Platforms: converter.ToPlatformList(platforms),
 		Total:     int64(len(platforms)),
 	})
 }
@@ -148,8 +143,8 @@ func UpdatePlatform(ctx context.Context, c *app.RequestContext) {
 	}
 
 	recordAudit(ctx, c, "update", "platform", req.Key, "更新平台 "+p.Name)
-	response.Success(c, map[string]interface{}{
-		"platform": p,
+	response.Success(c, &platform.UpdatePlatformResp{
+		Platform: converter.ToPlatformInfo(p),
 	})
 }
 
@@ -203,8 +198,8 @@ func SetDefaultPlatform(ctx context.Context, c *app.RequestContext) {
 	}
 
 	recordAudit(ctx, c, "update", "platform", req.Key, "设置默认平台 "+req.Key)
-	response.Success(c, map[string]interface{}{
-		"message": "设置成功",
+	response.Success(c, &platform.SetDefaultPlatformResp{
+		Message: "设置成功",
 	})
 }
 
@@ -288,8 +283,8 @@ func SyncPlatformRepos(ctx context.Context, c *app.RequestContext) {
 	}
 
 	recordAudit(ctx, c, "sync", "platform", req.Key, fmt.Sprintf("同步平台仓库 %s（导入 %d 个）", req.Key, count))
-	response.Success(c, map[string]interface{}{
-		"message":     "同步成功",
-		"syncedCount": count,
+	response.Success(c, &platform.SyncPlatformReposResp{
+		Message:     "同步成功",
+		SyncedCount: int32(count),
 	})
 }

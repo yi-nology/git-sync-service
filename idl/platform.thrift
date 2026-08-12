@@ -17,6 +17,8 @@ struct PlatformInfo {
     12: string lastTestResult (api.json="last_test_result")
     13: i32 repoCount (api.json="repo_count")
     14: string createdAt (api.json="created_at")
+    15: string lastTestAt (api.json="last_test_at")
+    16: string updatedAt (api.json="updated_at")
 }
 
 struct ListPlatformsReq {}

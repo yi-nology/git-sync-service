@@ -25,6 +25,8 @@ type PlatformInfo struct {
 	LastTestResult string `thrift:"lastTestResult,12" form:"last_test_result" json:"last_test_result" query:"last_test_result"`
 	RepoCount      int32  `thrift:"repoCount,13" form:"repo_count" json:"repo_count" query:"repo_count"`
 	CreatedAt      string `thrift:"createdAt,14" form:"created_at" json:"created_at" query:"created_at"`
+	LastTestAt     string `thrift:"lastTestAt,15" form:"last_test_at" json:"last_test_at" query:"last_test_at"`
+	UpdatedAt      string `thrift:"updatedAt,16" form:"updated_at" json:"updated_at" query:"updated_at"`
 }
 
 func NewPlatformInfo() *PlatformInfo {
@@ -90,6 +92,14 @@ func (p *PlatformInfo) GetCreatedAt() (v string) {
 	return p.CreatedAt
 }
 
+func (p *PlatformInfo) GetLastTestAt() (v string) {
+	return p.LastTestAt
+}
+
+func (p *PlatformInfo) GetUpdatedAt() (v string) {
+	return p.UpdatedAt
+}
+
 var fieldIDToName_PlatformInfo = map[int16]string{
 	1:  "id",
 	2:  "key",
@@ -105,6 +115,8 @@ var fieldIDToName_PlatformInfo = map[int16]string{
 	12: "lastTestResult",
 	13: "repoCount",
 	14: "createdAt",
+	15: "lastTestAt",
+	16: "updatedAt",
 }
 
 func (p *PlatformInfo) Read(iprot thrift.TProtocol) (err error) {
@@ -233,6 +245,22 @@ func (p *PlatformInfo) Read(iprot thrift.TProtocol) (err error) {
 		case 14:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField14(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 15:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField15(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 16:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField16(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -421,6 +449,28 @@ func (p *PlatformInfo) ReadField14(iprot thrift.TProtocol) error {
 	p.CreatedAt = _field
 	return nil
 }
+func (p *PlatformInfo) ReadField15(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.LastTestAt = _field
+	return nil
+}
+func (p *PlatformInfo) ReadField16(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.UpdatedAt = _field
+	return nil
+}
 
 func (p *PlatformInfo) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -482,6 +532,14 @@ func (p *PlatformInfo) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField14(oprot); err != nil {
 			fieldId = 14
+			goto WriteFieldError
+		}
+		if err = p.writeField15(oprot); err != nil {
+			fieldId = 15
+			goto WriteFieldError
+		}
+		if err = p.writeField16(oprot); err != nil {
+			fieldId = 16
 			goto WriteFieldError
 		}
 	}
@@ -738,6 +796,40 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 14 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 14 end error: ", p), err)
+}
+
+func (p *PlatformInfo) writeField15(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("lastTestAt", thrift.STRING, 15); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.LastTestAt); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 15 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 15 end error: ", p), err)
+}
+
+func (p *PlatformInfo) writeField16(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("updatedAt", thrift.STRING, 16); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.UpdatedAt); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 16 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 16 end error: ", p), err)
 }
 
 func (p *PlatformInfo) String() string {

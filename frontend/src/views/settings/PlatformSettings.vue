@@ -716,7 +716,7 @@ async function syncRepos(platform: Platform) {
   message.loading({ content: '正在同步仓库...', key: 'sync' })
   try {
     const result = await platformApi.syncRepos(platform.key)
-    message.success({ content: `同步成功，共 ${result.syncedCount || 0} 个仓库`, key: 'sync' })
+    message.success({ content: `同步成功，共 ${result.synced_count || 0} 个仓库`, key: 'sync' })
     await loadPlatforms()
   } catch (e: any) {
     message.error({ content: e?.message || '同步失败', key: 'sync' })

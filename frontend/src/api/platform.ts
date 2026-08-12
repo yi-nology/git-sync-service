@@ -90,5 +90,5 @@ export const platformApi = {
 
   // 同步仓库到本地
   syncRepos: (key: string) =>
-    api.post<any, { message: string; syncedCount: number }>('/platform/sync-repos', null, { params: { key } }),
+    api.post<any, { message: string; synced_count: number }>('/platform/sync-repos', null, { params: { key } }),
 }
