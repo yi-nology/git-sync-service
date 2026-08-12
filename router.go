@@ -16,9 +16,6 @@ func customizedRegister(r *server.Hertz) {
 	// Readiness probe (checks database and Redis, no auth)
 	r.GET("/health", git_sync.HealthCheck)
 
-	// System status API
-	r.GET("/api/v1/system/status", git_sync.SystemStatus)
-
 	// Webhook 接收端点（带速率限制，不走 API 鉴权）
 	r.POST("/api/webhook/receive/:repoKey", git_sync.RateLimitMiddleware(), git_sync.ReceiveWebhook)
 }

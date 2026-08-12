@@ -58,6 +58,10 @@ func Register(r *server.Hertz) {
 				_sync.GET("/tasks", append(_tasklistMw(), git_sync.TaskList)...)
 			}
 			{
+				_system := _v1.Group("/system", _systemMw()...)
+				_system.GET("/status", append(_systemstatusMw(), git_sync.SystemStatus)...)
+			}
+			{
 				_webhook := _v1.Group("/webhook", _webhookMw()...)
 				_webhook.GET("/events", append(_listeventsMw(), git_sync.ListEvents)...)
 				_webhook.GET("/rule", append(_rulegetMw(), git_sync.RuleGet)...)

@@ -4,6 +4,7 @@ include "sync_task.thrift"
 include "webhook.thrift"
 include "operation_log.thrift"
 include "platform.thrift"
+include "system.thrift"
 
 service RepoService {
     repo.ListReposResp RepoList(1: repo.ListReposReq req) (api.get="/api/v1/repos")
@@ -51,4 +52,8 @@ service PlatformService {
     platform.TestPlatformConnectionResp TestPlatformConnection(1: platform.TestPlatformConnectionReq req) (api.post="/api/v1/platform/test")
     platform.ListPlatformReposResp ListPlatformRepos(1: platform.ListPlatformReposReq req) (api.get="/api/v1/platform/repos")
     platform.SyncPlatformReposResp SyncPlatformRepos(1: platform.SyncPlatformReposReq req) (api.post="/api/v1/platform/sync-repos")
+}
+
+service SystemService {
+    system.SystemStatusData SystemStatus(1: system.SystemStatusReq req) (api.get="/api/v1/system/status")
 }

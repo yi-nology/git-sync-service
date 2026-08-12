@@ -273,3 +273,13 @@ func _batchreposMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _systemMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _systemstatusMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
