@@ -6,6 +6,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	handler "github.com/yi-nology/git-sync-service/biz/handler"
 	"github.com/yi-nology/git-sync-service/biz/handler/git_sync"
+	routermw "github.com/yi-nology/git-sync-service/biz/router/git_sync"
 )
 
 // customizeRegister registers customize routers.
@@ -24,6 +25,9 @@ func customizedRegister(r *server.Hertz) {
 
 	// POST /api/v1/repos/batch -> BatchRepos
 	r.POST("/api/v1/repos/batch", git_sync.BatchRepos)
+
+	// Operation logs (audit) API — requires X-API-Key auth
+	r.GET("/api/v1/logs/operations", routermw.AuthMiddleware(), git_sync.ListOperationLogs)
 
 	// Platform management APIs
 	r.GET("/api/v1/platforms", git_sync.ListPlatforms)

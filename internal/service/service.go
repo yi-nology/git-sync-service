@@ -260,3 +260,20 @@ func (s *Service) SyncPlatformRepos(ctx context.Context, key string) (int, error
 func (s *Service) ListReposByPlatform(ctx context.Context, platformKey string) ([]*model.Repo, error) {
 	return s.platforms.ListReposByPlatform(ctx, platformKey)
 }
+
+// Operation log (audit) related methods
+
+// RecordOperation 记录一条审计日志。
+func (s *Service) RecordOperation(ctx context.Context, entry *model.OperationLog) error {
+	return s.opLogs.Record(ctx, entry)
+}
+
+// ListOperations 按过滤条件分页返回审计日志。
+func (s *Service) ListOperations(ctx context.Context, offset, limit int, filter *dao.OperationLogFilter) ([]*model.OperationLog, int64, error) {
+	return s.opLogs.List(ctx, offset, limit, filter)
+}
+
+// OperationStats 返回今日、本周、总操作数。
+func (s *Service) OperationStats(ctx context.Context) (today, week, total int64, err error) {
+	return s.opLogs.Stats(ctx)
+}

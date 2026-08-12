@@ -86,6 +86,7 @@ func RuleCreate(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "create", "rule", r.Name, "创建 webhook 规则 "+r.Name)
 	response.Created(c, &webhook.CreateRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
@@ -124,6 +125,7 @@ func RuleUpdate(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "update", "rule", r.Name, "更新 webhook 规则 "+r.Name)
 	response.Success(c, &webhook.UpdateRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
@@ -141,6 +143,7 @@ func RuleDelete(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "delete", "rule", strconv.FormatUint(uint64(req.ID), 10), "删除 webhook 规则 #"+strconv.FormatUint(uint64(req.ID), 10))
 	response.NoContent(c)
 }
 
@@ -186,5 +189,6 @@ func RetryEvent(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "retry", "event", strconv.FormatUint(uint64(req.ID), 10), "重试 webhook 事件 #"+strconv.FormatUint(uint64(req.ID), 10))
 	response.Success(c, &webhook.RetryEventResp{Success: true, Message: "event retried"})
 }

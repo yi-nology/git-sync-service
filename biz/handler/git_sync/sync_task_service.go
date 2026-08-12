@@ -79,6 +79,7 @@ func TaskCreate(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, fmt.Sprintf("create task failed: %v", err))
 		return
 	}
+	recordAudit(ctx, c, "create", "task", t.Key, "创建同步任务 "+t.Name)
 	response.Created(c, &sync_task.CreateTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
@@ -107,6 +108,7 @@ func TaskUpdate(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "update", "task", t.Key, "更新同步任务 "+t.Key)
 	response.Success(c, &sync_task.UpdateTaskResp{Task: converter.ToTaskInfo(t)})
 }
 
@@ -124,6 +126,7 @@ func TaskDelete(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "delete", "task", req.Key, "删除同步任务 "+req.Key)
 	response.NoContent(c)
 }
 
@@ -141,6 +144,7 @@ func TaskRun(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "run", "task", req.Key, "手动触发同步 "+req.Key)
 	response.Success(c, &sync_task.RunTaskResp{Success: true, Message: "task started"})
 }
 

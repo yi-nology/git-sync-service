@@ -2,6 +2,7 @@ package git_sync
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -75,6 +76,7 @@ func CreatePlatform(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	recordAudit(ctx, c, "create", "platform", platform.Key, "创建平台 "+platform.Name)
 	response.Created(c, map[string]interface{}{
 		"platform": platform,
 	})
@@ -158,6 +160,7 @@ func UpdatePlatform(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	recordAudit(ctx, c, "update", "platform", req.Key, "更新平台 "+platform.Name)
 	response.Success(c, map[string]interface{}{
 		"platform": platform,
 	})
@@ -187,6 +190,7 @@ func DeletePlatform(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	recordAudit(ctx, c, "delete", "platform", key, "删除平台 "+key)
 	c.JSON(http.StatusNoContent, nil)
 }
 
@@ -203,6 +207,7 @@ func SetDefaultPlatform(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	recordAudit(ctx, c, "update", "platform", key, "设置默认平台 "+key)
 	response.Success(c, map[string]interface{}{
 		"message": "设置成功",
 	})
@@ -269,6 +274,7 @@ func SyncPlatformRepos(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	recordAudit(ctx, c, "sync", "platform", key, fmt.Sprintf("同步平台仓库 %s（导入 %d 个）", key, count))
 	response.Success(c, map[string]interface{}{
 		"message":     "同步成功",
 		"syncedCount": count,

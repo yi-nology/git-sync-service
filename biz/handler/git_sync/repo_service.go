@@ -112,6 +112,7 @@ func Create(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, fmt.Sprintf("create repo failed: %v", err))
 		return
 	}
+	recordAudit(ctx, c, "create", "repo", r.Key, "创建仓库 "+r.Name)
 	response.Created(c, &repo.CreateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
@@ -137,6 +138,7 @@ func Update(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "update", "repo", r.Key, "更新仓库 "+r.Key)
 	response.Success(c, &repo.UpdateRepoResp{Repo: converter.ToRepoInfo(r)})
 }
 
@@ -155,6 +157,7 @@ func Delete(ctx context.Context, c *app.RequestContext) {
 		response.InternalError(c, err.Error())
 		return
 	}
+	recordAudit(ctx, c, "delete", "repo", req.Key, "删除仓库 "+req.Key)
 	response.NoContent(c)
 }
 
