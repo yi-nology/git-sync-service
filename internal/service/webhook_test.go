@@ -270,7 +270,7 @@ func TestListEvents(t *testing.T) {
 	}
 
 	// List events
-	events, total, err := svc.ListEvents(nil, "test-repo", 0, 10)
+	events, total, err := svc.ListEvents(context.TODO(), "test-repo", 0, 10)
 	if err != nil {
 		t.Fatalf("ListEvents failed: %v", err)
 	}
@@ -297,7 +297,7 @@ func TestRetryEvent(t *testing.T) {
 	}
 
 	// Retry the event
-	err := svc.RetryEvent(nil, event.ID)
+	err := svc.RetryEvent(context.TODO(), event.ID)
 	if err != nil {
 		t.Fatalf("RetryEvent failed: %v", err)
 	}
@@ -330,7 +330,7 @@ func TestRetryEvent(t *testing.T) {
 func TestRetryEvent_NotFound(t *testing.T) {
 	svc, _ := setupWebhookTestService(t)
 
-	err := svc.RetryEvent(nil, 999)
+	err := svc.RetryEvent(context.TODO(), 999)
 	if err == nil {
 		t.Fatal("expected error for non-existent event")
 	}
