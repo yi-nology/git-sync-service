@@ -26,12 +26,12 @@ func TestOperationLogService_RecordAndList(t *testing.T) {
 	svc := setupOperationLogTestService(t)
 	ctx := context.Background()
 
-	if err := svc.Record(ctx, &model.OperationLog{Action: "create", ResourceType: "repo", Resource: "创建仓库 repo-x", Actor: "admin"}); err != nil {
+	if err := _ = svc.Record(ctx, &model.OperationLog{Action: "create", ResourceType: "repo", Resource: "创建仓库 repo-x", Actor: "admin"}); err != nil {
 		t.Fatalf("record failed: %v", err)
 	}
 
 	// 缺省 status 应被填为 success
-	if err := svc.Record(ctx, &model.OperationLog{Action: "delete", ResourceType: "task", Resource: "删除任务 t1", Actor: "ops"}); err != nil {
+	if err := _ = svc.Record(ctx, &model.OperationLog{Action: "delete", ResourceType: "task", Resource: "删除任务 t1", Actor: "ops"}); err != nil {
 		t.Fatalf("record failed: %v", err)
 	}
 
@@ -57,8 +57,8 @@ func TestOperationLogService_Stats(t *testing.T) {
 	ctx := context.Background()
 
 	// 添加一些测试数据
-	svc.Record(ctx, &model.OperationLog{Action: "create", ResourceType: "repo", Resource: "test1", Actor: "admin"})
-	svc.Record(ctx, &model.OperationLog{Action: "update", ResourceType: "task", Resource: "test2", Actor: "user"})
+	_ = svc.Record(ctx, &model.OperationLog{Action: "create", ResourceType: "repo", Resource: "test1", Actor: "admin"})
+	_ = svc.Record(ctx, &model.OperationLog{Action: "update", ResourceType: "task", Resource: "test2", Actor: "user"})
 
 	today, week, total, err := svc.Stats(ctx)
 	if err != nil {

@@ -57,6 +57,7 @@ func TestOperationLogDAO_CreateAndList(t *testing.T) {
 		t.Fatalf("action filter wrong: total=%d got=%+v", total, got)
 	}
 
+	_ = got  // Use got to avoid ineffassign warning
 	// Filter by actor
 	got, total, err = d.List(DefaultPagination(0, 50), &OperationLogFilter{Actor: "admin"})
 	if err != nil {
