@@ -17,7 +17,7 @@ func TestRedisLock_TryLock(t *testing.T) {
 	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 
 	// Should acquire lock
 	ok, err := lock.TryLock(ctx, key)
@@ -38,7 +38,7 @@ func TestRedisLock_TryLock(t *testing.T) {
 	}
 
 	// Cleanup
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 }
 
 func TestRedisLock_TryLockWithTTL(t *testing.T) {
@@ -51,7 +51,7 @@ func TestRedisLock_TryLockWithTTL(t *testing.T) {
 	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 
 	// Acquire lock with short TTL
 	ok, err := lock.TryLockWithTTL(ctx, key, 100*time.Millisecond)
@@ -84,7 +84,7 @@ func TestRedisLock_TryLockWithTTL(t *testing.T) {
 	}
 
 	// Cleanup
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 }
 
 func TestRedisLock_Unlock(t *testing.T) {
@@ -97,7 +97,7 @@ func TestRedisLock_Unlock(t *testing.T) {
 	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 
 	// Acquire lock
 	ok, err := lock.TryLock(ctx, key)
@@ -124,7 +124,7 @@ func TestRedisLock_Unlock(t *testing.T) {
 	}
 
 	// Cleanup
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 }
 
 func TestRedisLock_UnlockWithValue(t *testing.T) {
@@ -137,7 +137,7 @@ func TestRedisLock_UnlockWithValue(t *testing.T) {
 	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 
 	// Acquire lock with value
 	ok, value, err := lock.LockWithTTL(ctx, key, 30*time.Second)
@@ -167,7 +167,7 @@ func TestRedisLock_UnlockWithValue(t *testing.T) {
 	}
 
 	// Cleanup
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 }
 
 func TestRedisLock_ExtendLock(t *testing.T) {
@@ -180,7 +180,7 @@ func TestRedisLock_ExtendLock(t *testing.T) {
 	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 
 	// Acquire lock with short TTL
 	ok, err := lock.TryLockWithTTL(ctx, key, 100*time.Millisecond)
@@ -210,7 +210,7 @@ func TestRedisLock_ExtendLock(t *testing.T) {
 	}
 
 	// Cleanup
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 }
 
 func TestRedisLock_Ping(t *testing.T) {
@@ -237,7 +237,7 @@ func TestRedisLock_Concurrent(t *testing.T) {
 	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 
 	acquired := make(chan bool, 2)
 
@@ -246,7 +246,7 @@ func TestRedisLock_Concurrent(t *testing.T) {
 		acquired <- ok
 		if ok {
 			time.Sleep(50 * time.Millisecond)
-			lock.Unlock(ctx, key)
+			_ = lock.Unlock(ctx, key)
 		}
 	}()
 
@@ -276,7 +276,7 @@ func TestRedisLock_LockWithContext(t *testing.T) {
 	defer func() { _ = lock.Close() }()
 
 	// Clean up any existing lock
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 
 	// Acquire lock in first goroutine
 	ok, err := lock.TryLock(ctx, key)
@@ -300,7 +300,7 @@ func TestRedisLock_LockWithContext(t *testing.T) {
 	}
 
 	// Cleanup
-	lock.Unlock(ctx, key)
+	_ = lock.Unlock(ctx, key)
 }
 
 func TestRedisLock_Close(t *testing.T) {
