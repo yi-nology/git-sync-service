@@ -199,7 +199,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 	}
 
 	// Update task2 to set enabled=false using the actual key
-	if _, err := svc.tasks.UpdateTask(nil, &model.UpdateTaskRequest{
+	if _, err := svc.tasks.UpdateTask(context.TODO(), &model.UpdateTaskRequest{
 		Key:     task2.Key,
 		Enabled: false,
 	}); err != nil {

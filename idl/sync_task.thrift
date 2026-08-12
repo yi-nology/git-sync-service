@@ -1,4 +1,4 @@
-namespace go sync_task
+
 
 struct SyncTaskInfo {
     1: i64 id (api.json="id")

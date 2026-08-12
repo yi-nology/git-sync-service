@@ -1,4 +1,4 @@
-namespace go git_sync
+
 
 include "base.thrift"
 include "repo.thrift"

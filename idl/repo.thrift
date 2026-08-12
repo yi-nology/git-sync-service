@@ -1,4 +1,4 @@
-namespace go repo
+
 
 struct RepoInfo {
     1: i64 id (api.json="id")

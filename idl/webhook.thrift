@@ -1,4 +1,4 @@
-namespace go webhook
+
 
 struct WebhookRuleInfo {
     1: i64 id (api.json="id")
