@@ -52,15 +52,15 @@ func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
 		totalPages = int32((total + int64(req.PageSize) - 1) / int64(req.PageSize))
 	}
 
-	response.Success(c, map[string]interface{}{
-		"list": converter.ToOperationLogList(list),
-		"pagination": map[string]interface{}{
-			"page":        req.Page,
-			"page_size":   req.PageSize,
-			"total":       total,
-			"total_pages": totalPages,
+	response.Success(c, &operation_log.ListOperationLogsResp{
+		List: converter.ToOperationLogList(list),
+		Pagination: &operation_log.OperationLogPagination{
+			Page:       req.Page,
+			PageSize:   req.PageSize,
+			Total:      total,
+			TotalPages: totalPages,
 		},
-		"stats": &operation_log.OperationLogStats{
+		Stats: &operation_log.OperationLogStats{
 			Today: today,
 			Week:  week,
 			Total: statsTotal,

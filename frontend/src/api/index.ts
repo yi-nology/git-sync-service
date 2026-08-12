@@ -123,6 +123,12 @@ export interface OperationLogResp {
     page: number
     page_size: number
     total: number
+    total_pages: number
+  }
+  stats: {
+    today: number
+    week: number
+    total: number
   }
 }
 

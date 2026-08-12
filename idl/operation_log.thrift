@@ -27,11 +27,15 @@ struct ListOperationLogsReq {
     7: string endDate (api.query="end_date")
 }
 
+struct OperationLogPagination {
+    1: i32 page (api.json="page")
+    2: i32 pageSize (api.json="page_size")
+    3: i64 total (api.json="total")
+    4: i32 totalPages (api.json="total_pages")
+}
+
 struct ListOperationLogsResp {
     1: list<OperationLogInfo> list (api.json="list")
-    2: i32 page (api.json="page")
-    3: i32 pageSize (api.json="page_size")
-    4: i64 total (api.json="total")
-    5: i32 totalPages (api.json="total_pages")
-    6: OperationLogStats stats (api.json="stats")
+    2: OperationLogPagination pagination (api.json="pagination")
+    3: OperationLogStats stats (api.json="stats")
 }

@@ -1073,13 +1073,288 @@ func (p *ListOperationLogsReq) String() string {
 
 }
 
+type OperationLogPagination struct {
+	Page       int32 `thrift:"page,1" form:"page" json:"page" query:"page"`
+	PageSize   int32 `thrift:"pageSize,2" form:"page_size" json:"page_size" query:"page_size"`
+	Total      int64 `thrift:"total,3" form:"total" json:"total" query:"total"`
+	TotalPages int32 `thrift:"totalPages,4" form:"total_pages" json:"total_pages" query:"total_pages"`
+}
+
+func NewOperationLogPagination() *OperationLogPagination {
+	return &OperationLogPagination{}
+}
+
+func (p *OperationLogPagination) InitDefault() {
+}
+
+func (p *OperationLogPagination) GetPage() (v int32) {
+	return p.Page
+}
+
+func (p *OperationLogPagination) GetPageSize() (v int32) {
+	return p.PageSize
+}
+
+func (p *OperationLogPagination) GetTotal() (v int64) {
+	return p.Total
+}
+
+func (p *OperationLogPagination) GetTotalPages() (v int32) {
+	return p.TotalPages
+}
+
+var fieldIDToName_OperationLogPagination = map[int16]string{
+	1: "page",
+	2: "pageSize",
+	3: "total",
+	4: "totalPages",
+}
+
+func (p *OperationLogPagination) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_OperationLogPagination[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *OperationLogPagination) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.Page = _field
+	return nil
+}
+func (p *OperationLogPagination) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.PageSize = _field
+	return nil
+}
+func (p *OperationLogPagination) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.Total = _field
+	return nil
+}
+func (p *OperationLogPagination) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.TotalPages = _field
+	return nil
+}
+
+func (p *OperationLogPagination) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("OperationLogPagination"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *OperationLogPagination) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("page", thrift.I32, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI32(p.Page); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *OperationLogPagination) writeField2(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("pageSize", thrift.I32, 2); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI32(p.PageSize); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *OperationLogPagination) writeField3(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("total", thrift.I64, 3); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.Total); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *OperationLogPagination) writeField4(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("totalPages", thrift.I32, 4); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI32(p.TotalPages); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *OperationLogPagination) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("OperationLogPagination(%+v)", *p)
+
+}
+
 type ListOperationLogsResp struct {
-	List       []*OperationLogInfo `thrift:"list,1,default,list<OperationLogInfo>" form:"list" json:"list" query:"list"`
-	Page       int32               `thrift:"page,2" form:"page" json:"page" query:"page"`
-	PageSize   int32               `thrift:"pageSize,3" form:"page_size" json:"page_size" query:"page_size"`
-	Total      int64               `thrift:"total,4" form:"total" json:"total" query:"total"`
-	TotalPages int32               `thrift:"totalPages,5" form:"total_pages" json:"total_pages" query:"total_pages"`
-	Stats      *OperationLogStats  `thrift:"stats,6" form:"stats" json:"stats" query:"stats"`
+	List       []*OperationLogInfo     `thrift:"list,1,default,list<OperationLogInfo>" form:"list" json:"list" query:"list"`
+	Pagination *OperationLogPagination `thrift:"pagination,2" form:"pagination" json:"pagination" query:"pagination"`
+	Stats      *OperationLogStats      `thrift:"stats,3" form:"stats" json:"stats" query:"stats"`
 }
 
 func NewListOperationLogsResp() *ListOperationLogsResp {
@@ -1093,20 +1368,13 @@ func (p *ListOperationLogsResp) GetList() (v []*OperationLogInfo) {
 	return p.List
 }
 
-func (p *ListOperationLogsResp) GetPage() (v int32) {
-	return p.Page
-}
+var ListOperationLogsResp_Pagination_DEFAULT *OperationLogPagination
 
-func (p *ListOperationLogsResp) GetPageSize() (v int32) {
-	return p.PageSize
-}
-
-func (p *ListOperationLogsResp) GetTotal() (v int64) {
-	return p.Total
-}
-
-func (p *ListOperationLogsResp) GetTotalPages() (v int32) {
-	return p.TotalPages
+func (p *ListOperationLogsResp) GetPagination() (v *OperationLogPagination) {
+	if !p.IsSetPagination() {
+		return ListOperationLogsResp_Pagination_DEFAULT
+	}
+	return p.Pagination
 }
 
 var ListOperationLogsResp_Stats_DEFAULT *OperationLogStats
@@ -1120,11 +1388,12 @@ func (p *ListOperationLogsResp) GetStats() (v *OperationLogStats) {
 
 var fieldIDToName_ListOperationLogsResp = map[int16]string{
 	1: "list",
-	2: "page",
-	3: "pageSize",
-	4: "total",
-	5: "totalPages",
-	6: "stats",
+	2: "pagination",
+	3: "stats",
+}
+
+func (p *ListOperationLogsResp) IsSetPagination() bool {
+	return p.Pagination != nil
 }
 
 func (p *ListOperationLogsResp) IsSetStats() bool {
@@ -1159,7 +1428,7 @@ func (p *ListOperationLogsResp) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 2:
-			if fieldTypeId == thrift.I32 {
+			if fieldTypeId == thrift.STRUCT {
 				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -1167,32 +1436,8 @@ func (p *ListOperationLogsResp) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 3:
-			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField3(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 4:
-			if fieldTypeId == thrift.I64 {
-				if err = p.ReadField4(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 5:
-			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField5(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 6:
 			if fieldTypeId == thrift.STRUCT {
-				if err = p.ReadField6(iprot); err != nil {
+				if err = p.ReadField3(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -1251,50 +1496,14 @@ func (p *ListOperationLogsResp) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 func (p *ListOperationLogsResp) ReadField2(iprot thrift.TProtocol) error {
-
-	var _field int32
-	if v, err := iprot.ReadI32(); err != nil {
+	_field := NewOperationLogPagination()
+	if err := _field.Read(iprot); err != nil {
 		return err
-	} else {
-		_field = v
 	}
-	p.Page = _field
+	p.Pagination = _field
 	return nil
 }
 func (p *ListOperationLogsResp) ReadField3(iprot thrift.TProtocol) error {
-
-	var _field int32
-	if v, err := iprot.ReadI32(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.PageSize = _field
-	return nil
-}
-func (p *ListOperationLogsResp) ReadField4(iprot thrift.TProtocol) error {
-
-	var _field int64
-	if v, err := iprot.ReadI64(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.Total = _field
-	return nil
-}
-func (p *ListOperationLogsResp) ReadField5(iprot thrift.TProtocol) error {
-
-	var _field int32
-	if v, err := iprot.ReadI32(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.TotalPages = _field
-	return nil
-}
-func (p *ListOperationLogsResp) ReadField6(iprot thrift.TProtocol) error {
 	_field := NewOperationLogStats()
 	if err := _field.Read(iprot); err != nil {
 		return err
@@ -1319,18 +1528,6 @@ func (p *ListOperationLogsResp) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField3(oprot); err != nil {
 			fieldId = 3
-			goto WriteFieldError
-		}
-		if err = p.writeField4(oprot); err != nil {
-			fieldId = 4
-			goto WriteFieldError
-		}
-		if err = p.writeField5(oprot); err != nil {
-			fieldId = 5
-			goto WriteFieldError
-		}
-		if err = p.writeField6(oprot); err != nil {
-			fieldId = 6
 			goto WriteFieldError
 		}
 	}
@@ -1377,10 +1574,10 @@ WriteFieldEndError:
 }
 
 func (p *ListOperationLogsResp) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page", thrift.I32, 2); err != nil {
+	if err = oprot.WriteFieldBegin("pagination", thrift.STRUCT, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI32(p.Page); err != nil {
+	if err := p.Pagination.Write(oprot); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1394,58 +1591,7 @@ WriteFieldEndError:
 }
 
 func (p *ListOperationLogsResp) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("pageSize", thrift.I32, 3); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI32(p.PageSize); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
-}
-
-func (p *ListOperationLogsResp) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("total", thrift.I64, 4); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI64(p.Total); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
-}
-
-func (p *ListOperationLogsResp) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("totalPages", thrift.I32, 5); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI32(p.TotalPages); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
-}
-
-func (p *ListOperationLogsResp) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("stats", thrift.STRUCT, 6); err != nil {
+	if err = oprot.WriteFieldBegin("stats", thrift.STRUCT, 3); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := p.Stats.Write(oprot); err != nil {
@@ -1456,9 +1602,9 @@ func (p *ListOperationLogsResp) writeField6(oprot thrift.TProtocol) (err error) 
 	}
 	return nil
 WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
 WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
 func (p *ListOperationLogsResp) String() string {
