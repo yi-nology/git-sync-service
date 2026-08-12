@@ -143,7 +143,7 @@ type RepoFilter struct {
 }
 
 // ListWithFilter returns a filtered, sorted, paginated list of repos and the total count.
-func (d *RepoDAO) ListWithFilter(page Pagination, filter RepoFilter) ([]*model.Repo, int64, error) {
+func (d *RepoDAO) ListWithFilter(page Pagination, filter *RepoFilter) ([]*model.Repo, int64, error) {
 	var repos []*model.Repo
 	var total int64
 

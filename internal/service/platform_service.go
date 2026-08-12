@@ -181,7 +181,7 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 	}
 
 	// 更新平台仓库数量
-	s.platformDAO.UpdateRepoCount(platform.ID)
+	_ = s.platformDAO.UpdateRepoCount(platform.ID)
 
 	return count, nil
 }

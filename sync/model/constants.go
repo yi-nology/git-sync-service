@@ -76,6 +76,7 @@ const (
 	TableWebhookRules     = "webhook_rules"
 	TableWebhookRuleTasks = "webhook_rule_tasks"
 	TableWebhookEvents    = "webhook_events"
+	TableOperationLogs    = "operation_logs"
 )
 
 // Model default value constants

@@ -37,7 +37,7 @@ func (rs *RepoService) ListRepos(ctx context.Context, offset, limit int) ([]*mod
 // ListReposWithFilter returns a filtered, sorted, paginated list of repositories.
 func (rs *RepoService) ListReposWithFilter(ctx context.Context, offset, limit int, filter *dao.RepoFilter) ([]*model.Repo, int64, error) {
 	page := dao.DefaultPagination(offset, limit)
-	return rs.repoDAO.ListWithFilter(page, *filter)
+	return rs.repoDAO.ListWithFilter(page, filter)
 }
 
 // GetRepo returns a repository by key.
@@ -104,7 +104,7 @@ func (rs *RepoService) CreateRepo(ctx context.Context, req *model.CreateRepoRequ
 
 	// Update platform repo count
 	if repo.PlatformID > 0 && rs.platformDAO != nil {
-		rs.platformDAO.UpdateRepoCount(repo.PlatformID)
+		_ = rs.platformDAO.UpdateRepoCount(repo.PlatformID)
 	}
 
 	return repo, nil
@@ -153,7 +153,7 @@ func (rs *RepoService) DeleteRepo(ctx context.Context, key string) error {
 
 	// Update platform repo count
 	if platformID > 0 && rs.platformDAO != nil {
-		rs.platformDAO.UpdateRepoCount(platformID)
+		_ = rs.platformDAO.UpdateRepoCount(platformID)
 	}
 
 	return nil

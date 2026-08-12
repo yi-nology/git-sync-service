@@ -29,6 +29,7 @@ type Service struct {
 	tasks     *TaskService
 	webhooks  *WebhookService
 	platforms *PlatformService
+	opLogs    *OperationLogService
 	cron            *cron.Cron
 	cronEntryIDs    map[string]cron.EntryID
 	cronMu          sync.RWMutex
@@ -69,11 +70,13 @@ func NewService(cfg *Config) (*Service, error) {
 	ruleDAO := dao.NewWebhookRuleDAO(db)
 	eventDAO := dao.NewWebhookEventDAO(db)
 	platformDAO := dao.NewPlatformDAO(db)
+	opLogDAO := dao.NewOperationLogDAO(db)
 
 	repoService := NewRepoService(repoDAO, platformDAO, providerMgr)
 	taskService := NewTaskService(taskDAO, runDAO, runStepDAO, repoDAO)
 	webhookService := NewWebhookService(ruleDAO, eventDAO, repoDAO)
 	platformService := NewPlatformService(platformDAO, repoDAO, providerMgr)
+	opLogService := NewOperationLogService(opLogDAO)
 
 	bgCtx, bgCancel := context.WithCancel(context.Background())
 
@@ -84,6 +87,7 @@ func NewService(cfg *Config) (*Service, error) {
 		tasks:          taskService,
 		webhooks:       webhookService,
 		platforms:      platformService,
+		opLogs:         opLogService,
 		cron:           cron.New(cron.WithSeconds()),
 		cronEntryIDs:   make(map[string]cron.EntryID),
 		cleanupDone:    make(chan struct{}),
