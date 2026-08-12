@@ -27,7 +27,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Cache Go modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -82,7 +82,7 @@ jobs:
         run: go build -o ./output/git-sync-service .
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: git-sync-service-linux-amd64
           path: ./output/git-sync-service
