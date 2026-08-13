@@ -3,7 +3,6 @@ package git_sync
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/google/uuid"
@@ -177,7 +176,7 @@ func DeletePlatform(ctx context.Context, c *app.RequestContext) {
 	}
 
 	recordAudit(ctx, c, "delete", "platform", req.Key, "删除平台 "+req.Key)
-	c.JSON(http.StatusNoContent, nil)
+	response.NoContent(c)
 }
 
 // SetDefaultPlatform 设置默认平台
