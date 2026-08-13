@@ -3,6 +3,7 @@ module github.com/yi-nology/git-sync-service
 go 1.26
 
 require (
+	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/apache/thrift v0.13.0
 	github.com/cloudwego/hertz v0.10.5
 	github.com/glebarez/sqlite v1.11.0
@@ -81,6 +82,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/yi-nology/gitcode_api v0.6.0 // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
 	gitlab.com/gitlab-org/api/client-go/v2 v2.55.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect

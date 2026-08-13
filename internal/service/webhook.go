@@ -94,9 +94,20 @@ func (s *Service) applyRules(ctx context.Context, repoKey string, event *model.W
 }
 
 func (s *Service) RetryEvent(ctx context.Context, eventID uint) error {
-	return s.webhooks.RetryEvent(ctx, eventID, func(ctx context.Context, repoKey string, event *model.WebhookEvent) {
-		s.safeApplyRules(ctx, repoKey, event)
-	})
+	event, err := s.webhooks.MarkEventProcessing(ctx, eventID)
+	if err != nil {
+		return err
+	}
+	// 纳入 WaitGroup + 用 bgCtx,优雅关停时能被等待/取消,不再泄露 goroutine
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		s.safeApplyRules(s.bgCtx, event.RepoKey, event)
+		if err := s.webhooks.MarkEventProcessed(event); err != nil {
+			slog.Error("mark event processed failed", "eventID", eventID, "error", err)
+		}
+	}()
+	return nil
 }
 
 // ListRules returns webhook rules for a repository.
