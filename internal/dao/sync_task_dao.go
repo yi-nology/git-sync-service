@@ -47,3 +47,26 @@ func (d *SyncTaskDAO) FindAll(page Pagination) ([]*model.SyncTask, int64, error)
 	total, err := Paginate(d.db, page, &tasks)
 	return tasks, total, err
 }
+
+// CountByStatus 按_last_status 聚合计数,返回 map[status]count;
+// 总数放在 "total" 键。用于面板计数,避免全表加载进内存。
+func (d *SyncTaskDAO) CountByStatus() (map[string]int64, error) {
+	var rows []struct {
+		LastStatus string
+		Cnt        int64
+	}
+	if err := d.db.Model(&model.SyncTask{}).
+		Select("last_status, count(*) as cnt").
+		Group("last_status").
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	out := make(map[string]int64, len(rows)+1)
+	var total int64
+	for _, r := range rows {
+		out[r.LastStatus] = r.Cnt
+		total += r.Cnt
+	}
+	out["total"] = total
+	return out, nil
+}

@@ -1,6 +1,8 @@
 package converter
 
 import (
+	"time"
+
 	repomodel "github.com/yi-nology/git-sync-service/biz/model/repo"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -20,7 +22,8 @@ func ToRepoInfo(r *model.Repo) *repomodel.RepoInfo {
 		SshUrl:        r.SSHURL,
 		DefaultBranch: r.DefaultBranch,
 		Status:        r.Status,
-		CreatedAt:     r.CreatedAt.Format("2006-01-02 15:04:05"),
+		// 用 RFC3339 与 platform 响应统一,且能被 JS new Date() 可靠解析
+		CreatedAt: r.CreatedAt.Format(time.RFC3339),
 	}
 }
 

@@ -35,7 +35,11 @@ type Service struct {
 	cronMu          sync.RWMutex
 	executor        *executor.Executor
 	lastTriggerTime sync.Map
-	cleanupDone     chan struct{}
+	// runningTasks 标记正在执行的 taskKey,保证同一任务同一进程内不并发执行(防 worktree 踩踏)
+	runningTasks sync.Map
+	// concurrencySem 限制全局并发同步任务数(容量 = MaxConcurrent),保护 git 平台与内存
+	concurrencySem chan struct{}
+	cleanupDone    chan struct{}
 	bgCtx           context.Context
 	bgCancel        context.CancelFunc
 	wg              sync.WaitGroup
@@ -91,6 +95,7 @@ func NewService(cfg *Config) (*Service, error) {
 		cron:           cron.New(cron.WithSeconds()),
 		cronEntryIDs:   make(map[string]cron.EntryID),
 		cleanupDone:    make(chan struct{}),
+		concurrencySem: make(chan struct{}, cfg.Sync.MaxConcurrent),
 		bgCtx:          bgCtx,
 		bgCancel:       bgCancel,
 	}

@@ -34,6 +34,11 @@ func (rs *RepoService) ListRepos(ctx context.Context, offset, limit int) ([]*mod
 	return rs.repoDAO.FindAll(page)
 }
 
+// CountRepos returns the total repo count via COUNT aggregate.
+func (rs *RepoService) CountRepos() (int64, error) {
+	return rs.repoDAO.Count()
+}
+
 // ListReposWithFilter returns a filtered, sorted, paginated list of repositories.
 func (rs *RepoService) ListReposWithFilter(ctx context.Context, offset, limit int, filter *dao.RepoFilter) ([]*model.Repo, int64, error) {
 	page := dao.DefaultPagination(offset, limit)

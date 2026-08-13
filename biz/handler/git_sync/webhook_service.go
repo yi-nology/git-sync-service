@@ -162,6 +162,9 @@ func ListEvents(ctx context.Context, c *app.RequestContext) {
 	if limit <= 0 {
 		limit = 50
 	}
+	if limit > 200 {
+		limit = 200
+	}
 	offset, _ := strconv.Atoi(c.Query("offset"))
 	if offset < 0 {
 		offset = 0

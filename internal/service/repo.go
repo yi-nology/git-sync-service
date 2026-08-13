@@ -12,6 +12,11 @@ func (s *Service) ListRepos(ctx context.Context, offset, limit int) ([]*model.Re
 	return s.repos.ListRepos(ctx, offset, limit)
 }
 
+// CountRepos returns the total repo count via COUNT aggregate (no row loading).
+func (s *Service) CountRepos() (int64, error) {
+	return s.repos.CountRepos()
+}
+
 // ListReposWithFilter returns a filtered, sorted, paginated list of repositories.
 func (s *Service) ListReposWithFilter(ctx context.Context, offset, limit int, filter *dao.RepoFilter) ([]*model.Repo, int64, error) {
 	return s.repos.ListReposWithFilter(ctx, offset, limit, filter)

@@ -16,27 +16,27 @@ import (
 func SystemStatus(ctx context.Context, c *app.RequestContext) {
 	svc := GetSyncService()
 
-	// 取计数（用大 limit 取全部）
-	repos, _, _ := svc.ListRepos(ctx, 0, 10000)
-	tasks, _, _ := svc.ListTasks(ctx, "", 0, 10000)
-
-	runningCount := 0
-	failedCount := 0
-	for _, t := range tasks {
-		if t.LastStatus == "running" {
-			runningCount++
-		}
-		if t.LastStatus == "failed" {
-			failedCount++
-		}
+	// 计数走 COUNT 聚合,不再全表加载进内存
+	repoCount, err := svc.CountRepos()
+	if err != nil {
+		response.InternalError(c, "get repo count failed")
+		return
 	}
+	taskCounts, err := svc.CountTasksByStatus()
+	if err != nil {
+		response.InternalError(c, "get task count failed")
+		return
+	}
+	taskTotal := taskCounts["total"]
+	runningCount := taskCounts["running"]
+	failedCount := taskCounts["failed"]
 
 	response.Success(c, &system.SystemStatusData{
 		Status:      "running",
 		Version:     "v1.5.0",
 		Uptime:      int64(time.Since(startTime).Seconds()),
-		RepoCount:   int32(len(repos)),
-		TaskCount:   int32(len(tasks)),
+		RepoCount:   int32(repoCount),
+		TaskCount:   int32(taskTotal),
 		RunningTask: int32(runningCount),
 		FailedTask:  int32(failedCount),
 		GoVersion:   runtime.Version(),
