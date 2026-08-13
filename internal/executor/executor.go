@@ -121,8 +121,13 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	}
 
 	defer func() {
-		if err := os.RemoveAll(workDir); err != nil {
-			slog.Error("failed to cleanup temp dir", "error", err, "dir", workDir)
+		// 成功:保留 workdir,下次走增量 fetch(避免每次全量 clone);
+		// 非成功(失败/panic):清理,避免损坏的 .git / index.lock 影响下次执行。
+		// 注:同 taskKey 的并发执行已由 Service.runningTasks 互斥,不存在并发写同一 workdir。
+		if run.Status != model.StatusSuccess {
+			if rmErr := os.RemoveAll(workDir); rmErr != nil {
+				slog.Error("failed to cleanup temp dir", "error", rmErr, "dir", workDir)
+			}
 		}
 	}()
 
@@ -195,7 +200,17 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		if attempt > 1 {
 			step3.RetryCount = attempt - 1
 			fmt.Fprintf(&details, "\nRetry attempt %d/%d...\n", attempt, maxRetries)
-			time.Sleep(time.Duration(attempt*500) * time.Millisecond)
+			// 退避期间监听 context,超时/取消时立即中止,不再干等
+			backoff := time.Duration(attempt*500) * time.Millisecond
+			select {
+			case <-execCtx.Done():
+				pushErr = execCtx.Err()
+				fmt.Fprintf(&details, "retry aborted (context done): %v\n", pushErr)
+			case <-time.After(backoff):
+			}
+			if pushErr != nil {
+				break
+			}
 		}
 
 		pushErr = e.push(execCtx, repoDir, task, targetRepo)

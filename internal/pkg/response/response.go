@@ -1,6 +1,7 @@
 package response
 
 import (
+	"log/slog"
 	"math"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -47,9 +48,13 @@ func NotFound(c *app.RequestContext, message string) {
 	Error(c, consts.StatusNotFound, message)
 }
 
-// InternalError sends a 500 Internal Server Error response
+// InternalError sends a 500 Internal Server Error response.
+// 出于安全:原始 detail 只写入服务端日志,不回传客户端(避免泄露 SQL/DSN/表名/文件路径等内部信息)。
 func InternalError(c *app.RequestContext, message string) {
-	Error(c, consts.StatusInternalServerError, message)
+	if message != "" {
+		slog.Error("internal server error", "detail", message)
+	}
+	Error(c, consts.StatusInternalServerError, "internal server error")
 }
 
 // Paginated sends a 200 OK response with pagination data

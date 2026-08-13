@@ -36,6 +36,11 @@ func (ts *TaskService) ListTasks(ctx context.Context, repoKey string, offset, li
 	return ts.taskDAO.FindAll(page)
 }
 
+// CountTasksByStatus returns task counts grouped by last_status (key "total" = overall).
+func (ts *TaskService) CountTasksByStatus() (map[string]int64, error) {
+	return ts.taskDAO.CountByStatus()
+}
+
 // GetTask returns a sync task by key.
 func (ts *TaskService) GetTask(ctx context.Context, key string) (*model.SyncTask, error) {
 	return ts.taskDAO.FindByKey(key)

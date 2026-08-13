@@ -199,3 +199,12 @@ func (d *RepoDAO) ListWithFilter(page Pagination, filter *RepoFilter) ([]*model.
 
 	return repos, total, nil
 }
+
+// Count 返回仓库总数(走 COUNT 聚合,不加载行)。
+func (d *RepoDAO) Count() (int64, error) {
+	var count int64
+	if err := d.db.Model(&model.Repo{}).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
