@@ -96,12 +96,12 @@ func TestRedisGuard_CrossInstanceMutex(t *testing.T) {
 	if err != nil {
 		t.Fatalf("newRedisGuard g1: %v", err)
 	}
-	defer g1.Close()
+	defer func() { _ = g1.Close() }()
 	g2, err := newRedisGuard(mr.Addr(), "", 0, 2)
 	if err != nil {
 		t.Fatalf("newRedisGuard g2: %v", err)
 	}
-	defer g2.Close()
+	defer func() { _ = g2.Close() }()
 	ctx := context.Background()
 
 	// g1 拿到 taskA
@@ -130,12 +130,12 @@ func TestRedisGuard_CrossInstanceConcurrencyCap(t *testing.T) {
 	if err != nil {
 		t.Fatalf("g1: %v", err)
 	}
-	defer g1.Close()
+	defer func() { _ = g1.Close() }()
 	g2, err := newRedisGuard(mr.Addr(), "", 0, 1)
 	if err != nil {
 		t.Fatalf("g2: %v", err)
 	}
-	defer g2.Close()
+	defer func() { _ = g2.Close() }()
 	ctx := context.Background()
 
 	rel1, err := g1.Acquire(ctx, "taskA")

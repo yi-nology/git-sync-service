@@ -20,7 +20,7 @@ func newMiniredis(t *testing.T) *redis.Client {
 // 持有者能续期,非持有者/已释放后续期失败。
 func TestRedisLock_ExtendLockWithValue_miniredis(t *testing.T) {
 	client := newMiniredis(t)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	rl := &RedisLock{client: client}
 	ctx := context.Background()
 
@@ -47,7 +47,7 @@ func TestRedisLock_ExtendLockWithValue_miniredis(t *testing.T) {
 // TestSemaphore_RespectsMax_miniredis 验证不超过 max,release 后释放槽。
 func TestSemaphore_RespectsMax_miniredis(t *testing.T) {
 	client := newMiniredis(t)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	ctx := context.Background()
 	sem := NewSemaphore(client, "sem-max", 2, 5*time.Second)
 
@@ -72,7 +72,7 @@ func TestSemaphore_RespectsMax_miniredis(t *testing.T) {
 // 不续期则槽到期被清理。
 func TestSemaphore_RenewKeepsSlot_miniredis(t *testing.T) {
 	client := newMiniredis(t)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	ctx := context.Background()
 	sem := NewSemaphore(client, "sem-renew", 1, 300*time.Millisecond)
 
