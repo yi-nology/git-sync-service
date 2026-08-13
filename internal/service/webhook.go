@@ -61,6 +61,10 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 	}
 
 	if err := s.webhooks.CreateWebhookEvent(whEvent); err != nil {
+		// 并发去重:event_id 有唯一索引,插入冲突说明另一个请求已处理该事件,直接幂等返回
+		if dup, _ := s.webhooks.FindEventByEventID(event.ID); dup != nil {
+			return nil
+		}
 		return err
 	}
 

@@ -142,6 +142,19 @@ type RepoFilter struct {
 	OrderBy  string // sort direction: asc or desc (default: desc)
 }
 
+// allowedRepoSortColumns 是允许用于排序的列白名单。
+// SortBy 来自 HTTP query,直拼 ORDER BY 会造成 SQL 注入,必须白名单校验。
+var allowedRepoSortColumns = map[string]bool{
+	"created_at": true,
+	"updated_at": true,
+	"name":       true,
+}
+
+// isAllowedRepoSort 判断给定的排序列是否在白名单内。
+func isAllowedRepoSort(col string) bool {
+	return allowedRepoSortColumns[col]
+}
+
 // ListWithFilter returns a filtered, sorted, paginated list of repos and the total count.
 func (d *RepoDAO) ListWithFilter(page Pagination, filter *RepoFilter) ([]*model.Repo, int64, error) {
 	var repos []*model.Repo
@@ -169,8 +182,9 @@ func (d *RepoDAO) ListWithFilter(page Pagination, filter *RepoFilter) ([]*model.
 	}
 
 	// Determine sort column and order
+	// 白名单校验:只允许已知列名,防止 SortBy 直拼 ORDER BY 造成 SQL 注入
 	sortBy := "created_at"
-	if filter.SortBy != "" {
+	if isAllowedRepoSort(filter.SortBy) {
 		sortBy = filter.SortBy
 	}
 	order := "DESC"

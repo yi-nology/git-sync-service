@@ -9,6 +9,9 @@ var (
 	// ErrTaskNotFound is returned when a sync task is not found.
 	ErrTaskNotFound = errors.New("task not found")
 
+	// ErrTaskDisabled is returned when attempting to run a disabled task.
+	ErrTaskDisabled = errors.New("task is disabled")
+
 	// ErrRuleNotFound is returned when a webhook rule is not found.
 	ErrRuleNotFound = errors.New("rule not found")
 

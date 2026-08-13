@@ -67,6 +67,11 @@ func (s *Service) RunTaskWithTrigger(ctx context.Context, taskKey, trigger strin
 		return ErrTaskNotFound
 	}
 
+	// 已禁用的任务不执行(cron/webhook/手动均拦截),需要运行请先启用
+	if !task.Enabled {
+		return ErrTaskDisabled
+	}
+
 	_, err = s.executor.Execute(ctx, task, trigger, webhookEventID)
 	return err
 }
