@@ -23,23 +23,32 @@ var unlockScript = redis.NewScript(`
 	end
 `)
 
+// extendScript 仅当锁的 value 匹配(自己是持有者)才续期,避免误续别人的锁。
+var extendScript = redis.NewScript(`
+	if redis.call("get", KEYS[1]) == ARGV[1] then
+		return redis.call("pexpire", KEYS[1], ARGV[2])
+	else
+		return 0
+	end
+`)
+
 var semaphoreAcquireScript = redis.NewScript(`
 local key = KEYS[1]
 local member = ARGV[1]
 local max = tonumber(ARGV[2])
-local now = tonumber(ARGV[3])
+local now = tonumber(ARGV[3])      -- 当前时间(毫秒)
+local expire = tonumber(ARGV[4])   -- 槽过期时间(毫秒)
 
--- 清理过期的成员
-redis.call('ZREMRANGEBYSCORE', key, '-inf', now - 1)
+-- 清理已过期的成员(score = 过期毫秒时间戳 <= now 即已过期)
+redis.call('ZREMRANGEBYSCORE', key, '-inf', now)
 
--- 检查当前数量
 local current = redis.call('ZCARD', key)
 if current >= max then
     return 0
 end
 
--- 添加新成员
-redis.call('ZADD', key, now, member)
+-- 占用一个槽,score 设为过期时间戳,到点未续期则被清理(进程崩溃也不会永久占槽)
+redis.call('ZADD', key, expire, member)
 return 1
 `)
 
@@ -114,6 +123,17 @@ func (l *RedisLock) UnlockWithValue(ctx context.Context, key, value string) erro
 	return nil
 }
 
+// ExtendLockWithValue 续期:仅当 value 匹配(自己持有)才延长 TTL,返回是否成功续期。
+// 供 watchdog 在长任务期间周期性续期,避免锁过期被别人抢走。
+func (l *RedisLock) ExtendLockWithValue(ctx context.Context, key, value string, ttl time.Duration) (bool, error) {
+	lockKey := "git-sync:lock:" + key
+	res, err := extendScript.Run(ctx, l.client, []string{lockKey}, value, ttl.Milliseconds()).Int()
+	if err != nil {
+		return false, fmt.Errorf("redis extend failed: %w", err)
+	}
+	return res == 1, nil
+}
+
 func (l *RedisLock) Lock(ctx context.Context, key string) error {
 	for {
 		select {
@@ -183,26 +203,38 @@ func (l *RedisLock) Client() *redis.Client {
 }
 
 type Semaphore struct {
-	client *redis.Client
-	key    string
-	max    int
+	client  *redis.Client
+	key     string
+	max     int
+	slotTTL time.Duration // 单个槽的存活时长,持有期间需 Renew 续期,否则到期自动释放
 }
 
-func NewSemaphore(client *redis.Client, key string, max int) *Semaphore {
+// NewSemaphore 创建一个基于 redis ZSET 的分布式信号量。
+// slotTTL 为单个槽的存活时长:持有者需周期性 Renew,进程崩溃后槽在 slotTTL 后自动释放。
+func NewSemaphore(client *redis.Client, key string, max int, slotTTL time.Duration) *Semaphore {
 	return &Semaphore{
-		client: client,
-		key:    "git-sync:semaphore:" + key,
-		max:    max,
+		client:  client,
+		key:     "git-sync:semaphore:" + key,
+		max:     max,
+		slotTTL: slotTTL,
 	}
 }
 
 func (s *Semaphore) Acquire(ctx context.Context, identifier string) (bool, error) {
-	now := time.Now().Unix()
-	result, err := semaphoreAcquireScript.Run(ctx, s.client, []string{s.key}, identifier, s.max, now).Int()
+	now := time.Now().UnixMilli()
+	expire := time.Now().Add(s.slotTTL).UnixMilli()
+	result, err := semaphoreAcquireScript.Run(ctx, s.client, []string{s.key}, identifier, s.max, now, expire).Int()
 	if err != nil {
 		return false, fmt.Errorf("semaphore acquire failed: %w", err)
 	}
 	return result == 1, nil
+}
+
+// Renew 续期持有的槽(把 score 推到 now+slotTTL),供 watchdog 调用。
+func (s *Semaphore) Renew(ctx context.Context, identifier string) error {
+	expire := time.Now().Add(s.slotTTL).UnixMilli()
+	_, err := s.client.ZAdd(ctx, s.key, redis.Z{Score: float64(expire), Member: identifier}).Result()
+	return err
 }
 
 func (s *Semaphore) Release(ctx context.Context, identifier string) error {

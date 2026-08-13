@@ -106,33 +106,31 @@ func (ws *WebhookService) ListEvents(ctx context.Context, repoKey string, offset
 	return ws.eventDAO.FindByRepoKey(repoKey, page)
 }
 
-// RetryEvent retries processing a webhook event.
-func (ws *WebhookService) RetryEvent(ctx context.Context, eventID uint, applyRulesFn func(ctx context.Context, repoKey string, event *model.WebhookEvent)) error {
+// MarkEventProcessing 查找事件并标记为 processing,返回该事件供后续处理。
+func (ws *WebhookService) MarkEventProcessing(ctx context.Context, eventID uint) (*model.WebhookEvent, error) {
 	event, err := ws.eventDAO.FindByID(eventID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if event == nil {
-		return ErrEventNotFound
+		return nil, ErrEventNotFound
 	}
-
-	// Mark as processing before starting the goroutine
 	event.Status = model.StatusProcessing
 	if err := ws.eventDAO.Update(event); err != nil {
 		slog.Error("failed to update event status to processing", "eventID", eventID, "error", err)
 	}
+	return event, nil
+}
 
-	go func() {
-		applyRulesFn(context.Background(), event.RepoKey, event)
-		// Update status after goroutine completes
-		now := time.Now()
-		event.ProcessedAt = &now
-		event.Status = model.StatusProcessed
-		if err := ws.eventDAO.Update(event); err != nil {
-			slog.Error("failed to update event status to processed", "eventID", eventID, "error", err)
-		}
-	}()
-
+// MarkEventProcessed 标记事件为 processed(处理完成后调用)。
+func (ws *WebhookService) MarkEventProcessed(event *model.WebhookEvent) error {
+	now := time.Now()
+	event.ProcessedAt = &now
+	event.Status = model.StatusProcessed
+	if err := ws.eventDAO.Update(event); err != nil {
+		slog.Error("failed to update event status to processed", "eventID", event.ID, "error", err)
+		return err
+	}
 	return nil
 }
 

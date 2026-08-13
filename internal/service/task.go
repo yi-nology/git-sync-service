@@ -86,20 +86,13 @@ func (s *Service) RunTaskWithTrigger(ctx context.Context, taskKey, trigger strin
 		return ErrTaskDisabled
 	}
 
-	// 全局并发上限(非阻塞):达到 MaxConcurrent 直接拒绝,保护 git 平台与内存
-	select {
-	case s.concurrencySem <- struct{}{}:
-		defer func() { <-s.concurrencySem }()
-	default:
-		return ErrTooManyConcurrent
+	// 并发控制(配 redis 时为分布式,多实例安全):全局并发上限 + 同 taskKey 互斥。
+	// 非阻塞快速失败:全局满返回 ErrTooManyConcurrent,taskKey 已在跑返回 ErrTaskRunning。
+	release, err := s.guard.Acquire(ctx, taskKey)
+	if err != nil {
+		return err
 	}
-
-	// 同任务互斥(非阻塞):已有执行流在跑则跳过,避免并发写同一 worktree
-	// 注意:只有成功 store 后才注册 Delete,loaded 返回时不能误删别人的标记
-	if _, loaded := s.runningTasks.LoadOrStore(taskKey, struct{}{}); loaded {
-		return ErrTaskRunning
-	}
-	defer s.runningTasks.Delete(taskKey)
+	defer release()
 
 	_, err = s.executor.Execute(ctx, task, trigger, webhookEventID)
 	return err

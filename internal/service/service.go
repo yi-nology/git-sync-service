@@ -35,11 +35,9 @@ type Service struct {
 	cronMu          sync.RWMutex
 	executor        *executor.Executor
 	lastTriggerTime sync.Map
-	// runningTasks 标记正在执行的 taskKey,保证同一任务同一进程内不并发执行(防 worktree 踩踏)
-	runningTasks sync.Map
-	// concurrencySem 限制全局并发同步任务数(容量 = MaxConcurrent),保护 git 平台与内存
-	concurrencySem chan struct{}
-	cleanupDone    chan struct{}
+	// guard 统一封装“同 taskKey 互斥 + 全局并发上限”;配 redis 时为分布式,否则进程内。
+	guard concurrencyGuard
+	cleanupDone chan struct{}
 	bgCtx           context.Context
 	bgCancel        context.CancelFunc
 	wg              sync.WaitGroup
@@ -85,20 +83,26 @@ func NewService(cfg *Config) (*Service, error) {
 	bgCtx, bgCancel := context.WithCancel(context.Background())
 
 	svc := &Service{
-		config:         cfg,
-		db:             db,
-		repos:          repoService,
-		tasks:          taskService,
-		webhooks:       webhookService,
-		platforms:      platformService,
-		opLogs:         opLogService,
-		cron:           cron.New(cron.WithSeconds()),
-		cronEntryIDs:   make(map[string]cron.EntryID),
-		cleanupDone:    make(chan struct{}),
-		concurrencySem: make(chan struct{}, cfg.Sync.MaxConcurrent),
-		bgCtx:          bgCtx,
-		bgCancel:       bgCancel,
+		config:       cfg,
+		db:           db,
+		repos:        repoService,
+		tasks:        taskService,
+		webhooks:     webhookService,
+		platforms:    platformService,
+		opLogs:       opLogService,
+		cron:         cron.New(cron.WithSeconds()),
+		cronEntryIDs: make(map[string]cron.EntryID),
+		cleanupDone:  make(chan struct{}),
+		bgCtx:        bgCtx,
+		bgCancel:     bgCancel,
 	}
+
+	// 并发控制:配了 redis 用分布式(多实例安全),否则进程内(单实例)
+	guard, err := newGuard(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB, cfg.Sync.MaxConcurrent)
+	if err != nil {
+		return nil, fmt.Errorf("init concurrency guard failed: %w", err)
+	}
+	svc.guard = guard
 
 	exec, err := executor.NewExecutor(svc)
 	if err != nil {
@@ -132,6 +136,13 @@ func (s *Service) Stop() {
 		slog.Info("all background goroutines stopped")
 	case <-time.After(10 * time.Second):
 		slog.Warn("timeout waiting for background goroutines to stop")
+	}
+
+	// 释放并发控制器(关闭 redis 连接等)
+	if s.guard != nil {
+		if err := s.guard.Close(); err != nil {
+			slog.Error("failed to close concurrency guard", "error", err)
+		}
 	}
 }
 

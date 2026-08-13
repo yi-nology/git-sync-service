@@ -146,7 +146,7 @@ func TestSemaphore_Acquire(t *testing.T) {
 
 	ctx := context.Background()
 	key := fmt.Sprintf("test-semaphore-%d", time.Now().UnixNano())
-	sem := NewSemaphore(client, key, 2)
+	sem := NewSemaphore(client, key, 2, 10*time.Second)
 	defer client.Del(ctx, sem.key)
 
 	// Should acquire first two slots
@@ -182,7 +182,7 @@ func TestSemaphore_Release(t *testing.T) {
 
 	ctx := context.Background()
 	key := fmt.Sprintf("test-semaphore-release-%d", time.Now().UnixNano())
-	sem := NewSemaphore(client, key, 1)
+	sem := NewSemaphore(client, key, 1, 10*time.Second)
 	defer client.Del(ctx, sem.key)
 
 	// Acquire the single slot
@@ -217,7 +217,7 @@ func TestSemaphore_Concurrent(t *testing.T) {
 	ctx := context.Background()
 	key := fmt.Sprintf("test-semaphore-concurrent-%d", time.Now().UnixNano())
 	maxSlots := 3
-	sem := NewSemaphore(client, key, maxSlots)
+	sem := NewSemaphore(client, key, maxSlots, 10*time.Second)
 	defer client.Del(ctx, sem.key)
 
 	numWorkers := 10
@@ -262,7 +262,7 @@ func TestSemaphore_Cleanup(t *testing.T) {
 
 	ctx := context.Background()
 	key := fmt.Sprintf("test-semaphore-cleanup-%d", time.Now().UnixNano())
-	sem := NewSemaphore(client, key, 1)
+	sem := NewSemaphore(client, key, 1, 10*time.Second)
 	defer client.Del(ctx, sem.key)
 
 	// Acquire a slot
