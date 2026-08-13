@@ -64,6 +64,7 @@ import { LockOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { systemApi } from '@/api'
 import { notifySuccess, notifyError } from '@/utils/notify'
+import { ApiError } from '@/api/http'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -83,7 +84,13 @@ const handleLogin = async () => {
     router.push('/dashboard')
   } catch (e) {
     authStore.clearApiKey()
-    notifyError(e, '无法连接到服务器，请检查服务是否已启动')
+    if (e instanceof ApiError && e.code === 401) {
+      // API Key 无效/过期:给出明确中文提示,避免裸露的后端英文错误
+      notifyError('API Key 无效或已过期，请检查后重新输入')
+    } else {
+      // 网络错误等
+      notifyError('无法连接到服务器，请检查服务是否已启动')
+    }
   } finally {
     loading.value = false
   }

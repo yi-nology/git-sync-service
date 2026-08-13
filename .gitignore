@@ -62,3 +62,6 @@ data/
 frontend/.vite/
 frontend/dist/
 
+# 本地 UI 测试截图(GUI 测试产物,不纳入版本库)
+gui-test-screenshots/
+
