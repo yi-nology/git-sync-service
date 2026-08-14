@@ -33,7 +33,7 @@ func SystemStatus(ctx context.Context, c *app.RequestContext) {
 
 	response.Success(c, &system.SystemStatusData{
 		Status:      "running",
-		Version:     "v1.5.5",
+		Version:     "v1.5.6",
 		Uptime:      int64(time.Since(startTime).Seconds()),
 		RepoCount:   int32(repoCount),
 		TaskCount:   int32(taskTotal),
