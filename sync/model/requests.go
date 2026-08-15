@@ -29,7 +29,5 @@ type PreviewSyncResult struct {
 	CanSync      bool   `json:"canSync"`
 	SourceExists bool   `json:"sourceExists"`
 	TargetExists bool   `json:"targetExists"`
-	CommitCount  int    `json:"commitCount"`
-	LatestCommit string `json:"latestCommit"`
 	Message      string `json:"message"`
 }

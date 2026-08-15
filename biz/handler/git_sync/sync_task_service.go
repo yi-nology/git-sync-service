@@ -74,7 +74,6 @@ func TaskCreate(ctx context.Context, c *app.RequestContext) {
 		TargetRepoKey: req.TargetRepoKey, TargetBranch: req.TargetBranch,
 		SyncMode: req.SyncMode, Cron: req.Cron, GitTags: req.GitTags,
 		GitForce: req.GitForce, GitPrune: req.GitPrune,
-		GitNoVerify: req.GitNoVerify, PushOptions: req.PushOptions,
 	})
 	if err != nil {
 		response.InternalError(c, fmt.Sprintf("create task failed: %v", err))
@@ -99,7 +98,7 @@ func TaskUpdate(ctx context.Context, c *app.RequestContext) {
 		Key: req.Key, Name: req.Name, SourceBranch: req.SourceBranch,
 		TargetBranch: req.TargetBranch, SyncMode: req.SyncMode, Cron: req.Cron,
 		Enabled: req.Enabled, GitTags: req.GitTags, GitForce: req.GitForce,
-		GitPrune: req.GitPrune, GitNoVerify: req.GitNoVerify, PushOptions: req.PushOptions,
+		GitPrune: req.GitPrune,
 	})
 	if err != nil {
 		if errors.Is(err, service.ErrTaskNotFound) {
@@ -170,8 +169,7 @@ func TaskPreview(ctx context.Context, c *app.RequestContext) {
 	}
 	response.Success(c, &sync_task.PreviewSyncResp{
 		CanSync: result.CanSync, SourceExists: result.SourceExists,
-		TargetExists: result.TargetExists, CommitCount: int32(result.CommitCount),
-		LatestCommit: result.LatestCommit, Message: result.Message,
+		TargetExists: result.TargetExists, Message: result.Message,
 	})
 }
 

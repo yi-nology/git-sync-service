@@ -191,6 +191,19 @@ func (rs *RepoService) GetRepoByKey(key string) (*model.Repo, error) {
 	return rs.repoDAO.FindByKey(key)
 }
 
+// SetWebhookSecret 设置仓库的 Webhook 密钥(经 repo_dao 加密落库),供入站验签使用。
+func (rs *RepoService) SetWebhookSecret(repoKey, secret string) error {
+	repo, err := rs.repoDAO.FindByKey(repoKey)
+	if err != nil {
+		return err
+	}
+	if repo == nil {
+		return ErrRepoNotFound
+	}
+	repo.WebhookSecret = secret
+	return rs.repoDAO.Update(repo)
+}
+
 // TestConnection tests the connection to a repository.
 func (rs *RepoService) TestConnection(ctx context.Context, repoKey string) (*model.TestConnectionResult, error) {
 	repo, err := rs.repoDAO.FindByKey(repoKey)

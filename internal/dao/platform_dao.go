@@ -1,22 +1,64 @@
 package dao
 
 import (
+	"fmt"
+
+	"github.com/yi-nology/git-platform-sdk/pkg/credential"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
 
-// PlatformDAO 平台数据访问对象
+// PlatformDAO 平台数据访问对象。
+// AccessToken 与 repo_dao 一致采用加密存储:写入加密、读取解密;
+// 读取解密失败视为存量明文,原样返回(下次写入时自动转为密文)。
 type PlatformDAO struct {
 	db *gorm.DB
+	cm *credential.CryptoManager
 }
 
 // NewPlatformDAO 创建 PlatformDAO
-func NewPlatformDAO(db *gorm.DB) *PlatformDAO {
-	return &PlatformDAO{db: db}
+func NewPlatformDAO(db *gorm.DB) (*PlatformDAO, error) {
+	cm, err := credential.NewCryptoManager()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create CryptoManager: %w", err)
+	}
+	return &PlatformDAO{db: db, cm: cm}, nil
+}
+
+// decrypt 就地解密平台 AccessToken(解密失败保留原文,兼容存量明文)
+func (d *PlatformDAO) decrypt(p *model.Platform) {
+	if p != nil && p.AccessToken != "" {
+		if decrypted, err := d.cm.Decrypt(p.AccessToken); err == nil {
+			p.AccessToken = decrypted
+		}
+	}
+}
+
+// decryptAll 就地解密平台列表
+func (d *PlatformDAO) decryptAll(platforms []*model.Platform) {
+	for _, p := range platforms {
+		d.decrypt(p)
+	}
+}
+
+// encrypt 就地加密平台 AccessToken(空 token 跳过)
+func (d *PlatformDAO) encrypt(p *model.Platform) error {
+	if p.AccessToken == "" {
+		return nil
+	}
+	encrypted, err := d.cm.Encrypt(p.AccessToken)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt access token: %w", err)
+	}
+	p.AccessToken = encrypted
+	return nil
 }
 
 // Create 创建平台
 func (d *PlatformDAO) Create(platform *model.Platform) error {
+	if err := d.encrypt(platform); err != nil {
+		return err
+	}
 	return d.db.Create(platform).Error
 }
 
@@ -27,6 +69,7 @@ func (d *PlatformDAO) FindByKey(key string) (*model.Platform, error) {
 	if err != nil {
 		return nil, err
 	}
+	d.decrypt(&platform)
 	return &platform, nil
 }
 
@@ -37,6 +80,7 @@ func (d *PlatformDAO) FindByID(id uint) (*model.Platform, error) {
 	if err != nil {
 		return nil, err
 	}
+	d.decrypt(&platform)
 	return &platform, nil
 }
 
@@ -47,6 +91,7 @@ func (d *PlatformDAO) FindAll() ([]*model.Platform, error) {
 	if err != nil {
 		return nil, err
 	}
+	d.decryptAll(platforms)
 	return platforms, nil
 }
 
@@ -57,6 +102,7 @@ func (d *PlatformDAO) FindByType(platformType string) ([]*model.Platform, error)
 	if err != nil {
 		return nil, err
 	}
+	d.decryptAll(platforms)
 	return platforms, nil
 }
 
@@ -67,15 +113,20 @@ func (d *PlatformDAO) FindDefault() (*model.Platform, error) {
 	if err != nil {
 		return nil, err
 	}
+	d.decrypt(&platform)
 	return &platform, nil
 }
 
 // Update 更新平台
 func (d *PlatformDAO) Update(platform *model.Platform) error {
+	if err := d.encrypt(platform); err != nil {
+		return err
+	}
 	return d.db.Save(platform).Error
 }
 
 // UpdateFields 更新平台指定字段
+// 注意:字段值原样写入;如需更新 access_token 请走 Update 以确保加密。
 func (d *PlatformDAO) UpdateFields(key string, fields map[string]interface{}) error {
 	return d.db.Model(&model.Platform{}).Where("key = ?", key).Updates(fields).Error
 }

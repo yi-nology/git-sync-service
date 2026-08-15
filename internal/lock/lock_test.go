@@ -262,45 +262,57 @@ func TestSemaphore_Cleanup(t *testing.T) {
 
 	ctx := context.Background()
 	key := fmt.Sprintf("test-semaphore-cleanup-%d", time.Now().UnixNano())
-	sem := NewSemaphore(client, key, 1, 10*time.Second)
+	sem := NewSemaphore(client, key, 3, 10*time.Second)
 	defer client.Del(ctx, sem.key)
 
-	// Acquire a slot
-	ok, err := sem.Acquire(ctx, "old-worker")
-	if err != nil {
-		t.Fatalf("Acquire failed: %v", err)
+	// 直接构造槽位:score 为过期毫秒时间戳(Acquire 打分语义)。
+	// stale-2h/stale-1h 已过期,live 尚未过期。
+	now := time.Now()
+	seed := map[string]time.Time{
+		"stale-2h": now.Add(-2 * time.Hour),
+		"stale-1h": now.Add(-1 * time.Hour),
+		"live":     now.Add(10 * time.Second),
 	}
-	if !ok {
-		t.Fatal("Expected to acquire semaphore")
+	for member, expireAt := range seed {
+		if err := client.ZAdd(ctx, sem.key, redis.Z{
+			Score:  float64(expireAt.UnixMilli()),
+			Member: member,
+		}).Err(); err != nil {
+			t.Fatalf("seed %s failed: %v", member, err)
+		}
 	}
 
-	// Cleanup with long duration should remove nothing (entries are fresh)
-	err = sem.Cleanup(ctx, 1*time.Hour)
-	if err != nil {
+	// Cleanup(90min): 清理"过期超过 90 分钟"的条目 → 只清 stale-2h
+	if err := sem.Cleanup(ctx, 90*time.Minute); err != nil {
 		t.Fatalf("Cleanup failed: %v", err)
 	}
-
-	// Old worker should still be in the semaphore
-	ok, err = sem.Acquire(ctx, "new-worker")
+	card, err := client.ZCard(ctx, sem.key).Result()
 	if err != nil {
-		t.Fatalf("Acquire new-worker failed: %v", err)
+		t.Fatalf("ZCard failed: %v", err)
 	}
-	if ok {
-		t.Fatal("Expected new-worker to fail (semaphore full)")
+	if card != 2 {
+		t.Fatalf("Expected 2 members after Cleanup(90min), got %d", card)
 	}
 
-	// Cleanup with very short duration should remove old entries
-	err = sem.Cleanup(ctx, 0)
-	if err != nil {
+	// Cleanup(0): 清理所有已过期条目 → 只剩 live
+	if err := sem.Cleanup(ctx, 0); err != nil {
 		t.Fatalf("Cleanup with 0 duration failed: %v", err)
 	}
-
-	// Now new-worker should succeed
-	ok, err = sem.Acquire(ctx, "new-worker")
+	members, _, err := client.ZScan(ctx, sem.key, 0, "", 0).Result()
 	if err != nil {
-		t.Fatalf("Acquire new-worker after cleanup failed: %v", err)
+		t.Fatalf("ZScan failed: %v", err)
 	}
-	if !ok {
-		t.Fatal("Expected new-worker to acquire after cleanup")
+	// ZScan 返回 [member, score] 交错列表
+	if len(members) != 2 || members[0] != "live" {
+		t.Fatalf("Expected only live member after Cleanup(0), got %v", members)
+	}
+
+	// live 的 score 不应被改动(仍为未来的过期时间)
+	score, err := client.ZScore(ctx, sem.key, "live").Result()
+	if err != nil {
+		t.Fatalf("ZScore failed: %v", err)
+	}
+	if int64(score) <= now.UnixMilli() {
+		t.Fatalf("live score should stay in the future, got %d", int64(score))
 	}
 }

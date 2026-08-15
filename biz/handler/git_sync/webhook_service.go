@@ -185,3 +185,88 @@ func RetryEvent(ctx context.Context, c *app.RequestContext) {
 	recordAudit(ctx, c, "retry", "event", strconv.FormatUint(uint64(req.ID), 10), "重试 webhook 事件 #"+strconv.FormatUint(uint64(req.ID), 10))
 	response.Success(c, &webhook.RetryEventResp{Success: true, Message: "event retried"})
 }
+
+// RegisterPlatformWebhook 在平台侧为仓库注册 Webhook。
+// @router /api/v1/webhook/platform/register [POST]
+func RegisterPlatformWebhook(ctx context.Context, c *app.RequestContext) {
+	var req webhook.RegisterPlatformWebhookReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.RepoKey == "" || req.CallbackUrl == "" {
+		response.BadRequest(c, "repo_key and callback_url are required")
+		return
+	}
+
+	wh, err := GetSyncService().RegisterPlatformWebhook(ctx, req.RepoKey, req.CallbackUrl, req.Secret, req.Events)
+	if err != nil {
+		if errors.Is(err, service.ErrRepoNotFound) {
+			response.NotFound(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	recordAudit(ctx, c, "create", "platform_webhook", req.RepoKey, "为仓库 "+req.RepoKey+" 注册平台 Webhook #"+strconv.FormatInt(wh.ID, 10))
+	response.Created(c, &webhook.RegisterPlatformWebhookResp{
+		Webhook: &webhook.PlatformWebhookInfo{ID: wh.ID, URL: wh.URL, Events: wh.Events},
+	})
+}
+
+// ListPlatformWebhooks 列出平台侧已注册的 Webhook。
+// @router /api/v1/webhook/platform/list [GET]
+func ListPlatformWebhooks(ctx context.Context, c *app.RequestContext) {
+	var req webhook.ListPlatformWebhooksReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.RepoKey == "" {
+		response.BadRequest(c, "repo_key is required")
+		return
+	}
+
+	webhooks, err := GetSyncService().ListPlatformWebhooks(ctx, req.RepoKey)
+	if err != nil {
+		if errors.Is(err, service.ErrRepoNotFound) {
+			response.NotFound(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	list := make([]*webhook.PlatformWebhookInfo, 0, len(webhooks))
+	for _, wh := range webhooks {
+		list = append(list, &webhook.PlatformWebhookInfo{ID: wh.ID, URL: wh.URL, Events: wh.Events})
+	}
+	response.Success(c, &webhook.ListPlatformWebhooksResp{Webhooks: list})
+}
+
+// DeletePlatformWebhook 删除平台侧的 Webhook。
+// @router /api/v1/webhook/platform/delete [POST]
+func DeletePlatformWebhook(ctx context.Context, c *app.RequestContext) {
+	var req webhook.DeletePlatformWebhookReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.RepoKey == "" || req.WebhookId <= 0 {
+		response.BadRequest(c, "repo_key and webhook_id are required")
+		return
+	}
+
+	if err := GetSyncService().DeletePlatformWebhook(ctx, req.RepoKey, req.WebhookId); err != nil {
+		if errors.Is(err, service.ErrRepoNotFound) {
+			response.NotFound(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	recordAudit(ctx, c, "delete", "platform_webhook", req.RepoKey, "删除仓库 "+req.RepoKey+" 的平台 Webhook #"+strconv.FormatInt(req.WebhookId, 10))
+	response.NoContent(c)
+}

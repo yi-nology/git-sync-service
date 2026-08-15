@@ -23,6 +23,8 @@ import type {
   SyncLogParams,
   SystemLogListData,
   SystemLogParams,
+  PlatformWebhookData,
+  PlatformWebhookListData,
 } from '@/types/api'
 import type {
   CreateRepoRequest,
@@ -96,6 +98,13 @@ export const webhookApi = {
     http.get<unknown, EventsData>('/webhook/events', { params }),
   retryEvent: (id: number) =>
     http.post<unknown, RunResultData>('/webhook/event/retry', null, { params: { id } }),
+  // 平台侧 Webhook 注册(v1.6.0+)
+  registerPlatformWebhook: (data: { repo_key: string; callback_url: string; secret?: string; events?: string[] }) =>
+    http.post<unknown, PlatformWebhookData>('/webhook/platform/register', data),
+  listPlatformWebhooks: (repo_key: string) =>
+    http.get<unknown, PlatformWebhookListData>('/webhook/platform/list', { params: { repo_key } }),
+  deletePlatformWebhook: (repo_key: string, webhook_id: number) =>
+    http.post<unknown, void>('/webhook/platform/delete', null, { params: { repo_key, webhook_id } }),
 }
 
 export const logApi = {
@@ -116,6 +125,6 @@ export const systemApi = {
 export { ApiError } from './http'
 
 // 兼容旧导入(Dashboard 等页面仍在使用 SystemStatusResp 别名)
-export type { SystemStatusData as SystemStatusResp } from '@/types/api'
+export type { SystemStatusData as SystemStatusResp , PlatformWebhookData, PlatformWebhookListData } from '@/types/api'
 
 export default http

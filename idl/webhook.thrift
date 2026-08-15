@@ -102,3 +102,37 @@ struct RetryEventResp {
     1: bool success (api.json="success")
     2: string message (api.json="message")
 }
+
+struct PlatformWebhookInfo {
+    1: i64 id (api.json="id")
+    2: string url (api.json="url")
+    3: list<string> events (api.json="events")
+}
+
+struct RegisterPlatformWebhookReq {
+    1: string repoKey (api.json="repo_key")
+    2: string callbackUrl (api.json="callback_url")
+    3: string secret (api.json="secret")
+    4: list<string> events (api.json="events")
+}
+
+struct RegisterPlatformWebhookResp {
+    1: PlatformWebhookInfo webhook (api.json="webhook")
+}
+
+struct ListPlatformWebhooksReq {
+    1: string repoKey (api.query="repo_key")
+}
+
+struct ListPlatformWebhooksResp {
+    1: list<PlatformWebhookInfo> webhooks (api.json="webhooks")
+}
+
+struct DeletePlatformWebhookReq {
+    1: string repoKey (api.query="repo_key")
+    2: i64 webhookId (api.query="webhook_id")
+}
+
+struct DeletePlatformWebhookResp {
+    1: bool success (api.json="success")
+}

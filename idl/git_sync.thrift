@@ -36,6 +36,9 @@ service WebhookService {
     webhook.DeleteRuleResp RuleDelete(1: webhook.DeleteRuleReq req) (api.post="/api/v1/webhook/rule/delete")
     webhook.ListEventsResp ListEvents(1: webhook.ListEventsReq req) (api.get="/api/v1/webhook/events")
     webhook.RetryEventResp RetryEvent(1: webhook.RetryEventReq req) (api.post="/api/v1/webhook/event/retry")
+    webhook.RegisterPlatformWebhookResp RegisterPlatformWebhook(1: webhook.RegisterPlatformWebhookReq req) (api.post="/api/v1/webhook/platform/register")
+    webhook.ListPlatformWebhooksResp ListPlatformWebhooks(1: webhook.ListPlatformWebhooksReq req) (api.get="/api/v1/webhook/platform/list")
+    webhook.DeletePlatformWebhookResp DeletePlatformWebhook(1: webhook.DeletePlatformWebhookReq req) (api.post="/api/v1/webhook/platform/delete")
 }
 
 service OperationLogService {

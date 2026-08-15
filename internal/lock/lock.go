@@ -243,7 +243,9 @@ func (s *Semaphore) Release(ctx context.Context, identifier string) error {
 }
 
 func (s *Semaphore) Cleanup(ctx context.Context, olderThan time.Duration) error {
-	cutoff := float64(time.Now().Add(-olderThan).Unix())
+	// 注意:槽位 score 是毫秒时间戳(Acquire 用 UnixMilli),阈值必须同为毫秒,
+	// 否则 ZRemRangeByScore 永远删不到任何条目(此前用 Unix() 秒导致差 1000 倍)
+	cutoff := float64(time.Now().Add(-olderThan).UnixMilli())
 	_, err := s.client.ZRemRangeByScore(ctx, s.key, "-inf", fmt.Sprintf("%f", cutoff)).Result()
 	return err
 }

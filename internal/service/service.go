@@ -71,7 +71,10 @@ func NewService(cfg *Config) (*Service, error) {
 	runStepDAO := dao.NewSyncRunStepDAO(db)
 	ruleDAO := dao.NewWebhookRuleDAO(db)
 	eventDAO := dao.NewWebhookEventDAO(db)
-	platformDAO := dao.NewPlatformDAO(db)
+	platformDAO, err := dao.NewPlatformDAO(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create PlatformDAO: %w", err)
+	}
 	opLogDAO := dao.NewOperationLogDAO(db)
 
 	repoService := NewRepoService(repoDAO, platformDAO, providerMgr)

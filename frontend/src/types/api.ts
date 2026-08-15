@@ -71,8 +71,6 @@ export interface PreviewSyncData {
   can_sync: boolean
   source_exists: boolean
   target_exists: boolean
-  commit_count: number
-  latest_commit: string
   message: string
 }
 
@@ -182,4 +180,12 @@ export interface SystemLogListData {
 }
 export interface SystemLogParams extends PageParams {
   level?: string
+}
+
+export interface PlatformWebhookData {
+  webhook: { id: number; url: string; events: string[] }
+}
+
+export interface PlatformWebhookListData {
+  webhooks: { id: number; url: string; events: string[] }[]
 }
