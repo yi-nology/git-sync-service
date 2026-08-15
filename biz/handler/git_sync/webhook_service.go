@@ -9,6 +9,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/yi-nology/git-sync-service/biz/model/webhook"
 	"github.com/yi-nology/git-sync-service/internal/converter"
+	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	"github.com/yi-nology/git-sync-service/internal/service"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
@@ -55,6 +56,20 @@ func RuleGet(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, &webhook.GetRuleResp{Rule: converter.ToRuleInfo(r)})
 }
 
+// parseTaskKeys 解析逗号分隔的任务 key 列表(去空白、去空项)。
+func parseTaskKeys(s string) []string {
+	if s == "" {
+		return nil
+	}
+	var keys []string
+	for _, key := range strings.Split(s, ",") {
+		if key = strings.TrimSpace(key); key != "" {
+			keys = append(keys, key)
+		}
+	}
+	return keys
+}
+
 func RuleCreate(ctx context.Context, c *app.RequestContext) {
 	var req webhook.CreateRuleReq
 	if err := c.BindAndValidate(&req); err != nil {
@@ -66,15 +81,7 @@ func RuleCreate(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	var taskKeys []string
-	if req.SyncTaskKeys != "" {
-		for _, key := range strings.Split(req.SyncTaskKeys, ",") {
-			key = strings.TrimSpace(key)
-			if key != "" {
-				taskKeys = append(taskKeys, key)
-			}
-		}
-	}
+	taskKeys := parseTaskKeys(req.SyncTaskKeys)
 
 	r, err := GetSyncService().CreateRule(ctx, &syncmodel.CreateRuleRequest{
 		Name: req.Name, RepoKey: req.RepoKey, EventType: req.EventType,
@@ -101,15 +108,7 @@ func RuleUpdate(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	var taskKeys []string
-	if req.SyncTaskKeys != "" {
-		for _, key := range strings.Split(req.SyncTaskKeys, ",") {
-			key = strings.TrimSpace(key)
-			if key != "" {
-				taskKeys = append(taskKeys, key)
-			}
-		}
-	}
+	taskKeys := parseTaskKeys(req.SyncTaskKeys)
 
 	r, err := GetSyncService().UpdateRule(ctx, &syncmodel.UpdateRuleRequest{
 		ID: uint(req.ID), Name: req.Name, EventType: req.EventType,
@@ -158,18 +157,9 @@ func ListEvents(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	limit := int(req.Limit)
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
 	offset, _ := strconv.Atoi(c.Query("offset"))
-	if offset < 0 {
-		offset = 0
-	}
-	events, _, err := GetSyncService().ListEvents(ctx, req.RepoKey, offset, limit)
+	page := dao.DefaultPagination(offset, int(req.Limit))
+	events, _, err := GetSyncService().ListEvents(ctx, req.RepoKey, page.Offset, page.Limit)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return

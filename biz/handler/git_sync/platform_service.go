@@ -111,30 +111,7 @@ func UpdatePlatform(ctx context.Context, c *app.RequestContext) {
 	}
 
 	// 更新字段（空值表示不更新）
-	if req.Name != "" {
-		p.Name = req.Name
-	}
-	if req.InstanceUrl != "" {
-		p.InstanceURL = req.InstanceUrl
-	}
-	if req.ApiUrl != "" {
-		p.APIURL = req.ApiUrl
-	}
-	if req.AccessToken != "" {
-		p.AccessToken = req.AccessToken
-	}
-	if req.SkipTlsVerify != nil {
-		p.SkipTLSVerify = *req.SkipTlsVerify
-	}
-	if req.CaCertPath != "" {
-		p.CACertPath = req.CaCertPath
-	}
-	if req.ProxyUrl != "" {
-		p.ProxyURL = req.ProxyUrl
-	}
-	if req.IsDefault != nil {
-		p.IsDefault = *req.IsDefault
-	}
+	converter.ApplyPlatformUpdate(p, &req)
 
 	if err := GetSyncService().UpdatePlatform(ctx, p); err != nil {
 		response.InternalError(c, err.Error())

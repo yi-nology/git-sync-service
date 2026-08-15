@@ -72,17 +72,9 @@ func (s *PlatformService) TestPlatformConnection(ctx context.Context, key string
 		return nil, fmt.Errorf("platform not found: %w", err)
 	}
 
-	// 创建 provider
-	cfg := sdkprov.Config{
-		Platform: sdkprov.Platform(platform.Type),
-		BaseURL:  platform.APIURL,
-		Token:    platform.AccessToken,
-		SkipTLS:  platform.SkipTLSVerify,
-	}
-
-	provider, err := sdkprov.NewProvider(cfg)
+	provider, err := platformProvider(s.providerMgr, platform)
 	if err != nil {
-		return nil, fmt.Errorf("create provider failed: %w", err)
+		return nil, err
 	}
 
 	// 测试连接
@@ -101,22 +93,14 @@ func (s *PlatformService) ListPlatformRepos(ctx context.Context, key, page, perP
 		return nil, fmt.Errorf("platform not found: %w", err)
 	}
 
-	// 创建 provider
-	cfg := sdkprov.Config{
-		Platform: sdkprov.Platform(platform.Type),
-		BaseURL:  platform.APIURL,
-		Token:    platform.AccessToken,
-		SkipTLS:  platform.SkipTLSVerify,
-	}
-
-	provider, err := sdkprov.NewProvider(cfg)
+	provider, err := platformProvider(s.providerMgr, platform)
 	if err != nil {
-		return nil, fmt.Errorf("create provider failed: %w", err)
+		return nil, err
 	}
 
-	// 获取仓库列表
-	opts := sdkprov.ListRepoOptions{}
-	repos, err := provider.ListRepos(ctx, opts)
+	// 获取仓库列表(分页参数归一化后真正下传)
+	p, pp := parsePageOpts(page, perPage)
+	repos, err := provider.ListRepos(ctx, sdkprov.ListRepoOptions{Page: p, PerPage: pp})
 	if err != nil {
 		return nil, fmt.Errorf("list repos failed: %w", err)
 	}
@@ -131,22 +115,13 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 		return 0, fmt.Errorf("platform not found: %w", err)
 	}
 
-	// 创建 provider
-	cfg := sdkprov.Config{
-		Platform: sdkprov.Platform(platform.Type),
-		BaseURL:  platform.APIURL,
-		Token:    platform.AccessToken,
-		SkipTLS:  platform.SkipTLSVerify,
-	}
-
-	provider, err := sdkprov.NewProvider(cfg)
+	provider, err := platformProvider(s.providerMgr, platform)
 	if err != nil {
-		return 0, fmt.Errorf("create provider failed: %w", err)
+		return 0, err
 	}
 
 	// 获取仓库列表
-	opts := sdkprov.ListRepoOptions{}
-	repos, err := provider.ListRepos(ctx, opts)
+	repos, err := provider.ListRepos(ctx, sdkprov.ListRepoOptions{})
 	if err != nil {
 		return 0, fmt.Errorf("list repos failed: %w", err)
 	}
@@ -193,16 +168,4 @@ func (s *PlatformService) ListReposByPlatform(ctx context.Context, platformKey s
 		return nil, err
 	}
 	return s.repoDAO.FindByPlatformID(platform.ID)
-}
-
-// GetProviderByPlatform 根据平台获取 Provider
-func (s *PlatformService) GetProviderByPlatform(platform *model.Platform) (sdkprov.Provider, error) {
-	cfg := sdkprov.Config{
-		Platform: sdkprov.Platform(platform.Type),
-		BaseURL:  platform.APIURL,
-		Token:    platform.AccessToken,
-		SkipTLS:  platform.SkipTLSVerify,
-	}
-
-	return sdkprov.NewProvider(cfg)
 }

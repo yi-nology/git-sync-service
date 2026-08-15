@@ -48,7 +48,12 @@ type Executor struct {
 }
 
 func NewExecutor(svc Service) (*Executor, error) {
-	backend, err := gitbackend.NewGitBackend(gitbackend.Options{})
+	// git.backend 配置接线:空值由 SDK 自动选择(native 优先,回退 gogit)
+	backendType := ""
+	if cfg := svc.GetConfig(); cfg != nil {
+		backendType = cfg.Git.Backend
+	}
+	backend, err := gitbackend.NewGitBackend(gitbackend.Options{Type: backendType})
 	if err != nil {
 		return nil, fmt.Errorf("init git backend failed: %w", err)
 	}

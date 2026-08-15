@@ -9,6 +9,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/yi-nology/git-sync-service/biz/model/sync_task"
 	"github.com/yi-nology/git-sync-service/internal/converter"
+	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	"github.com/yi-nology/git-sync-service/internal/service"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
@@ -185,18 +186,9 @@ func TaskHistory(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	limit := int(req.Limit)
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
 	offset, _ := strconv.Atoi(c.Query("offset"))
-	if offset < 0 {
-		offset = 0
-	}
-	runs, _, err := GetSyncService().ListHistory(ctx, req.TaskKey, offset, limit)
+	page := dao.DefaultPagination(offset, int(req.Limit))
+	runs, _, err := GetSyncService().ListHistory(ctx, req.TaskKey, page.Offset, page.Limit)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
