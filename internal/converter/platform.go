@@ -45,3 +45,34 @@ func ToPlatformList(platforms []*model.Platform) []*platformmodel.PlatformInfo {
 	}
 	return result
 }
+
+// ApplyPlatformUpdate 将更新请求中的非空字段合并进平台模型(空值表示不更新)。
+func ApplyPlatformUpdate(p *model.Platform, req *platformmodel.UpdatePlatformReq) {
+	if p == nil || req == nil {
+		return
+	}
+	if req.Name != "" {
+		p.Name = req.Name
+	}
+	if req.InstanceUrl != "" {
+		p.InstanceURL = req.InstanceUrl
+	}
+	if req.ApiUrl != "" {
+		p.APIURL = req.ApiUrl
+	}
+	if req.AccessToken != "" {
+		p.AccessToken = req.AccessToken
+	}
+	if req.SkipTlsVerify != nil {
+		p.SkipTLSVerify = *req.SkipTlsVerify
+	}
+	if req.CaCertPath != "" {
+		p.CACertPath = req.CaCertPath
+	}
+	if req.ProxyUrl != "" {
+		p.ProxyURL = req.ProxyUrl
+	}
+	if req.IsDefault != nil {
+		p.IsDefault = *req.IsDefault
+	}
+}

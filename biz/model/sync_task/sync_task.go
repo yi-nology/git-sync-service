@@ -22,7 +22,6 @@ type SyncTaskInfo struct {
 	GitTags       bool   `thrift:"gitTags,12" form:"git_tags" json:"git_tags" query:"git_tags"`
 	GitForce      bool   `thrift:"gitForce,13" form:"git_force" json:"git_force" query:"git_force"`
 	GitPrune      bool   `thrift:"gitPrune,14" form:"git_prune" json:"git_prune" query:"git_prune"`
-	GitNoVerify   bool   `thrift:"gitNoVerify,15" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
 	LastRunAt     string `thrift:"lastRunAt,16" form:"last_run_at" json:"last_run_at" query:"last_run_at"`
 	LastStatus    string `thrift:"lastStatus,17" form:"last_status" json:"last_status" query:"last_status"`
 	CreatedAt     string `thrift:"createdAt,18" form:"created_at" json:"created_at" query:"created_at"`
@@ -91,10 +90,6 @@ func (p *SyncTaskInfo) GetGitPrune() (v bool) {
 	return p.GitPrune
 }
 
-func (p *SyncTaskInfo) GetGitNoVerify() (v bool) {
-	return p.GitNoVerify
-}
-
 func (p *SyncTaskInfo) GetLastRunAt() (v string) {
 	return p.LastRunAt
 }
@@ -122,7 +117,6 @@ var fieldIDToName_SyncTaskInfo = map[int16]string{
 	12: "gitTags",
 	13: "gitForce",
 	14: "gitPrune",
-	15: "gitNoVerify",
 	16: "lastRunAt",
 	17: "lastStatus",
 	18: "createdAt",
@@ -254,14 +248,6 @@ func (p *SyncTaskInfo) Read(iprot thrift.TProtocol) (err error) {
 		case 14:
 			if fieldTypeId == thrift.BOOL {
 				if err = p.ReadField14(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 15:
-			if fieldTypeId == thrift.BOOL {
-				if err = p.ReadField15(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -474,17 +460,6 @@ func (p *SyncTaskInfo) ReadField14(iprot thrift.TProtocol) error {
 	p.GitPrune = _field
 	return nil
 }
-func (p *SyncTaskInfo) ReadField15(iprot thrift.TProtocol) error {
-
-	var _field bool
-	if v, err := iprot.ReadBool(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.GitNoVerify = _field
-	return nil
-}
 func (p *SyncTaskInfo) ReadField16(iprot thrift.TProtocol) error {
 
 	var _field string
@@ -579,10 +554,6 @@ func (p *SyncTaskInfo) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField14(oprot); err != nil {
 			fieldId = 14
-			goto WriteFieldError
-		}
-		if err = p.writeField15(oprot); err != nil {
-			fieldId = 15
 			goto WriteFieldError
 		}
 		if err = p.writeField16(oprot); err != nil {
@@ -851,23 +822,6 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 14 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 14 end error: ", p), err)
-}
-
-func (p *SyncTaskInfo) writeField15(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("gitNoVerify", thrift.BOOL, 15); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteBool(p.GitNoVerify); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 15 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 15 end error: ", p), err)
 }
 
 func (p *SyncTaskInfo) writeField16(oprot thrift.TProtocol) (err error) {
@@ -1664,8 +1618,6 @@ type CreateTaskReq struct {
 	GitTags       bool   `thrift:"gitTags,8" form:"git_tags" json:"git_tags" query:"git_tags"`
 	GitForce      bool   `thrift:"gitForce,9" form:"git_force" json:"git_force" query:"git_force"`
 	GitPrune      bool   `thrift:"gitPrune,10" form:"git_prune" json:"git_prune" query:"git_prune"`
-	GitNoVerify   bool   `thrift:"gitNoVerify,11" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
-	PushOptions   string `thrift:"pushOptions,12" form:"push_options" json:"push_options" query:"push_options"`
 }
 
 func NewCreateTaskReq() *CreateTaskReq {
@@ -1715,14 +1667,6 @@ func (p *CreateTaskReq) GetGitPrune() (v bool) {
 	return p.GitPrune
 }
 
-func (p *CreateTaskReq) GetGitNoVerify() (v bool) {
-	return p.GitNoVerify
-}
-
-func (p *CreateTaskReq) GetPushOptions() (v string) {
-	return p.PushOptions
-}
-
 var fieldIDToName_CreateTaskReq = map[int16]string{
 	1:  "name",
 	2:  "sourceRepoKey",
@@ -1734,8 +1678,6 @@ var fieldIDToName_CreateTaskReq = map[int16]string{
 	8:  "gitTags",
 	9:  "gitForce",
 	10: "gitPrune",
-	11: "gitNoVerify",
-	12: "pushOptions",
 }
 
 func (p *CreateTaskReq) Read(iprot thrift.TProtocol) (err error) {
@@ -1832,22 +1774,6 @@ func (p *CreateTaskReq) Read(iprot thrift.TProtocol) (err error) {
 		case 10:
 			if fieldTypeId == thrift.BOOL {
 				if err = p.ReadField10(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 11:
-			if fieldTypeId == thrift.BOOL {
-				if err = p.ReadField11(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 12:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField12(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -1992,28 +1918,6 @@ func (p *CreateTaskReq) ReadField10(iprot thrift.TProtocol) error {
 	p.GitPrune = _field
 	return nil
 }
-func (p *CreateTaskReq) ReadField11(iprot thrift.TProtocol) error {
-
-	var _field bool
-	if v, err := iprot.ReadBool(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.GitNoVerify = _field
-	return nil
-}
-func (p *CreateTaskReq) ReadField12(iprot thrift.TProtocol) error {
-
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.PushOptions = _field
-	return nil
-}
 
 func (p *CreateTaskReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -2059,14 +1963,6 @@ func (p *CreateTaskReq) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField10(oprot); err != nil {
 			fieldId = 10
-			goto WriteFieldError
-		}
-		if err = p.writeField11(oprot); err != nil {
-			fieldId = 11
-			goto WriteFieldError
-		}
-		if err = p.writeField12(oprot); err != nil {
-			fieldId = 12
 			goto WriteFieldError
 		}
 	}
@@ -2257,40 +2153,6 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 10 end error: ", p), err)
 }
 
-func (p *CreateTaskReq) writeField11(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("gitNoVerify", thrift.BOOL, 11); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteBool(p.GitNoVerify); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 11 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 11 end error: ", p), err)
-}
-
-func (p *CreateTaskReq) writeField12(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("pushOptions", thrift.STRING, 12); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.PushOptions); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 12 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 12 end error: ", p), err)
-}
-
 func (p *CreateTaskReq) String() string {
 	if p == nil {
 		return "<nil>"
@@ -2456,8 +2318,6 @@ type UpdateTaskReq struct {
 	GitTags      bool   `thrift:"gitTags,8" form:"git_tags" json:"git_tags" query:"git_tags"`
 	GitForce     bool   `thrift:"gitForce,9" form:"git_force" json:"git_force" query:"git_force"`
 	GitPrune     bool   `thrift:"gitPrune,10" form:"git_prune" json:"git_prune" query:"git_prune"`
-	GitNoVerify  bool   `thrift:"gitNoVerify,11" form:"git_no_verify" json:"git_no_verify" query:"git_no_verify"`
-	PushOptions  string `thrift:"pushOptions,12" form:"push_options" json:"push_options" query:"push_options"`
 }
 
 func NewUpdateTaskReq() *UpdateTaskReq {
@@ -2507,14 +2367,6 @@ func (p *UpdateTaskReq) GetGitPrune() (v bool) {
 	return p.GitPrune
 }
 
-func (p *UpdateTaskReq) GetGitNoVerify() (v bool) {
-	return p.GitNoVerify
-}
-
-func (p *UpdateTaskReq) GetPushOptions() (v string) {
-	return p.PushOptions
-}
-
 var fieldIDToName_UpdateTaskReq = map[int16]string{
 	1:  "key",
 	2:  "name",
@@ -2526,8 +2378,6 @@ var fieldIDToName_UpdateTaskReq = map[int16]string{
 	8:  "gitTags",
 	9:  "gitForce",
 	10: "gitPrune",
-	11: "gitNoVerify",
-	12: "pushOptions",
 }
 
 func (p *UpdateTaskReq) Read(iprot thrift.TProtocol) (err error) {
@@ -2624,22 +2474,6 @@ func (p *UpdateTaskReq) Read(iprot thrift.TProtocol) (err error) {
 		case 10:
 			if fieldTypeId == thrift.BOOL {
 				if err = p.ReadField10(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 11:
-			if fieldTypeId == thrift.BOOL {
-				if err = p.ReadField11(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 12:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField12(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -2784,28 +2618,6 @@ func (p *UpdateTaskReq) ReadField10(iprot thrift.TProtocol) error {
 	p.GitPrune = _field
 	return nil
 }
-func (p *UpdateTaskReq) ReadField11(iprot thrift.TProtocol) error {
-
-	var _field bool
-	if v, err := iprot.ReadBool(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.GitNoVerify = _field
-	return nil
-}
-func (p *UpdateTaskReq) ReadField12(iprot thrift.TProtocol) error {
-
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.PushOptions = _field
-	return nil
-}
 
 func (p *UpdateTaskReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -2851,14 +2663,6 @@ func (p *UpdateTaskReq) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField10(oprot); err != nil {
 			fieldId = 10
-			goto WriteFieldError
-		}
-		if err = p.writeField11(oprot); err != nil {
-			fieldId = 11
-			goto WriteFieldError
-		}
-		if err = p.writeField12(oprot); err != nil {
-			fieldId = 12
 			goto WriteFieldError
 		}
 	}
@@ -3047,40 +2851,6 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 10 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 10 end error: ", p), err)
-}
-
-func (p *UpdateTaskReq) writeField11(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("gitNoVerify", thrift.BOOL, 11); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteBool(p.GitNoVerify); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 11 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 11 end error: ", p), err)
-}
-
-func (p *UpdateTaskReq) writeField12(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("pushOptions", thrift.STRING, 12); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.PushOptions); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 12 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 12 end error: ", p), err)
 }
 
 func (p *UpdateTaskReq) String() string {
@@ -4125,8 +3895,6 @@ type PreviewSyncResp struct {
 	CanSync      bool   `thrift:"canSync,1" form:"can_sync" json:"can_sync" query:"can_sync"`
 	SourceExists bool   `thrift:"sourceExists,2" form:"source_exists" json:"source_exists" query:"source_exists"`
 	TargetExists bool   `thrift:"targetExists,3" form:"target_exists" json:"target_exists" query:"target_exists"`
-	CommitCount  int32  `thrift:"commitCount,4" form:"commit_count" json:"commit_count" query:"commit_count"`
-	LatestCommit string `thrift:"latestCommit,5" form:"latest_commit" json:"latest_commit" query:"latest_commit"`
 	Message      string `thrift:"message,6" form:"message" json:"message" query:"message"`
 }
 
@@ -4149,14 +3917,6 @@ func (p *PreviewSyncResp) GetTargetExists() (v bool) {
 	return p.TargetExists
 }
 
-func (p *PreviewSyncResp) GetCommitCount() (v int32) {
-	return p.CommitCount
-}
-
-func (p *PreviewSyncResp) GetLatestCommit() (v string) {
-	return p.LatestCommit
-}
-
 func (p *PreviewSyncResp) GetMessage() (v string) {
 	return p.Message
 }
@@ -4165,8 +3925,6 @@ var fieldIDToName_PreviewSyncResp = map[int16]string{
 	1: "canSync",
 	2: "sourceExists",
 	3: "targetExists",
-	4: "commitCount",
-	5: "latestCommit",
 	6: "message",
 }
 
@@ -4208,22 +3966,6 @@ func (p *PreviewSyncResp) Read(iprot thrift.TProtocol) (err error) {
 		case 3:
 			if fieldTypeId == thrift.BOOL {
 				if err = p.ReadField3(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 4:
-			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField4(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 5:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField5(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -4299,28 +4041,6 @@ func (p *PreviewSyncResp) ReadField3(iprot thrift.TProtocol) error {
 	p.TargetExists = _field
 	return nil
 }
-func (p *PreviewSyncResp) ReadField4(iprot thrift.TProtocol) error {
-
-	var _field int32
-	if v, err := iprot.ReadI32(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.CommitCount = _field
-	return nil
-}
-func (p *PreviewSyncResp) ReadField5(iprot thrift.TProtocol) error {
-
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.LatestCommit = _field
-	return nil
-}
 func (p *PreviewSyncResp) ReadField6(iprot thrift.TProtocol) error {
 
 	var _field string
@@ -4349,14 +4069,6 @@ func (p *PreviewSyncResp) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField3(oprot); err != nil {
 			fieldId = 3
-			goto WriteFieldError
-		}
-		if err = p.writeField4(oprot); err != nil {
-			fieldId = 4
-			goto WriteFieldError
-		}
-		if err = p.writeField5(oprot); err != nil {
-			fieldId = 5
 			goto WriteFieldError
 		}
 		if err = p.writeField6(oprot); err != nil {
@@ -4432,40 +4144,6 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
-func (p *PreviewSyncResp) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("commitCount", thrift.I32, 4); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI32(p.CommitCount); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
-}
-
-func (p *PreviewSyncResp) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("latestCommit", thrift.STRING, 5); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.LatestCommit); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
-}
-
 func (p *PreviewSyncResp) writeField6(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("message", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
@@ -4502,7 +4180,7 @@ type SyncRunInfo struct {
 	Details        string             `thrift:"details,8" form:"details" json:"details" query:"details"`
 	ErrorMessage   string             `thrift:"errorMessage,9" form:"error_message" json:"error_message" query:"error_message"`
 	CreatedAt      string             `thrift:"createdAt,10" form:"created_at" json:"created_at" query:"created_at"`
-	WebhookEventId *int64             `thrift:"webhookEventId,11,optional" form:"webhook_event_id" json:"webhook_event_id,omitempty" query:"webhook_event_id"`
+	WebhookEventId *int64             `thrift:"webhookEventId,11,optional" form:"webhook_event_id" json:"webhook_event_id" query:"webhook_event_id"`
 	DurationMs     int64              `thrift:"durationMs,12" form:"duration_ms" json:"duration_ms" query:"duration_ms"`
 	ErrorType      string             `thrift:"errorType,13" form:"error_type" json:"error_type" query:"error_type"`
 	RetryTotal     int32              `thrift:"retryTotal,14" form:"retry_total" json:"retry_total" query:"retry_total"`

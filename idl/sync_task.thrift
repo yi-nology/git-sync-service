@@ -15,7 +15,6 @@ struct SyncTaskInfo {
     12: bool gitTags (api.json="git_tags")
     13: bool gitForce (api.json="git_force")
     14: bool gitPrune (api.json="git_prune")
-    15: bool gitNoVerify (api.json="git_no_verify")
     16: string lastRunAt (api.json="last_run_at")
     17: string lastStatus (api.json="last_status")
     18: string createdAt (api.json="created_at")
@@ -51,8 +50,6 @@ struct CreateTaskReq {
     8: bool gitTags (api.json="git_tags")
     9: bool gitForce (api.json="git_force")
     10: bool gitPrune (api.json="git_prune")
-    11: bool gitNoVerify (api.json="git_no_verify")
-    12: string pushOptions (api.json="push_options")
 }
 
 struct CreateTaskResp {
@@ -70,8 +67,6 @@ struct UpdateTaskReq {
     8: bool gitTags (api.json="git_tags")
     9: bool gitForce (api.json="git_force")
     10: bool gitPrune (api.json="git_prune")
-    11: bool gitNoVerify (api.json="git_no_verify")
-    12: string pushOptions (api.json="push_options")
 }
 
 struct UpdateTaskResp {
@@ -106,8 +101,6 @@ struct PreviewSyncResp {
     1: bool canSync (api.json="can_sync")
     2: bool sourceExists (api.json="source_exists")
     3: bool targetExists (api.json="target_exists")
-    4: i32 commitCount (api.json="commit_count")
-    5: string latestCommit (api.json="latest_commit")
     6: string message (api.json="message")
 }
 

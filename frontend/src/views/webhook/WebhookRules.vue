@@ -22,6 +22,10 @@
           <template #icon><PlusOutlined /></template>
           添加规则
         </a-button>
+        <a-button @click="openPlatform">
+          <template #icon><ApiOutlined /></template>
+          平台 Webhook
+        </a-button>
       </a-space>
     </div>
 
@@ -172,6 +176,76 @@
         </a-row>
       </a-form>
     </a-modal>
+
+    <!-- 平台侧 Webhook 注册(v1.6.0+) -->
+    <a-modal
+      v-model:open="platVisible"
+      title="平台 Webhook 管理"
+      :width="640"
+      :footer="null"
+    >
+      <a-alert
+        type="info"
+        show-icon
+        style="margin-bottom: 16px"
+        message="在源平台(GitHub/GitLab/Gitea 等)侧为本仓库注册 Webhook,回调指向本服务,secret 将加密存储用于验签"
+      />
+      <a-form :model="platForm" layout="vertical">
+        <a-form-item label="回调 URL" required>
+          <a-input v-model:value="platForm.callback_url" placeholder="https://your-domain/api/webhook/receive/{repo_key}" />
+        </a-form-item>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="Secret">
+              <a-input-password v-model:value="platForm.secret" placeholder="用于验签,留空则不设置" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="事件">
+              <a-select
+                v-model:value="platForm.events"
+                mode="multiple"
+                style="width: 100%"
+                placeholder="留空默认 push"
+                :options="[
+                  { label: 'Push', value: 'push' },
+                  { label: 'Tag', value: 'tag' },
+                  { label: 'Pull Request', value: 'pull_request' },
+                ]"
+              />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-button type="primary" :loading="platLoading" style="margin-bottom: 16px" @click="registerPlatform">
+          注册到平台
+        </a-button>
+      </a-form>
+
+      <a-table
+        v-if="platList.length"
+        :columns="platColumns"
+        :data-source="platList"
+        row-key="id"
+        size="small"
+        :pagination="false"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'events'">
+            <a-tag v-for="ev in record.events" :key="ev">{{ ev }}</a-tag>
+          </template>
+          <template v-if="column.dataIndex === 'action'">
+            <a-popconfirm
+              title="确定在平台侧删除该 Webhook 吗？"
+              ok-text="确定"
+              cancel-text="取消"
+              @confirm="deletePlatform(record.id)"
+            >
+              <a-button type="link" size="small" danger>删除</a-button>
+            </a-popconfirm>
+          </template>
+        </template>
+      </a-table>
+    </a-modal>
   </div>
 </template>
 
@@ -182,6 +256,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   InfoCircleOutlined,
+  ApiOutlined,
 } from '@ant-design/icons-vue'
 import { useWebhookStore } from '@/stores/webhook'
 import { useRepoStore } from '@/stores/repo'
@@ -189,6 +264,7 @@ import { useSyncTaskStore } from '@/stores/syncTask'
 import type { WebhookRule } from '@/types'
 import { eventTypeColor } from '@/utils/dictionaries'
 import { notifySuccess, notifyError, notifyWarning } from '@/utils/notify'
+import { webhookApi } from '@/api'
 
 const webhookStore = useWebhookStore()
 const repoStore = useRepoStore()
@@ -319,6 +395,75 @@ async function handleToggleEnabled(rule: WebhookRule, checked: boolean) {
     loadRules()
   } catch (e) {
     notifyError(e, '更新状态失败')
+  }
+}
+
+// ---- 平台侧 Webhook 管理(v1.6.0+) ----
+const platVisible = ref(false)
+const platLoading = ref(false)
+const platList = ref<{ id: number; url: string; events: string[] }[]>([])
+const platColumns = [
+  { title: 'ID', dataIndex: 'id', width: 70 },
+  { title: '回调 URL', dataIndex: 'url', ellipsis: true },
+  { title: '事件', dataIndex: 'events', width: 160 },
+  { title: '操作', dataIndex: 'action', width: 80, align: 'center' as const },
+]
+const platForm = reactive({
+  callback_url: '',
+  secret: '',
+  events: [] as string[],
+})
+
+function openPlatform() {
+  if (!repoKey.value) {
+    notifyWarning('请先选择仓库')
+    return
+  }
+  platForm.callback_url = `${window.location.origin}/api/webhook/receive/${repoKey.value}`
+  platForm.secret = ''
+  platForm.events = ['push']
+  platVisible.value = true
+  loadPlatform()
+}
+
+function loadPlatform() {
+  platLoading.value = true
+  webhookApi.listPlatformWebhooks(repoKey.value)
+    .then((data) => { platList.value = data?.webhooks ?? [] })
+    .catch((e) => notifyError(e, '加载平台 Webhook 失败'))
+    .finally(() => { platLoading.value = false })
+}
+
+async function registerPlatform() {
+  if (!platForm.callback_url) {
+    notifyWarning('请填写回调 URL')
+    return
+  }
+  platLoading.value = true
+  try {
+    await webhookApi.registerPlatformWebhook({
+      repo_key: repoKey.value,
+      callback_url: platForm.callback_url,
+      secret: platForm.secret || undefined,
+      events: platForm.events.length ? platForm.events : undefined,
+    })
+    notifySuccess('平台 Webhook 注册成功')
+    platForm.secret = ''
+    loadPlatform()
+  } catch (e) {
+    notifyError(e, '注册平台 Webhook 失败')
+  } finally {
+    platLoading.value = false
+  }
+}
+
+async function deletePlatform(id: number) {
+  try {
+    await webhookApi.deletePlatformWebhook(repoKey.value, id)
+    notifySuccess('已删除平台 Webhook')
+    loadPlatform()
+  } catch (e) {
+    notifyError(e, '删除平台 Webhook 失败')
   }
 }
 </script>

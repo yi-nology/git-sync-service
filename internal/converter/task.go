@@ -19,7 +19,7 @@ func ToTaskInfo(t *model.SyncTask) *taskmodel.SyncTaskInfo {
 		TargetRepoKey: t.TargetRepoKey, TargetBranch: t.TargetBranch,
 		SyncMode: t.SyncMode, Cron: t.Cron, WebhookToken: t.WebhookToken,
 		Enabled: t.Enabled, GitTags: t.GitTags, GitForce: t.GitForce,
-		GitPrune: t.GitPrune, GitNoVerify: t.GitNoVerify,
+		GitPrune: t.GitPrune,
 		LastRunAt: lastRunAt, LastStatus: t.LastStatus,
 		CreatedAt: t.CreatedAt.Format("2006-01-02 15:04:05"),
 	}

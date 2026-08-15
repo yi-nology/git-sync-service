@@ -9,6 +9,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/yi-nology/git-sync-service/biz/model/sync_task"
 	"github.com/yi-nology/git-sync-service/internal/converter"
+	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 	"github.com/yi-nology/git-sync-service/internal/service"
 	syncmodel "github.com/yi-nology/git-sync-service/sync/model"
@@ -73,7 +74,6 @@ func TaskCreate(ctx context.Context, c *app.RequestContext) {
 		TargetRepoKey: req.TargetRepoKey, TargetBranch: req.TargetBranch,
 		SyncMode: req.SyncMode, Cron: req.Cron, GitTags: req.GitTags,
 		GitForce: req.GitForce, GitPrune: req.GitPrune,
-		GitNoVerify: req.GitNoVerify, PushOptions: req.PushOptions,
 	})
 	if err != nil {
 		response.InternalError(c, fmt.Sprintf("create task failed: %v", err))
@@ -98,7 +98,7 @@ func TaskUpdate(ctx context.Context, c *app.RequestContext) {
 		Key: req.Key, Name: req.Name, SourceBranch: req.SourceBranch,
 		TargetBranch: req.TargetBranch, SyncMode: req.SyncMode, Cron: req.Cron,
 		Enabled: req.Enabled, GitTags: req.GitTags, GitForce: req.GitForce,
-		GitPrune: req.GitPrune, GitNoVerify: req.GitNoVerify, PushOptions: req.PushOptions,
+		GitPrune: req.GitPrune,
 	})
 	if err != nil {
 		if errors.Is(err, service.ErrTaskNotFound) {
@@ -169,8 +169,7 @@ func TaskPreview(ctx context.Context, c *app.RequestContext) {
 	}
 	response.Success(c, &sync_task.PreviewSyncResp{
 		CanSync: result.CanSync, SourceExists: result.SourceExists,
-		TargetExists: result.TargetExists, CommitCount: int32(result.CommitCount),
-		LatestCommit: result.LatestCommit, Message: result.Message,
+		TargetExists: result.TargetExists, Message: result.Message,
 	})
 }
 
@@ -185,18 +184,9 @@ func TaskHistory(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	limit := int(req.Limit)
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
 	offset, _ := strconv.Atoi(c.Query("offset"))
-	if offset < 0 {
-		offset = 0
-	}
-	runs, _, err := GetSyncService().ListHistory(ctx, req.TaskKey, offset, limit)
+	page := dao.DefaultPagination(offset, int(req.Limit))
+	runs, _, err := GetSyncService().ListHistory(ctx, req.TaskKey, page.Offset, page.Limit)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return

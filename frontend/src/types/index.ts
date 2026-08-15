@@ -27,7 +27,6 @@ export interface SyncTask {
   git_tags: boolean
   git_force: boolean
   git_prune: boolean
-  git_no_verify: boolean
   last_run_at: string
   last_status: string
   created_at: string
@@ -106,8 +105,6 @@ export interface PreviewSyncResp {
   can_sync: boolean
   source_exists: boolean
   target_exists: boolean
-  commit_count: number
-  latest_commit: string
   message: string
 }
 
@@ -134,8 +131,6 @@ export interface CreateTaskRequest {
   git_tags?: boolean
   git_force?: boolean
   git_prune?: boolean
-  git_no_verify?: boolean
-  push_options?: string
 }
 
 export interface UpdateTaskRequest {
@@ -149,8 +144,6 @@ export interface UpdateTaskRequest {
   git_tags?: boolean
   git_force?: boolean
   git_prune?: boolean
-  git_no_verify?: boolean
-  push_options?: string
 }
 
 export interface CreateRuleRequest {
@@ -180,4 +173,18 @@ export interface UpdateRuleRequest {
 export interface Pagination {
   page: number
   page_size: number
+}
+
+// 平台侧 Webhook 注册(v1.6.0+)
+export interface PlatformWebhookInfo {
+  id: number
+  url: string
+  events: string[]
+}
+
+export interface RegisterPlatformWebhookRequest {
+  repo_key: string
+  callback_url: string
+  secret?: string
+  events?: string[]
 }

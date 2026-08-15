@@ -39,7 +39,10 @@ func setupTestService(t *testing.T) (*Service, *gorm.DB) {
 	if err != nil {
 		t.Fatalf("failed to create RepoDAO: %v", err)
 	}
-	platformDAO := dao.NewPlatformDAO(db)
+	platformDAO, err := dao.NewPlatformDAO(db)
+	if err != nil {
+		t.Fatalf("failed to create PlatformDAO: %v", err)
+	}
 
 	providerMgr := provider.NewManager(0)
 	repoService := NewRepoService(repoDAO, platformDAO, providerMgr)

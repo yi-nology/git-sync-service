@@ -156,22 +156,10 @@ func matchEventType(pattern, actual string) bool {
 
 func splitAndTrim(s string) []string {
 	var result []string
-	for _, part := range splitString(s, ",") {
-		part = trimSpace(part)
-		if part != "" {
+	for _, part := range strings.Split(s, ",") {
+		if part = strings.TrimSpace(part); part != "" {
 			result = append(result, part)
 		}
 	}
 	return result
-}
-
-func splitString(s, sep string) []string {
-	if s == "" {
-		return nil
-	}
-	return strings.Split(s, sep)
-}
-
-func trimSpace(s string) string {
-	return strings.TrimSpace(s)
 }

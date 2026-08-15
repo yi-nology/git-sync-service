@@ -169,9 +169,39 @@ func (rs *RepoService) GetProvider(cloneURL, accessToken string) (sdkprov.Provid
 	return rs.providerMgr.GetByURL(cloneURL, accessToken)
 }
 
+// resolveRepoProvider 解析仓库对应的 provider:repo token 优先,回退关联平台 token;
+// 有关联平台记录时按平台配置构造(经 Manager 缓存),否则按 CloneURL 探测平台。
+func (rs *RepoService) resolveRepoProvider(repo *model.Repo) (sdkprov.Provider, error) {
+	token := repo.AccessToken
+	var platform *model.Platform
+	if repo.PlatformID > 0 && rs.platformDAO != nil {
+		platform, _ = rs.platformDAO.FindByID(repo.PlatformID)
+		if platform != nil && token == "" {
+			token = platform.AccessToken
+		}
+	}
+	if platform != nil {
+		return rs.providerMgr.Get(providerConfig(platform, token))
+	}
+	return rs.providerMgr.GetByURL(repo.CloneURL, token)
+}
+
 // GetRepoByKey returns a repository by key.
 func (rs *RepoService) GetRepoByKey(key string) (*model.Repo, error) {
 	return rs.repoDAO.FindByKey(key)
+}
+
+// SetWebhookSecret 设置仓库的 Webhook 密钥(经 repo_dao 加密落库),供入站验签使用。
+func (rs *RepoService) SetWebhookSecret(repoKey, secret string) error {
+	repo, err := rs.repoDAO.FindByKey(repoKey)
+	if err != nil {
+		return err
+	}
+	if repo == nil {
+		return ErrRepoNotFound
+	}
+	repo.WebhookSecret = secret
+	return rs.repoDAO.Update(repo)
 }
 
 // TestConnection tests the connection to a repository.
@@ -184,29 +214,7 @@ func (rs *RepoService) TestConnection(ctx context.Context, repoKey string) (*mod
 		return &model.TestConnectionResult{Success: false, Message: "repo not found"}, nil
 	}
 
-	// Use repo's access token, or fall back to platform's token
-	token := repo.AccessToken
-	var platform *model.Platform
-	if repo.PlatformID > 0 && rs.platformDAO != nil {
-		platform, _ = rs.platformDAO.FindByID(repo.PlatformID)
-		if platform != nil && token == "" {
-			token = platform.AccessToken
-		}
-	}
-
-	// Create provider using platform config if available
-	var prov sdkprov.Provider
-	if platform != nil {
-		cfg := sdkprov.Config{
-			Platform: sdkprov.Platform(platform.Type),
-			BaseURL:  platform.APIURL,
-			Token:    token,
-			SkipTLS:  platform.SkipTLSVerify,
-		}
-		prov, err = sdkprov.NewProvider(cfg)
-	} else {
-		prov, err = rs.providerMgr.GetByURL(repo.CloneURL, token)
-	}
+	prov, err := rs.resolveRepoProvider(repo)
 	if err != nil {
 		return &model.TestConnectionResult{Success: false, Message: err.Error()}, nil
 	}
@@ -229,29 +237,7 @@ func (rs *RepoService) ListBranches(ctx context.Context, repoKey string) ([]stri
 		return nil, ErrRepoNotFound
 	}
 
-	// Use repo's access token, or fall back to platform's token
-	token := repo.AccessToken
-	var platform *model.Platform
-	if repo.PlatformID > 0 && rs.platformDAO != nil {
-		platform, _ = rs.platformDAO.FindByID(repo.PlatformID)
-		if platform != nil && token == "" {
-			token = platform.AccessToken
-		}
-	}
-
-	// Create provider using platform config if available
-	var prov sdkprov.Provider
-	if platform != nil {
-		cfg := sdkprov.Config{
-			Platform: sdkprov.Platform(platform.Type),
-			BaseURL:  platform.APIURL,
-			Token:    token,
-			SkipTLS:  platform.SkipTLSVerify,
-		}
-		prov, err = sdkprov.NewProvider(cfg)
-	} else {
-		prov, err = rs.providerMgr.GetByURL(repo.CloneURL, token)
-	}
+	prov, err := rs.resolveRepoProvider(repo)
 	if err != nil {
 		return nil, err
 	}

@@ -74,6 +74,12 @@ func Register(r *server.Hertz) {
 					_event := _webhook.Group("/event", _eventMw()...)
 					_event.POST("/retry", append(_retryeventMw(), git_sync.RetryEvent)...)
 				}
+				{
+					_platform0 := _webhook.Group("/platform", _platform0Mw()...)
+					_platform0.POST("/delete", append(_deleteplatformwebhookMw(), git_sync.DeletePlatformWebhook)...)
+					_platform0.GET("/list", append(_listplatformwebhooksMw(), git_sync.ListPlatformWebhooks)...)
+					_platform0.POST("/register", append(_registerplatformwebhookMw(), git_sync.RegisterPlatformWebhook)...)
+				}
 			}
 		}
 	}

@@ -21,8 +21,6 @@ type SyncTask struct {
 	GitTags       bool           `json:"git_tags" gorm:"default:false"`
 	GitForce      bool           `json:"git_force" gorm:"default:false"`
 	GitPrune      bool           `json:"git_prune" gorm:"default:false"`
-	GitNoVerify   bool           `json:"git_no_verify" gorm:"default:false"`
-	PushOptions   string         `json:"push_options" gorm:"size:500"`
 	LastRunAt     *time.Time     `json:"last_run_at"`
 	LastStatus    string         `json:"last_status" gorm:"size:20"`
 	CreatedAt     time.Time      `json:"created_at"`
@@ -45,8 +43,6 @@ type CreateTaskRequest struct {
 	GitTags       bool   `json:"git_tags"`
 	GitForce      bool   `json:"git_force"`
 	GitPrune      bool   `json:"git_prune"`
-	GitNoVerify   bool   `json:"git_no_verify"`
-	PushOptions   string `json:"push_options"`
 }
 
 type UpdateTaskRequest struct {
@@ -60,6 +56,4 @@ type UpdateTaskRequest struct {
 	GitTags      bool   `json:"git_tags"`
 	GitForce     bool   `json:"git_force"`
 	GitPrune     bool   `json:"git_prune"`
-	GitNoVerify  bool   `json:"git_no_verify"`
-	PushOptions  string `json:"push_options"`
 }

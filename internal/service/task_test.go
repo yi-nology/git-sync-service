@@ -483,3 +483,31 @@ func TestPreviewSync_MissingRepo(t *testing.T) {
 		t.Error("expected CanSync to be false when repos are missing")
 	}
 }
+
+func TestPreviewSync(t *testing.T) {
+	t.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
+	db := setupTaskTestDB(t)
+	if err := db.AutoMigrate(&model.Repo{}); err != nil {
+		t.Fatalf("migrate repo: %v", err)
+	}
+	repoDAO, err := dao.NewRepoDAO(db)
+	if err != nil {
+		t.Fatalf("NewRepoDAO: %v", err)
+	}
+	if err := repoDAO.Create(&model.Repo{Key: "src", Name: "src", Status: model.RepoStatusActive}); err != nil {
+		t.Fatalf("seed repo: %v", err)
+	}
+	ts := NewTaskService(dao.NewSyncTaskDAO(db), dao.NewSyncRunDAO(db), dao.NewSyncRunStepDAO(db), repoDAO)
+	ctx := context.Background()
+
+	// 目标缺失
+	r1, err := ts.PreviewSync(ctx, &model.PreviewSyncRequest{SourceRepoKey: "src", TargetRepoKey: "missing"})
+	if err != nil || r1.CanSync || !r1.SourceExists || r1.TargetExists {
+		t.Errorf("case1 unexpected: %+v err=%v", r1, err)
+	}
+	// 双侧存在
+	r2, err := ts.PreviewSync(ctx, &model.PreviewSyncRequest{SourceRepoKey: "src", TargetRepoKey: "src"})
+	if err != nil || !r2.CanSync || !r2.SourceExists || !r2.TargetExists {
+		t.Errorf("case2 unexpected: %+v err=%v", r2, err)
+	}
+}

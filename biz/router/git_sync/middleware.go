@@ -283,3 +283,23 @@ func _systemstatusMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _platform0Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deleteplatformwebhookMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _listplatformwebhooksMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _registerplatformwebhookMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

@@ -6,89 +6,45 @@ import (
 	"io"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
+	"golang.org/x/time/rate"
 )
 
 const maxWebhookBodySize = 10 << 20
 
-// rateLimiter implements a thread-safe token bucket rate limiter.
-type rateLimiter struct {
-	mu         sync.Mutex
-	tokens     float64
-	maxTokens  float64
-	refillRate float64 // tokens per second
-	lastRefill time.Time
-}
-
-func newRateLimiter(ratePerSecond int) *rateLimiter {
-	return &rateLimiter{
-		tokens:     float64(ratePerSecond),
-		maxTokens:  float64(ratePerSecond),
-		refillRate: float64(ratePerSecond),
-		lastRefill: time.Now(),
-	}
-}
-
-// Allow reports whether a request is permitted under the rate limit.
-func (rl *rateLimiter) Allow() bool {
-	rl.mu.Lock()
-	defer rl.mu.Unlock()
-
-	now := time.Now()
-	elapsed := now.Sub(rl.lastRefill).Seconds()
-	rl.tokens += elapsed * rl.refillRate
-	if rl.tokens > rl.maxTokens {
-		rl.tokens = rl.maxTokens
-	}
-	rl.lastRefill = now
-
-	if rl.tokens >= 1 {
-		rl.tokens--
-		return true
-	}
-	return false
+// newRateLimiter 创建限流器(令牌桶,容量与速率均为 ratePerSecond/秒;0 表示全拒)。
+// 基于 golang.org/x/time/rate,替代此前手写的令牌桶实现。
+func newRateLimiter(ratePerSecond int) *rate.Limiter {
+	return rate.NewLimiter(rate.Limit(ratePerSecond), ratePerSecond)
 }
 
 var (
-	webhookRateLimiter   *rateLimiter
-	webhookRateLimiterMu sync.RWMutex
-	webhookRateLimiterInited bool
+	webhookRateLimiter   *rate.Limiter
+	webhookRateLimiterMu sync.Mutex
 )
 
 // getWebhookRateLimiter returns the singleton rate limiter, initializing it from config on first call.
-func getWebhookRateLimiter() *rateLimiter {
-	webhookRateLimiterMu.RLock()
-	if webhookRateLimiterInited {
-		defer webhookRateLimiterMu.RUnlock()
-		return webhookRateLimiter
-	}
-	webhookRateLimiterMu.RUnlock()
-
+func getWebhookRateLimiter() *rate.Limiter {
 	webhookRateLimiterMu.Lock()
 	defer webhookRateLimiterMu.Unlock()
-	// Double-check after acquiring write lock
-	if webhookRateLimiterInited {
-		return webhookRateLimiter
+	if webhookRateLimiter == nil {
+		rateLimit := GetSyncService().GetConfig().Webhook.RateLimit
+		if rateLimit <= 0 {
+			rateLimit = 10 // default: 10 requests per second
+		}
+		webhookRateLimiter = newRateLimiter(rateLimit)
 	}
-	rateLimit := GetSyncService().GetConfig().Webhook.RateLimit
-	if rateLimit <= 0 {
-		rateLimit = 10 // default: 10 requests per second
-	}
-	webhookRateLimiter = newRateLimiter(rateLimit)
-	webhookRateLimiterInited = true
 	return webhookRateLimiter
 }
 
 // setWebhookRateLimiter overrides the rate limiter. Used for testing.
-func setWebhookRateLimiter(rl *rateLimiter) {
+func setWebhookRateLimiter(rl *rate.Limiter) {
 	webhookRateLimiterMu.Lock()
 	defer webhookRateLimiterMu.Unlock()
 	webhookRateLimiter = rl
-	webhookRateLimiterInited = true
 }
 
 // resetWebhookRateLimiter resets the rate limiter so it will be re-initialized from config. Used for testing.
@@ -96,7 +52,6 @@ func resetWebhookRateLimiter() {
 	webhookRateLimiterMu.Lock()
 	defer webhookRateLimiterMu.Unlock()
 	webhookRateLimiter = nil
-	webhookRateLimiterInited = false
 }
 
 // RateLimitMiddleware returns a middleware that enforces webhook rate limiting.

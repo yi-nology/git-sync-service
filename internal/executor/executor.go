@@ -48,7 +48,12 @@ type Executor struct {
 }
 
 func NewExecutor(svc Service) (*Executor, error) {
-	backend, err := gitbackend.NewGitBackend(gitbackend.Options{})
+	// git.backend 配置接线:空值由 SDK 自动选择(native 优先,回退 gogit)
+	backendType := ""
+	if cfg := svc.GetConfig(); cfg != nil {
+		backendType = cfg.Git.Backend
+	}
+	backend, err := gitbackend.NewGitBackend(gitbackend.Options{Type: backendType})
 	if err != nil {
 		return nil, fmt.Errorf("init git backend failed: %w", err)
 	}
@@ -366,44 +371,3 @@ func timePtr(t time.Time) *time.Time {
 	return &t
 }
 
-// SyncPreview contains the result of a sync preview operation.
-type SyncPreview struct {
-	CanSync       bool
-	SourceExists  bool
-	TargetExists  bool
-	CommitsBehind int
-	CommitsAhead  int
-	LatestCommit  string
-	Message       string
-}
-
-// Preview checks if a sync operation can be performed.
-func (e *Executor) Preview(ctx context.Context, task *model.SyncTask) (*SyncPreview, error) {
-	preview := &SyncPreview{}
-
-	sourceRepo, err := e.service.GetRepoByKey(task.SourceRepoKey)
-	if err != nil {
-		preview.Message = fmt.Sprintf("source repo error: %v", err)
-		return preview, nil
-	}
-	preview.SourceExists = sourceRepo != nil
-	if !preview.SourceExists {
-		preview.Message = "source repo not found"
-		return preview, nil
-	}
-
-	targetRepo, err := e.service.GetRepoByKey(task.TargetRepoKey)
-	if err != nil {
-		preview.Message = fmt.Sprintf("target repo error: %v", err)
-		return preview, nil
-	}
-	preview.TargetExists = targetRepo != nil
-	if !preview.TargetExists {
-		preview.Message = "target repo not found"
-		return preview, nil
-	}
-
-	preview.CanSync = true
-	preview.Message = "sync can be performed"
-	return preview, nil
-}

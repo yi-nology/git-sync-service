@@ -40,13 +40,8 @@ func TestRateLimiter_Refill(t *testing.T) {
 		t.Fatal("expected request to be denied after exhausting tokens")
 	}
 
-	// Manually simulate time passage by manipulating lastRefill
-	rl.mu.Lock()
-	rl.lastRefill = rl.lastRefill.Add(-1 * time.Second) // simulate 1 second passing
-	rl.mu.Unlock()
-
-	// Should be allowed now (refilled 10 tokens)
-	if !rl.Allow() {
+	// 模拟时间流逝 1 秒:x/time/rate 以未来时间点判定,等价于等待 1s 后令牌回填
+	if !rl.AllowN(time.Now().Add(time.Second), 1) {
 		t.Fatal("expected request to be allowed after refill")
 	}
 }

@@ -62,8 +62,6 @@ func (ts *TaskService) CreateTask(ctx context.Context, req *model.CreateTaskRequ
 		GitTags:       req.GitTags,
 		GitForce:      req.GitForce,
 		GitPrune:      req.GitPrune,
-		GitNoVerify:   req.GitNoVerify,
-		PushOptions:   req.PushOptions,
 	}
 
 	if err := ts.taskDAO.Create(task); err != nil {
@@ -102,8 +100,6 @@ func (ts *TaskService) UpdateTask(ctx context.Context, req *model.UpdateTaskRequ
 	task.GitTags = req.GitTags
 	task.GitForce = req.GitForce
 	task.GitPrune = req.GitPrune
-	task.GitNoVerify = req.GitNoVerify
-	task.PushOptions = req.PushOptions
 
 	if err := ts.taskDAO.Update(task); err != nil {
 		return nil, err
