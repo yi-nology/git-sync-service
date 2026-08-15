@@ -98,7 +98,7 @@ func (s *PlatformService) ListPlatformRepos(ctx context.Context, key, page, perP
 		return nil, err
 	}
 
-	// 获取仓库列表(分页参数归一化后真正下传)
+	// 分页参数归一化后真正下传给 SDK
 	p, pp := parsePageOpts(page, perPage)
 	repos, err := provider.ListRepos(ctx, sdkprov.ListRepoOptions{Page: p, PerPage: pp})
 	if err != nil {
