@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
 
+	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
@@ -21,7 +21,8 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 		return ErrRepoNotFound
 	}
 
-	prov, err := s.repos.GetProvider(repo.CloneURL, repo.AccessToken)
+	// 与注册/测试连接等链路保持一致:优先按平台记录解析(支持自建平台),否则按 CloneURL 探测
+	prov, err := s.repos.resolveRepoProvider(repo)
 	if err != nil {
 		return err
 	}
@@ -140,26 +141,8 @@ func (s *Service) ListEvents(ctx context.Context, repoKey string, offset, limit 
 	return s.webhooks.ListEvents(ctx, repoKey, offset, limit)
 }
 
+// matchEventType 事件类型匹配,复用 SDK branchfilter(逗号分隔 glob,
+// 空/ "*" 匹配全部;顺带支持 "push*" 等模式)。
 func matchEventType(pattern, actual string) bool {
-	if pattern == "" || pattern == "*" {
-		return true
-	}
-
-	// Support comma-separated patterns
-	for _, p := range splitAndTrim(pattern) {
-		if p == actual {
-			return true
-		}
-	}
-	return false
-}
-
-func splitAndTrim(s string) []string {
-	var result []string
-	for _, part := range strings.Split(s, ",") {
-		if part = strings.TrimSpace(part); part != "" {
-			result = append(result, part)
-		}
-	}
-	return result
+	return branchfilter.New(pattern).Match(actual)
 }
