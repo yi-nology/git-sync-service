@@ -164,11 +164,6 @@ func (rs *RepoService) DeleteRepo(ctx context.Context, key string) error {
 	return nil
 }
 
-// GetProvider returns a git platform provider for the given repository.
-func (rs *RepoService) GetProvider(cloneURL, accessToken string) (sdkprov.Provider, error) {
-	return rs.providerMgr.GetByURL(cloneURL, accessToken)
-}
-
 // resolveRepoProvider 解析仓库对应的 provider:repo token 优先,回退关联平台 token;
 // 有关联平台记录时按平台配置构造(经 Manager 缓存),否则按 CloneURL 探测平台。
 func (rs *RepoService) resolveRepoProvider(repo *model.Repo) (sdkprov.Provider, error) {

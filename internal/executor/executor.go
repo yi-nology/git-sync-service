@@ -91,38 +91,23 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	sourceRepo, err := e.service.GetRepoByKey(task.SourceRepoKey)
 	if err != nil {
-		run.Status = model.StatusFailed
-		run.ErrorMessage = fmt.Sprintf("query source repo failed: %v", err)
-		run.ErrorType = ClassifyError(err)
-		return run, err
+		return failRun(run, fmt.Errorf("query source repo failed: %v", err))
 	}
 	if sourceRepo == nil {
-		run.Status = model.StatusFailed
-		run.ErrorMessage = fmt.Sprintf("source repo not found: %s", task.SourceRepoKey)
-		run.ErrorType = model.ErrorConfig
-		return run, fmt.Errorf("source repo not found: %s", task.SourceRepoKey)
+		return failRun(run, fmt.Errorf("source repo not found: %s", task.SourceRepoKey))
 	}
 
 	targetRepo, err := e.service.GetRepoByKey(task.TargetRepoKey)
 	if err != nil {
-		run.Status = model.StatusFailed
-		run.ErrorMessage = fmt.Sprintf("query target repo failed: %v", err)
-		run.ErrorType = ClassifyError(err)
-		return run, err
+		return failRun(run, fmt.Errorf("query target repo failed: %v", err))
 	}
 	if targetRepo == nil {
-		run.Status = model.StatusFailed
-		run.ErrorMessage = fmt.Sprintf("target repo not found: %s", task.TargetRepoKey)
-		run.ErrorType = model.ErrorConfig
-		return run, fmt.Errorf("target repo not found: %s", task.TargetRepoKey)
+		return failRun(run, fmt.Errorf("target repo not found: %s", task.TargetRepoKey))
 	}
 
 	workDir := e.service.GetTempDir(task.Key)
 	if err := os.MkdirAll(workDir, 0o755); err != nil {
-		run.Status = model.StatusFailed
-		run.ErrorMessage = fmt.Sprintf("create work dir failed: %v", err)
-		run.ErrorType = ClassifyError(err)
-		return run, err
+		return failRun(run, fmt.Errorf("create work dir failed: %v", err))
 	}
 
 	defer func() {
@@ -159,20 +144,14 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		if err := e.cloneRepo(execCtx, repoDir, sourceRepo, task); err != nil {
 			e.failStep(step1, err)
 			fmt.Fprintf(&details, "clone error: %v\n", err)
-			run.Status = model.StatusFailed
-			run.ErrorMessage = fmt.Sprintf("clone failed: %v", err)
-			run.ErrorType = ClassifyError(err)
-			return run, err
+			return failRun(run, fmt.Errorf("clone failed: %v", err))
 		}
 	} else {
 		details.WriteString("Step 1: Fetch updates from source repo...\n")
 		if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo); err != nil {
 			e.failStep(step1, err)
 			fmt.Fprintf(&details, "fetch error: %v\n", err)
-			run.Status = model.StatusFailed
-			run.ErrorMessage = fmt.Sprintf("fetch failed: %v", err)
-			run.ErrorType = ClassifyError(err)
-			return run, err
+			return failRun(run, fmt.Errorf("fetch failed: %v", err))
 		}
 	}
 	e.completeStep(step1, "")
@@ -184,10 +163,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	if err := e.ensureRemote(execCtx, repoDir, targetRepo); err != nil {
 		e.failStep(step2, err)
 		fmt.Fprintf(&details, "add remote error: %v\n", err)
-		run.Status = model.StatusFailed
-		run.ErrorMessage = fmt.Sprintf("add remote failed: %v", err)
-		run.ErrorType = ClassifyError(err)
-		return run, err
+		return failRun(run, fmt.Errorf("add remote failed: %v", err))
 	}
 	e.completeStep(step2, "")
 	details.WriteString("Step 2: completed\n")
@@ -236,10 +212,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	if pushErr != nil {
 		e.failStep(step3, pushErr)
 		fmt.Fprintf(&details, "push error: %v\n", pushErr)
-		run.Status = model.StatusFailed
-		run.ErrorMessage = fmt.Sprintf("push failed after %d attempts: %v", maxRetries, pushErr)
-		run.ErrorType = ClassifyError(pushErr)
-		return run, pushErr
+		return failRun(run, fmt.Errorf("push failed after %d attempts: %v", maxRetries, pushErr))
 	}
 	e.completeStep(step3, "")
 	details.WriteString("Step 3: completed\n")
@@ -249,29 +222,39 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	return run, nil
 }
 
+// failRun 标记 run 失败并按错误分类填充字段,统一 Execute 的失败出口。
+func failRun(run *model.SyncRun, err error) (*model.SyncRun, error) {
+	run.Status = model.StatusFailed
+	run.ErrorMessage = err.Error()
+	run.ErrorType = ClassifyError(err)
+	return run, err
+}
+
 func (e *Executor) authConfig(repo *model.Repo) gitbackend.AuthConfig {
-	// Use repo's access token first
-	if repo.AccessToken != "" {
-		slog.Debug("using repo access token", "repo", repo.Key)
-		return gitbackend.AuthConfig{
-			Type:  gitbackend.AuthHTTPToken,
-			Token: repo.AccessToken,
+	// 平台记录只查一次:token 仅作回退,SkipTLSVerify 则无论 token 来源
+	// 是否为仓库自身都要生效(自签名证书平台的 git clone/fetch/push 依赖它)。
+	var skipTLS bool
+	var platformToken string
+	if repo.PlatformID > 0 {
+		if platform, err := e.service.GetPlatformByID(repo.PlatformID); err == nil && platform != nil {
+			skipTLS = platform.SkipTLSVerify
+			platformToken = platform.AccessToken
 		}
 	}
-	// Fall back to platform's token
-	if repo.PlatformID > 0 {
-		platform, err := e.service.GetPlatformByID(repo.PlatformID)
-		if err == nil && platform != nil && platform.AccessToken != "" {
-			slog.Debug("using platform access token", "repo", repo.Key, "platform", platform.Name)
-			return gitbackend.AuthConfig{
-				Type:  gitbackend.AuthHTTPToken,
-				Token: platform.AccessToken,
-			}
+	token := repo.AccessToken
+	if token == "" {
+		token = platformToken
+	}
+	if token != "" {
+		slog.Debug("using access token", "repo", repo.Key, "fromPlatform", repo.AccessToken == "")
+		return gitbackend.AuthConfig{
+			Type:             gitbackend.AuthHTTPToken,
+			Token:            token,
+			InsecureSkipTLS:  skipTLS,
 		}
-		slog.Debug("no platform token found", "repo", repo.Key, "platformID", repo.PlatformID)
 	}
 	slog.Debug("no auth configured", "repo", repo.Key)
-	return gitbackend.AuthConfig{Type: gitbackend.AuthNone}
+	return gitbackend.AuthConfig{Type: gitbackend.AuthNone, InsecureSkipTLS: skipTLS}
 }
 
 // beginStep creates a new step record in "running" state.
@@ -347,11 +330,19 @@ func (e *Executor) fetchRepo(ctx context.Context, dir string, task *model.SyncTa
 }
 
 func (e *Executor) ensureRemote(ctx context.Context, dir string, repo *model.Repo) error {
-	remotes, err := e.backend.ListRemoteBranches(ctx, dir, RemoteTarget)
-	if err != nil || len(remotes) == 0 {
-		return e.backend.AddRemote(ctx, dir, RemoteTarget, repo.CloneURL)
+	// 按配置的 remote 名称判断存在性(GetRemotes);此前用 ListRemoteBranches
+	// 依赖 remote-tracking refs,从未 fetch 过的既有 remote 会被误判为不存在,
+	// 导致 AddRemote 报 "remote target already exists"。
+	remotes, err := e.backend.GetRemotes(ctx, dir)
+	if err != nil {
+		return err
 	}
-	return nil
+	for _, name := range remotes {
+		if name == RemoteTarget {
+			return nil
+		}
+	}
+	return e.backend.AddRemote(ctx, dir, RemoteTarget, repo.CloneURL)
 }
 
 func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, repo *model.Repo) error {
