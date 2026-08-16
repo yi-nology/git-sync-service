@@ -215,10 +215,10 @@ github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS
 github.com/twitchyliquid64/golang-asm v0.15.1/go.mod h1:a1lVb/DtPvCB8fslRZhAngC2+aY1QWCk3Cedj/Gdt08=
 github.com/xanzy/ssh-agent v0.3.3 h1:+/15pJfg/RsTxqYcX6fHqOXZwwMP+2VyYWJeWM2qQFM=
 github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=
-github.com/yi-nology/git-platform-sdk v0.41.0 h1:e89ZXCyi3N+KrwN5bSwIbqsVPM/SpykDsyaRTvjX1cE=
-github.com/yi-nology/git-platform-sdk v0.41.0/go.mod h1:C4SxbsUVuGOIcwzHUf1bwZ/mL88UzuHQ/mMw3O3l9i4=
-github.com/yi-nology/gitcode_api v0.6.0 h1:Jbb3YvGqpnYnBG4BbuXBJoDD/cl8qkNOorPuuC6sh1g=
-github.com/yi-nology/gitcode_api v0.6.0/go.mod h1:YaRLRDyxaVqy6Nm4xLISmGJ7AZOf5sPWcWtwZOKd8ig=
+github.com/yi-nology/git-platform-sdk v0.43.0 h1:ApEhSBMiHGxjPThBq9lkbRG0kT2c3T6PheFgVs7S/O8=
+github.com/yi-nology/git-platform-sdk v0.43.0/go.mod h1:rntWUlqx0VktVJWQvuxJ01cLdiRodwqcnDeED103ZXM=
+github.com/yi-nology/gitcode_api v0.7.0 h1:+cOh0eejTbQ/8RVDPw3zqiMzxs9WnRWrUMFNUrPG6/U=
+github.com/yi-nology/gitcode_api v0.7.0/go.mod h1:YaRLRDyxaVqy6Nm4xLISmGJ7AZOf5sPWcWtwZOKd8ig=
 github.com/yuin/gopher-lua v1.1.1 h1:kYKnWBjvbNP4XLT3+bPEwAXJx262OhaHDWDVOPjL46M=
 github.com/yuin/gopher-lua v1.1.1/go.mod h1:GBR0iDaNXjAgGg9zfCvksxSRnQx76gclCIb7kdAd1Pw=
 github.com/zeebo/xxh3 v1.1.0 h1:s7DLGDK45Dyfg7++yxI0khrfwq9661w9EN78eP/UZVs=
