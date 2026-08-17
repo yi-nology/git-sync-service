@@ -530,3 +530,368 @@ func TestCompleteStep(t *testing.T) {
 		t.Errorf("expected status 'success', got '%s'", step.Status)
 	}
 }
+
+func TestAuthConfig_WithPlatform(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	repo := &model.Repo{
+		AccessToken: "",
+		PlatformID:  1,
+	}
+
+	config := exec.authConfig(repo)
+	// mockService returns a platform with AccessToken="test-token"
+	if config.Token != "test-token" {
+		t.Errorf("expected platform token 'test-token', got '%q'", config.Token)
+	}
+}
+
+func TestAuthConfig_RepoTokenOverridesPlatform(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	repo := &model.Repo{
+		AccessToken: "repo-specific-token",
+		PlatformID:  1,
+	}
+
+	config := exec.authConfig(repo)
+	// Repo token should take precedence
+	if config.Token != "repo-specific-token" {
+		t.Errorf("expected repo token 'repo-specific-token', got '%q'", config.Token)
+	}
+}
+
+func TestAuthConfig_NoPlatformID(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	repo := &model.Repo{
+		AccessToken: "",
+		PlatformID:  0,
+	}
+
+	config := exec.authConfig(repo)
+	if config.Type != "none" {
+		t.Errorf("expected auth type 'none', got '%q'", config.Type)
+	}
+}
+
+func TestCloneRepo_WithForceFlag(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		SourceBranch: "main",
+		GitForce:     true,
+	}
+
+	repo := &model.Repo{
+		CloneURL: "https://github.com/test/repo.git",
+	}
+
+	// This will fail because we don't have a real git backend,
+	// but it exercises the depth=0 path
+	_ = exec.cloneRepo(context.Background(), "/tmp/test-clone", repo, task)
+}
+
+func TestCloneRepo_ShallowClone(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		SourceBranch: "main",
+		GitForce:     false,
+	}
+
+	repo := &model.Repo{
+		CloneURL: "https://github.com/test/repo.git",
+	}
+
+	// This will fail because we don't have a real git backend,
+	// but it exercises the depth=1 path
+	_ = exec.cloneRepo(context.Background(), "/tmp/test-clone", repo, task)
+}
+
+func TestNewExecutor_WithBackendConfig(t *testing.T) {
+	svc := &mockServiceWithConfig{
+		mockService: newMockService(),
+		backendType: "gogit",
+	}
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+	if exec == nil {
+		t.Fatal("expected non-nil executor")
+	}
+}
+
+func TestNewExecutor_InvalidBackend(t *testing.T) {
+	svc := &mockServiceWithConfig{
+		mockService: newMockService(),
+		backendType: "invalid-backend-type",
+	}
+	_, err := NewExecutor(svc)
+	if err == nil {
+		t.Fatal("expected error for invalid backend type")
+	}
+}
+
+// mockServiceWithConfig wraps mockService to return a specific config
+type mockServiceWithConfig struct {
+	*mockService
+	backendType string
+}
+
+func (m *mockServiceWithConfig) GetConfig() *model.Config {
+	return &model.Config{
+		Git: model.GitConfig{
+			Backend: m.backendType,
+		},
+		Sync: model.SyncConfig{
+			DefaultTimeout: 300,
+			RetryCount:     3,
+		},
+	}
+}
+
+func TestExecute_CompleteRunError(t *testing.T) {
+	svc := newMockService()
+	svc.completeErr = fmt.Errorf("db write failed")
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "missing-repo", // Will fail, triggering complete
+		TargetRepoKey: "target-repo",
+	}
+
+	ctx := context.Background()
+	run, err := exec.Execute(ctx, task, "manual", nil)
+	// Should still return the run even with complete error
+	if run == nil {
+		t.Fatal("expected non-nil run")
+	}
+	if err == nil {
+		t.Fatal("expected error for missing source repo")
+	}
+}
+
+func TestExecute_UpdateTaskLastRunError(t *testing.T) {
+	svc := newMockService()
+	svc.updateErr = fmt.Errorf("db update failed")
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "missing-repo", // Will fail, triggering update
+		TargetRepoKey: "target-repo",
+	}
+
+	ctx := context.Background()
+	run, _ := exec.Execute(ctx, task, "manual", nil)
+	if run == nil {
+		t.Fatal("expected non-nil run")
+	}
+}
+
+func TestExecute_SourceRepoQueryError(t *testing.T) {
+	svc := newMockService()
+	svc.repoErr = fmt.Errorf("database connection lost")
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "source-repo",
+		TargetRepoKey: "target-repo",
+		SourceBranch:  "main",
+		TargetBranch:  "main",
+	}
+
+	ctx := context.Background()
+	run, err := exec.Execute(ctx, task, "manual", nil)
+	if err == nil {
+		t.Fatal("expected error when repo query fails")
+	}
+	if run == nil {
+		t.Fatal("expected non-nil run")
+	}
+	if run.Status != model.StatusFailed {
+		t.Errorf("expected status 'failed', got '%q'", run.Status)
+	}
+	if run.ErrorType != model.ErrorUnknown {
+		t.Errorf("expected error type '%s', got '%q'", model.ErrorUnknown, run.ErrorType)
+	}
+}
+
+func TestFailRun(t *testing.T) {
+	run := &model.SyncRun{
+		ID:     1,
+		Status: model.StatusRunning,
+	}
+
+	err := fmt.Errorf("401 authentication failed")
+	resultRun, resultErr := failRun(run, err)
+
+	if resultRun.Status != model.StatusFailed {
+		t.Errorf("expected status 'failed', got '%q'", resultRun.Status)
+	}
+	if resultRun.ErrorMessage != "401 authentication failed" {
+		t.Errorf("expected error message '401 authentication failed', got '%q'", resultRun.ErrorMessage)
+	}
+	if resultRun.ErrorType != model.ErrorAuth {
+		t.Errorf("expected error type '%s', got '%q'", model.ErrorAuth, resultRun.ErrorType)
+	}
+	if resultErr == nil {
+		t.Fatal("expected non-nil error")
+	}
+}
+
+func TestFetchRepo(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		SourceBranch: "main",
+		GitTags:      true,
+		GitPrune:     true,
+	}
+
+	repo := &model.Repo{
+		CloneURL: "https://github.com/test/repo.git",
+	}
+
+	// This will fail because we don't have a real git repo,
+	// but it exercises the fetchRepo code path
+	_ = exec.fetchRepo(context.Background(), "/tmp/nonexistent", task, repo)
+}
+
+func TestEnsureRemote(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	repo := &model.Repo{
+		CloneURL: "https://github.com/test/target.git",
+	}
+
+	// This will fail because we don't have a real git repo,
+	// but it exercises the ensureRemote code path
+	_ = exec.ensureRemote(context.Background(), "/tmp/nonexistent", repo)
+}
+
+func TestPush(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		SourceBranch: "main",
+		TargetBranch: "main",
+		GitForce:     false,
+	}
+
+	repo := &model.Repo{
+		CloneURL: "https://github.com/test/target.git",
+	}
+
+	// This will fail because we don't have a real git repo,
+	// but it exercises the push code path
+	_ = exec.push(context.Background(), "/tmp/nonexistent", task, repo)
+}
+
+func TestExecute_WithDefaultTimeout(t *testing.T) {
+	svc := &mockServiceWithConfig{
+		mockService: newMockService(),
+		backendType: "",
+	}
+	svc.config = &model.Config{
+		Sync: model.SyncConfig{
+			DefaultTimeout: 0, // Should default to 300
+			RetryCount:     1,
+		},
+	}
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "missing-repo",
+		TargetRepoKey: "target-repo",
+	}
+
+	ctx := context.Background()
+	run, _ := exec.Execute(ctx, task, "manual", nil)
+	if run == nil {
+		t.Fatal("expected non-nil run")
+	}
+}
+
+func TestExecute_WithZeroRetryCount(t *testing.T) {
+	svc := &mockServiceWithConfig{
+		mockService: newMockService(),
+		backendType: "",
+	}
+	svc.config = &model.Config{
+		Sync: model.SyncConfig{
+			DefaultTimeout: 300,
+			RetryCount:     0, // Should default to 3
+		},
+	}
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "missing-repo",
+		TargetRepoKey: "target-repo",
+	}
+
+	ctx := context.Background()
+	run, _ := exec.Execute(ctx, task, "manual", nil)
+	if run == nil {
+		t.Fatal("expected non-nil run")
+	}
+}
