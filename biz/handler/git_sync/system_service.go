@@ -9,6 +9,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	system "github.com/yi-nology/git-sync-service/biz/model/system"
+	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
 )
 
@@ -35,10 +36,10 @@ func SystemStatus(ctx context.Context, c *app.RequestContext) {
 		Status:      "running",
 		Version:     "v1.6.3",
 		Uptime:      int64(time.Since(startTime).Seconds()),
-		RepoCount:   int32(repoCount),
-		TaskCount:   int32(taskTotal),
-		RunningTask: int32(runningCount),
-		FailedTask:  int32(failedCount),
+		RepoCount:   converter.SafeInt64ToInt32(repoCount),
+		TaskCount:   converter.SafeInt64ToInt32(taskTotal),
+		RunningTask: converter.SafeInt64ToInt32(runningCount),
+		FailedTask:  converter.SafeInt64ToInt32(failedCount),
 		GoVersion:   runtime.Version(),
 		Platform:    runtime.GOOS + "/" + runtime.GOARCH,
 	})

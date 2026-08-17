@@ -12,7 +12,7 @@ func ToRepoInfo(r *model.Repo) *repomodel.RepoInfo {
 		return nil
 	}
 	return &repomodel.RepoInfo{
-		ID:            int64(r.ID),
+		ID:            SafeUintToInt64(r.ID),
 		Key:           r.Key,
 		Name:          r.Name,
 		Platform:      r.Platform,

@@ -106,7 +106,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	}
 
 	workDir := e.service.GetTempDir(task.Key)
-	if err := os.MkdirAll(workDir, 0o755); err != nil {
+	if err := os.MkdirAll(workDir, 0o750); err != nil {
 		return failRun(run, fmt.Errorf("create work dir failed: %v", err))
 	}
 

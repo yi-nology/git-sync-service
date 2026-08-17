@@ -261,6 +261,6 @@ func SyncPlatformRepos(ctx context.Context, c *app.RequestContext) {
 	recordAudit(ctx, c, "sync", "platform", req.Key, fmt.Sprintf("同步平台仓库 %s（导入 %d 个）", req.Key, count))
 	response.Success(c, &platform.SyncPlatformReposResp{
 		Message:     "同步成功",
-		SyncedCount: int32(count),
+		SyncedCount: converter.SafeIntToInt32(count),
 	})
 }

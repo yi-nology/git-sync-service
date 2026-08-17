@@ -161,3 +161,72 @@ func TestLoadConfig_FileNotFound(t *testing.T) {
 		t.Fatal("Expected error for nonexistent config file")
 	}
 }
+
+func TestInitDB_SQLite(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	db, err := InitDB("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("InitDB failed: %v", err)
+	}
+
+	if db == nil {
+		t.Fatal("expected non-nil db")
+	}
+
+	// Verify tables were created
+	if !db.Migrator().HasTable(&Platform{}) {
+		t.Error("expected Platform table to exist")
+	}
+
+	if !db.Migrator().HasTable(&Repo{}) {
+		t.Error("expected Repo table to exist")
+	}
+
+	if !db.Migrator().HasTable(&SyncTask{}) {
+		t.Error("expected SyncTask table to exist")
+	}
+
+	if !db.Migrator().HasTable(&SyncRun{}) {
+		t.Error("expected SyncRun table to exist")
+	}
+
+	if !db.Migrator().HasTable(&SyncRunStep{}) {
+		t.Error("expected SyncRunStep table to exist")
+	}
+
+	if !db.Migrator().HasTable(&WebhookRule{}) {
+		t.Error("expected WebhookRule table to exist")
+	}
+
+	if !db.Migrator().HasTable(&WebhookRuleTask{}) {
+		t.Error("expected WebhookRuleTask table to exist")
+	}
+
+	if !db.Migrator().HasTable(&WebhookEvent{}) {
+		t.Error("expected WebhookEvent table to exist")
+	}
+
+	if !db.Migrator().HasTable(&OperationLog{}) {
+		t.Error("expected OperationLog table to exist")
+	}
+}
+
+func TestInitDB_UnsupportedDriver(t *testing.T) {
+	_, err := InitDB("postgres", "test.db")
+	if err == nil {
+		t.Fatal("Expected error for unsupported driver")
+	}
+}
+
+func TestInitDB_Memory(t *testing.T) {
+	db, err := InitDB("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("InitDB failed: %v", err)
+	}
+
+	if db == nil {
+		t.Fatal("expected non-nil db")
+	}
+}

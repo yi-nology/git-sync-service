@@ -12,10 +12,10 @@ func ToRuleInfo(r *model.WebhookRule) *webhookmodel.WebhookRuleInfo {
 		return nil
 	}
 	return &webhookmodel.WebhookRuleInfo{
-		ID: int64(r.ID), Name: r.Name, RepoKey: r.RepoKey,
+		ID: SafeUintToInt64(r.ID), Name: r.Name, RepoKey: r.RepoKey,
 		EventType: r.EventType, BranchPattern: r.BranchPattern,
 		Action: r.Action, SyncTaskKeys: strings.Join(r.GetTaskKeys(), ","),
-		MinInterval: int32(r.MinInterval), Enabled: r.Enabled,
+		MinInterval: SafeIntToInt32(r.MinInterval), Enabled: r.Enabled,
 		Description: r.Description, CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 }
@@ -37,7 +37,7 @@ func ToEventInfo(e *model.WebhookEvent) *webhookmodel.WebhookEventInfo {
 		processedAt = e.ProcessedAt.Format("2006-01-02 15:04:05")
 	}
 	return &webhookmodel.WebhookEventInfo{
-		ID: int64(e.ID), EventId: e.EventID, RepoKey: e.RepoKey,
+		ID: SafeUintToInt64(e.ID), EventId: e.EventID, RepoKey: e.RepoKey,
 		EventType: e.EventType, Source: e.Source, ActorName: e.ActorName,
 		Branch: e.Branch, CommitSha: e.CommitSHA, Status: e.Status,
 		ErrorMessage: e.ErrorMessage, ProcessedAt: processedAt,

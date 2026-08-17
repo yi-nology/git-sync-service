@@ -1,0 +1,11 @@
+{
+  "G115": {
+    "exclude": ["internal/converter/safe_convert.go"]
+  },
+  "G118": {
+    "exclude": ["internal/service/concurrency.go"]
+  },
+  "G304": {
+    "exclude": ["sync/model/config.go"]
+  }
+}

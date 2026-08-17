@@ -18,7 +18,7 @@ func ToPlatformInfo(p *model.Platform) *platformmodel.PlatformInfo {
 		lastTestAt = p.LastTestAt.Format(time.RFC3339)
 	}
 	return &platformmodel.PlatformInfo{
-		ID:             int64(p.ID),
+		ID:             SafeUintToInt64(p.ID),
 		Key:            p.Key,
 		Name:           p.Name,
 		Type:           p.Type,
@@ -30,7 +30,7 @@ func ToPlatformInfo(p *model.Platform) *platformmodel.PlatformInfo {
 		IsDefault:      p.IsDefault,
 		Status:         p.Status,
 		LastTestResult: p.LastTestResult,
-		RepoCount:      int32(p.RepoCount),
+		RepoCount:      SafeIntToInt32(p.RepoCount),
 		CreatedAt:      p.CreatedAt.Format(time.RFC3339),
 		LastTestAt:     lastTestAt,
 		UpdatedAt:      p.UpdatedAt.Format(time.RFC3339),

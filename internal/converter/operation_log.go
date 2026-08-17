@@ -11,7 +11,7 @@ func ToOperationLogInfo(l *model.OperationLog) *olmodel.OperationLogInfo {
 		return nil
 	}
 	return &olmodel.OperationLogInfo{
-		ID:       int64(l.ID),
+		ID:       SafeUintToInt64(l.ID),
 		Time:     l.CreatedAt.Format("2006-01-02 15:04:05"),
 		User:     l.Actor,
 		Action:   l.Action,

@@ -56,7 +56,7 @@ func NewService(cfg *Config) (*Service, error) {
 	sqlDB.SetMaxIdleConns(cfg.Database.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(cfg.Database.MaxOpenConns)
 
-	if err := os.MkdirAll(cfg.Git.TempDir, 0o755); err != nil {
+	if err := os.MkdirAll(cfg.Git.TempDir, 0o750); err != nil {
 		return nil, fmt.Errorf("create temp dir failed: %w", err)
 	}
 

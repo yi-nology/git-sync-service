@@ -312,3 +312,221 @@ func TestTimePtr(t *testing.T) {
 		t.Errorf("expected %v, got %v", now, *ptr)
 	}
 }
+
+func TestClassifyError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected string
+	}{
+		{"nil error", nil, ""},
+		{"auth 401", fmt.Errorf("401 Unauthorized"), model.ErrorAuth},
+		{"auth 403", fmt.Errorf("403 Forbidden"), model.ErrorAuth},
+		{"auth authentication", fmt.Errorf("authentication failed"), model.ErrorAuth},
+		{"auth unauthorized", fmt.Errorf("unauthorized access"), model.ErrorAuth},
+		{"auth permission denied", fmt.Errorf("permission denied"), model.ErrorAuth},
+		{"auth token", fmt.Errorf("invalid token"), model.ErrorAuth},
+		{"auth credential", fmt.Errorf("credential error"), model.ErrorAuth},
+		{"network timeout", fmt.Errorf("connection timeout"), model.ErrorNetwork},
+		{"network connection refused", fmt.Errorf("connection refused"), model.ErrorNetwork},
+		{"network dial tcp", fmt.Errorf("dial tcp: lookup example.com"), model.ErrorNetwork},
+		{"network network", fmt.Errorf("network error"), model.ErrorNetwork},
+		{"network i/o error", fmt.Errorf("i/o error"), model.ErrorNetwork},
+		{"network eof", fmt.Errorf("unexpected eof"), model.ErrorNetwork},
+		{"network no route", fmt.Errorf("no route to host"), model.ErrorNetwork},
+		{"config not found", fmt.Errorf("repository not found"), model.ErrorConfig},
+		{"config does not exist", fmt.Errorf("branch does not exist"), model.ErrorConfig},
+		{"config repository not found", fmt.Errorf("repository not found"), model.ErrorConfig},
+		{"config branch not found", fmt.Errorf("branch not found"), model.ErrorConfig},
+		{"git non-fast-forward", fmt.Errorf("non-fast-forward"), model.ErrorGit},
+		{"git conflict", fmt.Errorf("merge conflict"), model.ErrorGit},
+		{"git rejected", fmt.Errorf("push rejected"), model.ErrorGit},
+		{"git failed to push", fmt.Errorf("failed to push"), model.ErrorGit},
+		{"git fetch first", fmt.Errorf("fetch first"), model.ErrorGit},
+		{"unknown error", fmt.Errorf("some random error"), model.ErrorUnknown},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ClassifyError(tt.err)
+			if result != tt.expected {
+				t.Errorf("ClassifyError(%v) = %q, want %q", tt.err, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestExecute_WithContext(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "source-repo",
+		TargetRepoKey: "target-repo",
+		SourceBranch:  "main",
+		TargetBranch:  "main",
+	}
+
+	// Test with cancelled context
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	run, err := exec.Execute(ctx, task, "manual", nil)
+	if err == nil {
+		t.Fatal("expected error for cancelled context")
+	}
+	if run == nil {
+		t.Fatal("expected non-nil run even on error")
+	}
+}
+
+func TestExecute_WithWebhookEventID(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "source-repo",
+		TargetRepoKey: "target-repo",
+		SourceBranch:  "main",
+		TargetBranch:  "main",
+	}
+
+	webhookEventID := uint(123)
+	ctx := context.Background()
+	_, _ = exec.Execute(ctx, task, "webhook", &webhookEventID)
+
+	// Verify run was created with webhook event ID
+	if len(svc.runs) == 0 {
+		t.Fatal("expected run to be created")
+	}
+
+	run := svc.runs[0]
+	if run.WebhookEventID == nil {
+		t.Fatal("expected webhook event ID to be set")
+	}
+
+	if *run.WebhookEventID != 123 {
+		t.Errorf("expected webhook event ID 123, got %d", *run.WebhookEventID)
+	}
+}
+
+func TestBeginStep(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	// Create a run
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "source-repo",
+		TargetRepoKey: "target-repo",
+	}
+
+	run, err := svc.CreateRun(task, "manual", nil)
+	if err != nil {
+		t.Fatalf("CreateRun failed: %v", err)
+	}
+
+	// Begin a step
+	step := exec.beginStep(run.ID, "fetch")
+	if step == nil {
+		t.Fatal("expected non-nil step")
+	}
+
+	if step.RunID != run.ID {
+		t.Errorf("expected run ID %d, got %d", run.ID, step.RunID)
+	}
+
+	if step.StepName != "fetch" {
+		t.Errorf("expected step name 'fetch', got '%s'", step.StepName)
+	}
+
+	if step.Status != "running" {
+		t.Errorf("expected status 'running', got '%s'", step.Status)
+	}
+}
+
+func TestFailStep(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	// Create a run
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "source-repo",
+		TargetRepoKey: "target-repo",
+	}
+
+	run, err := svc.CreateRun(task, "manual", nil)
+	if err != nil {
+		t.Fatalf("CreateRun failed: %v", err)
+	}
+
+	// Begin a step
+	step := exec.beginStep(run.ID, "fetch")
+	if step == nil {
+		t.Fatal("expected non-nil step")
+	}
+
+	// Fail the step
+	exec.failStep(step, fmt.Errorf("fetch failed"))
+
+	if step.Status != "failed" {
+		t.Errorf("expected status 'failed', got '%s'", step.Status)
+	}
+
+	if step.ErrorMsg != "fetch failed" {
+		t.Errorf("expected error message 'fetch failed', got '%s'", step.ErrorMsg)
+	}
+}
+
+func TestCompleteStep(t *testing.T) {
+	svc := newMockService()
+	exec, err := NewExecutor(svc)
+	if err != nil {
+		t.Fatalf("NewExecutor failed: %v", err)
+	}
+
+	// Create a run
+	task := &model.SyncTask{
+		Key:           "test-task",
+		Name:          "Test Task",
+		SourceRepoKey: "source-repo",
+		TargetRepoKey: "target-repo",
+	}
+
+	run, err := svc.CreateRun(task, "manual", nil)
+	if err != nil {
+		t.Fatalf("CreateRun failed: %v", err)
+	}
+
+	// Begin a step
+	step := exec.beginStep(run.ID, "fetch")
+	if step == nil {
+		t.Fatal("expected non-nil step")
+	}
+
+	// Complete the step
+	exec.completeStep(step, "details")
+
+	if step.Status != "success" {
+		t.Errorf("expected status 'success', got '%s'", step.Status)
+	}
+}

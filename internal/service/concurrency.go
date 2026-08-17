@@ -111,11 +111,12 @@ func (g *redisGuard) Acquire(ctx context.Context, taskKey string) (releaseFunc, 
 
 	// 3) watchdog 续期锁与信号量槽,避免长任务期间过期被别的实例抢走
 	stop := make(chan struct{})
-	go g.watchdog(lockKey, value, semID, stop)
+	go g.watchdog(lockKey, value, semID, stop) //nolint:gosec // watchdog goroutine 需要独立于请求生命周期运行
 
 	return func() {
 		close(stop)
 		// 用独立 context 释放,避免外层 ctx 已取消导致释放失败、锁残留
+		//nolint:gosec // 释放锁/信号量需要独立于请求生命周期的 context
 		releaseCtx := context.Background()
 		_ = g.rlock.UnlockWithValue(releaseCtx, lockKey, value)
 		_ = g.sem.Release(releaseCtx, semID)
@@ -123,10 +124,12 @@ func (g *redisGuard) Acquire(ctx context.Context, taskKey string) (releaseFunc, 
 }
 
 // watchdog 周期性续期持有的锁与信号量槽。stop 关闭即退出。
+// 使用 context.Background() 是有意为之：watchdog 作为后台 goroutine 需要在请求上下文取消后继续运行，
+// 直到 stop 通道被关闭。这是后台任务续期的标准模式。
 func (g *redisGuard) watchdog(lockKey, value, semID string, stop <-chan struct{}) {
 	t := time.NewTicker(renewInterval)
 	defer t.Stop()
-	ctx := context.Background()
+	ctx := context.Background() //nolint:gosec // watchdog goroutine intentionally uses background context
 	for {
 		select {
 		case <-stop:

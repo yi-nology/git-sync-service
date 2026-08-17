@@ -227,9 +227,9 @@ func BatchRepos(ctx context.Context, c *app.RequestContext) {
 		}
 	}
 	response.Success(c, &repo.BatchReposResp{
-		Total:   int32(total),
-		Success: int32(success),
-		Failed:  int32(failed),
+		Total:   converter.SafeIntToInt32(total),
+		Success: converter.SafeIntToInt32(success),
+		Failed:  converter.SafeIntToInt32(failed),
 		Errors:  errs,
 	})
 }

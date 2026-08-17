@@ -14,7 +14,7 @@ func ToTaskInfo(t *model.SyncTask) *taskmodel.SyncTaskInfo {
 		lastRunAt = t.LastRunAt.Format("2006-01-02 15:04:05")
 	}
 	return &taskmodel.SyncTaskInfo{
-		ID: int64(t.ID), Key: t.Key, Name: t.Name,
+		ID: SafeUintToInt64(t.ID), Key: t.Key, Name: t.Name,
 		SourceRepoKey: t.SourceRepoKey, SourceBranch: t.SourceBranch,
 		TargetRepoKey: t.TargetRepoKey, TargetBranch: t.TargetBranch,
 		SyncMode: t.SyncMode, Cron: t.Cron, WebhookToken: t.WebhookToken,
@@ -42,14 +42,14 @@ func ToSyncRunInfo(r *model.SyncRun) *taskmodel.SyncRunInfo {
 		endTime = r.EndTime.Format("2006-01-02 15:04:05")
 	}
 	info := &taskmodel.SyncRunInfo{
-		ID: int64(r.ID), TaskKey: r.TaskKey, TriggerSource: r.TriggerSource,
+		ID: SafeUintToInt64(r.ID), TaskKey: r.TaskKey, TriggerSource: r.TriggerSource,
 		Status: r.Status, StartTime: r.StartTime.Format("2006-01-02 15:04:05"),
 		EndTime: endTime, CommitRange: r.CommitRange, Details: r.Details,
 		ErrorMessage: r.ErrorMessage, CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
-		DurationMs: r.DurationMs, ErrorType: r.ErrorType, RetryTotal: int32(r.RetryTotal),
+		DurationMs: r.DurationMs, ErrorType: r.ErrorType, RetryTotal: SafeIntToInt32(r.RetryTotal),
 	}
 	if r.WebhookEventID != nil {
-		id := int64(*r.WebhookEventID)
+		id := SafeUintToInt64(*r.WebhookEventID)
 		info.WebhookEventId = &id
 	}
 	if len(r.Steps) > 0 {
@@ -75,14 +75,14 @@ func ToSyncRunStepInfo(s *model.SyncRunStep) *taskmodel.SyncRunStepInfo {
 		return nil
 	}
 	info := &taskmodel.SyncRunStepInfo{
-		ID:         int64(s.ID),
+		ID:         SafeUintToInt64(s.ID),
 		StepName:   s.StepName,
 		Status:     s.Status,
 		StartTime:  s.StartTime.Format("2006-01-02 15:04:05"),
 		DurationMs: s.DurationMs,
 		ErrorMsg:   s.ErrorMsg,
 		ErrorType:  s.ErrorType,
-		RetryCount: int32(s.RetryCount),
+		RetryCount: SafeIntToInt32(s.RetryCount),
 	}
 	if s.EndTime != nil {
 		info.EndTime = s.EndTime.Format("2006-01-02 15:04:05")

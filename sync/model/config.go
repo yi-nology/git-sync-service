@@ -58,8 +58,10 @@ type LogConfig struct {
 	Format string `yaml:"format"`
 }
 
+// LoadConfig 从指定路径加载配置文件。
+// path 参数由调用方控制（通常是启动参数或环境变量），不存在用户注入风险。
 func LoadConfig(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // 配置文件路径由程序启动参数决定，非用户可控输入
 	if err != nil {
 		return nil, err
 	}

@@ -49,7 +49,7 @@ func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
 
 	totalPages := int32(0)
 	if req.PageSize > 0 && total > 0 {
-		totalPages = int32((total + int64(req.PageSize) - 1) / int64(req.PageSize))
+		totalPages = converter.SafeInt64ToInt32((total + int64(req.PageSize) - 1) / int64(req.PageSize))
 	}
 
 	response.Success(c, &operation_log.ListOperationLogsResp{
