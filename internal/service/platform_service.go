@@ -120,8 +120,8 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 		return 0, err
 	}
 
-	// 获取仓库列表
-	repos, err := provider.ListRepos(ctx, sdkprov.ListRepoOptions{})
+	// 翻页拉取全部仓库,不能只取第一页,否则超过一页的仓库永远不会被同步
+	repos, err := fetchAllPlatformRepos(ctx, provider)
 	if err != nil {
 		return 0, fmt.Errorf("list repos failed: %w", err)
 	}

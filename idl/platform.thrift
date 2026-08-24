@@ -19,6 +19,7 @@ struct PlatformInfo {
     14: string createdAt (api.json="created_at")
     15: string lastTestAt (api.json="last_test_at")
     16: string updatedAt (api.json="updated_at")
+    17: bool hasToken (api.json="has_token")
 }
 
 struct ListPlatformsReq {}

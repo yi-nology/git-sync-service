@@ -38,7 +38,7 @@
           <div class="info-item">
             <GlobalOutlined class="info-icon" />
             <span class="info-label">实例地址</span>
-            <span class="info-value">{{ getInstanceUrl(platform) || getApiUrl(platform) }}</span>
+            <span class="info-value">{{ getInstanceUrl(platform) || platformPresets[platform.type]?.defaultInstance || '—' }}</span>
           </div>
           <div class="info-item">
             <ApiOutlined class="info-icon" />
@@ -55,8 +55,8 @@
           <div class="info-item">
             <KeyOutlined class="info-icon" />
             <span class="info-label">Token</span>
-            <a-tag :color="platform.access_token ? 'success' : 'default'" size="small">
-              {{ platform.access_token ? '已配置' : '未配置' }}
+            <a-tag :color="platform.has_token ? 'success' : 'default'" size="small">
+              {{ platform.has_token ? '已配置' : '未配置' }}
             </a-tag>
           </div>
           <div class="info-item">
@@ -68,6 +68,9 @@
             <ClockCircleOutlined class="info-icon" />
             <span class="info-label">最后测试</span>
             <span class="info-value">{{ formatTime(getLastTestAt(platform)) }}</span>
+            <a-tag :color="platform.status === 'active' ? 'success' : 'error'" size="small" style="margin-left: 4px">
+              {{ platform.status === 'active' ? '成功' : '失败' }}
+            </a-tag>
           </div>
         </div>
 
@@ -231,7 +234,7 @@
           <a-collapse-panel key="advanced" header="高级选项">
             <!-- 跳过证书验证 -->
             <a-form-item>
-              <a-checkbox v-model:value="formData.skip_tls_verify">
+              <a-checkbox v-model:checked="formData.skip_tls_verify">
                 跳过 TLS 证书验证
               </a-checkbox>
               <div class="form-tip">
@@ -260,7 +263,7 @@
 
             <!-- 设为默认 -->
             <a-form-item>
-              <a-checkbox v-model:value="formData.is_default">
+              <a-checkbox v-model:checked="formData.is_default">
                 设为默认平台
               </a-checkbox>
             </a-form-item>

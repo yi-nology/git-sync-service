@@ -34,6 +34,7 @@ func ToPlatformInfo(p *model.Platform) *platformmodel.PlatformInfo {
 		CreatedAt:      p.CreatedAt.Format(time.RFC3339),
 		LastTestAt:     lastTestAt,
 		UpdatedAt:      p.UpdatedAt.Format(time.RFC3339),
+		HasToken:       p.AccessToken != "",
 	}
 }
 

@@ -102,3 +102,7 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
+
+// 本地补丁:gitlab ListRepos 加 membership 过滤 + provider 缓存键含 SkipTLS。
+// 待 SDK 发布含该修复的版本后,移除 replace 并升级版本号。
+replace github.com/yi-nology/git-platform-sdk => ../git-platform-sdk
