@@ -46,17 +46,26 @@
                 <a-form-item label="源仓库" required>
                   <a-select
                     v-model:value="form.source_repo_key"
-                    placeholder="选择源仓库"
+                    placeholder="输入名称搜索,滚动加载更多"
                     show-search
-                    :filter-option="filterRepoOption"
+                    :filter-option="false"
+                    :loading="repoLoading"
                     style="width: 100%"
                     size="large"
+                    @search="handleRepoSearch"
+                    @popupScroll="handleRepoPopupScroll"
                   >
-                    <a-select-option v-for="repo in repoStore.repos" :key="repo.key" :value="repo.key">
+                    <a-select-option v-for="repo in sourceRepoOptions" :key="repo.key" :value="repo.key">
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span>{{ repo.name }}</span>
                         <span style="color: #8C8C8C; font-size: 12px;">{{ repo.platform }}</span>
                       </div>
+                    </a-select-option>
+                    <a-select-option v-if="repoLoading" key="__loading" disabled>
+                      <span style="color: #8C8C8C; font-size: 12px;">加载中...</span>
+                    </a-select-option>
+                    <a-select-option v-else-if="!sourceRepoOptions.length" key="__empty" disabled>
+                      <span style="color: #8C8C8C; font-size: 12px;">无匹配仓库</span>
                     </a-select-option>
                   </a-select>
                 </a-form-item>
@@ -65,17 +74,26 @@
                 <a-form-item label="目标仓库" required>
                   <a-select
                     v-model:value="form.target_repo_key"
-                    placeholder="选择目标仓库"
+                    placeholder="输入名称搜索,滚动加载更多"
                     show-search
-                    :filter-option="filterRepoOption"
+                    :filter-option="false"
+                    :loading="repoLoading"
                     style="width: 100%"
                     size="large"
+                    @search="handleRepoSearch"
+                    @popupScroll="handleRepoPopupScroll"
                   >
-                    <a-select-option v-for="repo in repoStore.repos" :key="repo.key" :value="repo.key">
+                    <a-select-option v-for="repo in targetRepoOptions" :key="repo.key" :value="repo.key">
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span>{{ repo.name }}</span>
                         <span style="color: #8C8C8C; font-size: 12px;">{{ repo.platform }}</span>
                       </div>
+                    </a-select-option>
+                    <a-select-option v-if="repoLoading" key="__loading" disabled>
+                      <span style="color: #8C8C8C; font-size: 12px;">加载中...</span>
+                    </a-select-option>
+                    <a-select-option v-else-if="!targetRepoOptions.length" key="__empty" disabled>
+                      <span style="color: #8C8C8C; font-size: 12px;">无匹配仓库</span>
                     </a-select-option>
                   </a-select>
                 </a-form-item>
@@ -201,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   InfoCircleOutlined,
@@ -210,12 +228,12 @@ import {
   CheckOutlined,
 } from '@ant-design/icons-vue'
 import { useSyncTaskStore } from '@/stores/syncTask'
-import { useRepoStore } from '@/stores/repo'
+import { repoApi } from '@/api'
 import { notifySuccess, notifyError, notifyWarning } from '@/utils/notify'
+import type { Repo } from '@/types'
 
 const router = useRouter()
 const taskStore = useSyncTaskStore()
-const repoStore = useRepoStore()
 const step = ref(1)
 const submitting = ref(false)
 
@@ -239,15 +257,90 @@ const cronPresets = [
   { label: '每周一', value: '0 0 * * 1' },
 ]
 
-function filterRepoOption(input: string, option: any) {
-  const repo = repoStore.repos.find(r => r.key === option.value)
-  if (!repo) return false
-  const search = input.toLowerCase()
-  return repo.name.toLowerCase().includes(search) || repo.key.toLowerCase().includes(search)
+// ---- 仓库下拉:远程搜索 + 滚动翻页加载 ----
+// 仓库可能很多,不再一次性拉全量(原 page_size=500 仍有截断风险):
+// 输入搜索走后端 search,滚动触底追加下一页。
+const REPO_PAGE_SIZE = 50
+const repoOptions = ref<Repo[]>([])
+const repoTotal = ref(0)
+const repoPage = ref(1)
+const repoSearch = ref('')
+const repoLoading = ref(false)
+const repoLoadedKeys = new Set<string>()
+// 已选中的仓库对象缓存:搜索/翻页替换 options 后保证回显有据可查
+const selectedRepoCache = new Map<string, Repo>()
+let repoSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+const repoHasMore = computed(() => repoOptions.value.length < repoTotal.value)
+
+// 已选项可能不在当前页 options 里,合并进各自下拉保证显示名称而非裸 key;
+// 源下拉只补源仓库、目标下拉只补目标仓库,避免把源仓库混入目标列表造成误选
+function mergeSelected(options: Repo[], selectedKey: string): Repo[] {
+  if (!selectedKey || options.some(r => r.key === selectedKey)) return options
+  const r = selectedRepoCache.get(selectedKey)
+  return r ? [r, ...options] : options
 }
 
+const sourceRepoOptions = computed(() => mergeSelected(repoOptions.value, form.source_repo_key))
+const targetRepoOptions = computed(() => mergeSelected(repoOptions.value, form.target_repo_key))
+
+async function loadRepoPage(page: number, search: string) {
+  repoLoading.value = true
+  try {
+    const data = await repoApi.list({ page, page_size: REPO_PAGE_SIZE, search: search || undefined })
+    repoTotal.value = data.pagination?.total ?? data.list.length
+    if (page === 1) {
+      repoLoadedKeys.clear()
+      repoOptions.value = data.list
+    } else {
+      const merged = [...repoOptions.value]
+      for (const r of data.list) {
+        if (!repoLoadedKeys.has(r.key)) merged.push(r)
+      }
+      repoOptions.value = merged
+    }
+    for (const r of data.list) repoLoadedKeys.add(r.key)
+    repoPage.value = page
+    repoSearch.value = search
+  } catch (e) {
+    notifyError(e, '加载仓库失败')
+  } finally {
+    repoLoading.value = false
+  }
+}
+
+function handleRepoSearch(val: string) {
+  if (repoSearchTimer) clearTimeout(repoSearchTimer)
+  repoSearchTimer = setTimeout(() => {
+    loadRepoPage(1, val.trim())
+  }, 300)
+}
+
+async function handleRepoPopupScroll(e: Event) {
+  const target = e.target as HTMLElement
+  const nearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 60
+  if (nearBottom && repoHasMore.value && !repoLoading.value) {
+    await loadRepoPage(repoPage.value + 1, repoSearch.value)
+  }
+}
+
+function cacheSelectedRepos() {
+  for (const r of repoOptions.value) {
+    if (r.key === form.source_repo_key || r.key === form.target_repo_key) {
+      selectedRepoCache.set(r.key, r)
+    }
+  }
+}
+
+// 选中变化时缓存选中对象(在 options 被搜索替换前抓取,保证回显)
+watch(() => [form.source_repo_key, form.target_repo_key], cacheSelectedRepos)
+
 function getRepoName(key: string) {
-  return repoStore.repos.find(r => r.key === key)?.name || key
+  return (
+    selectedRepoCache.get(key)?.name
+    || repoOptions.value.find(r => r.key === key)?.name
+    || key
+  )
 }
 
 function nextStep() {
@@ -275,7 +368,7 @@ function nextStep() {
 
 async function submit() {
   if (!form.name || !form.source_repo_key || !form.target_repo_key) {
-    notifyWarning('请填写必填字段')
+    notifyWarning('请填写必填项')
     return
   }
   submitting.value = true
@@ -291,7 +384,7 @@ async function submit() {
 }
 
 onMounted(() => {
-  repoStore.fetchRepos().catch((e) => notifyError(e, '加载仓库失败'))
+  loadRepoPage(1, '').catch((e) => notifyError(e, '加载仓库失败'))
 })
 </script>
 

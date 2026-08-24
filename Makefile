@@ -2,10 +2,14 @@
 
 APP_NAME := git-sync-service
 BUILD_DIR := ./output
+VERSION_PKG := github.com/yi-nology/git-sync-service/internal/version
+# 版本号编译时注入:默认取 git describe(tag 或 commit),可用 `make build VERSION=v1.7.1` 覆盖
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
 build:
 	@mkdir -p $(BUILD_DIR)
-	@go build -o $(BUILD_DIR)/$(APP_NAME) .
+	@go build -ldflags "-X $(VERSION_PKG).Version=$(VERSION)" -o $(BUILD_DIR)/$(APP_NAME) .
+	@echo ">> built $(BUILD_DIR)/$(APP_NAME) (version $(VERSION))"
 
 # 本地开发启动:自动加载 .env(ENCRYPTION_KEY 等本地密钥,已被 gitignore)。
 # 注意必须 `go run .` 整包编译,不能 `go run main.go`(后者只编译单文件,会报 undefined: register)

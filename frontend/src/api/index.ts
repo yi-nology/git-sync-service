@@ -35,8 +35,15 @@ import type {
   UpdateRuleRequest,
 } from '@/types'
 
+/** 仓库列表查询参数:分页 + 过滤(后端 /repos 支持) */
+export interface RepoQueryParams extends PageParams {
+  search?: string
+  platform?: string
+  status?: string
+}
+
 export const repoApi = {
-  list: (params?: PageParams) =>
+  list: (params?: RepoQueryParams) =>
     http.get<unknown, RepoListData>('/repos', { params }),
   get: (key: string) =>
     http.get<unknown, RepoData>('/repo', { params: { key } }),

@@ -57,7 +57,8 @@ jobs:
           if [ "$GOOS" = "windows" ]; then
             binary_name="${binary_name}.exe"
           fi
-          go build -o "./dist/${binary_name}" .
+          # 版本号编译注入(tag 触发时 GITHUB_REF_NAME 即 v1.7.x 形式的 tag)
+          go build -ldflags "-X github.com/yi-nology/git-sync-service/internal/version.Version=${GITHUB_REF_NAME}" -o "./dist/${binary_name}" .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
