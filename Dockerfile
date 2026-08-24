@@ -15,8 +15,11 @@ RUN go mod download
 # 复制源代码
 COPY . .
 
-# 构建应用（启用 CGO 以支持 SQLite）
-RUN CGO_ENABLED=1 GOOS=linux go build -o main .
+# 构建应用（启用 CGO 以支持 SQLite）；版本号取构建时间戳,可被 --build-arg VERSION= 覆盖
+ARG VERSION=docker-dev
+RUN CGO_ENABLED=1 GOOS=linux go build \
+    -ldflags "-X github.com/yi-nology/git-sync-service/internal/version.Version=${VERSION}" \
+    -o main .
 
 # 运行阶段
 FROM alpine:3.20

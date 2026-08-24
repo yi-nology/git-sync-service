@@ -11,6 +11,7 @@ import (
 	system "github.com/yi-nology/git-sync-service/biz/model/system"
 	"github.com/yi-nology/git-sync-service/internal/converter"
 	"github.com/yi-nology/git-sync-service/internal/pkg/response"
+	"github.com/yi-nology/git-sync-service/internal/version"
 )
 
 // SystemStatus 返回系统状态信息（管理面板用）。
@@ -34,7 +35,7 @@ func SystemStatus(ctx context.Context, c *app.RequestContext) {
 
 	response.Success(c, &system.SystemStatusData{
 		Status:      "running",
-		Version:     "v1.6.3",
+		Version:     version.Version,
 		Uptime:      int64(time.Since(startTime).Seconds()),
 		RepoCount:   converter.SafeInt64ToInt32(repoCount),
 		TaskCount:   converter.SafeInt64ToInt32(taskTotal),
