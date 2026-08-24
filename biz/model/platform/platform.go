@@ -27,6 +27,7 @@ type PlatformInfo struct {
 	CreatedAt      string `thrift:"createdAt,14" form:"created_at" json:"created_at" query:"created_at"`
 	LastTestAt     string `thrift:"lastTestAt,15" form:"last_test_at" json:"last_test_at" query:"last_test_at"`
 	UpdatedAt      string `thrift:"updatedAt,16" form:"updated_at" json:"updated_at" query:"updated_at"`
+	HasToken       bool   `thrift:"hasToken,17" form:"has_token" json:"has_token" query:"has_token"`
 }
 
 func NewPlatformInfo() *PlatformInfo {
@@ -100,6 +101,10 @@ func (p *PlatformInfo) GetUpdatedAt() (v string) {
 	return p.UpdatedAt
 }
 
+func (p *PlatformInfo) GetHasToken() (v bool) {
+	return p.HasToken
+}
+
 var fieldIDToName_PlatformInfo = map[int16]string{
 	1:  "id",
 	2:  "key",
@@ -117,6 +122,7 @@ var fieldIDToName_PlatformInfo = map[int16]string{
 	14: "createdAt",
 	15: "lastTestAt",
 	16: "updatedAt",
+	17: "hasToken",
 }
 
 func (p *PlatformInfo) Read(iprot thrift.TProtocol) (err error) {
@@ -261,6 +267,14 @@ func (p *PlatformInfo) Read(iprot thrift.TProtocol) (err error) {
 		case 16:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField16(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 17:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField17(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -472,6 +486,18 @@ func (p *PlatformInfo) ReadField16(iprot thrift.TProtocol) error {
 	return nil
 }
 
+func (p *PlatformInfo) ReadField17(iprot thrift.TProtocol) error {
+
+	var _field bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.HasToken = _field
+	return nil
+}
+
 func (p *PlatformInfo) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	if err = oprot.WriteStructBegin("PlatformInfo"); err != nil {
@@ -540,6 +566,10 @@ func (p *PlatformInfo) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField16(oprot); err != nil {
 			fieldId = 16
+			goto WriteFieldError
+		}
+		if err = p.writeField17(oprot); err != nil {
+			fieldId = 17
 			goto WriteFieldError
 		}
 	}
@@ -830,6 +860,23 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 16 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 16 end error: ", p), err)
+}
+
+func (p *PlatformInfo) writeField17(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("hasToken", thrift.BOOL, 17); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteBool(p.HasToken); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 17 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 17 end error: ", p), err)
 }
 
 func (p *PlatformInfo) String() string {

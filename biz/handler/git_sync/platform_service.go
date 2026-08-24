@@ -3,6 +3,7 @@ package git_sync
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/google/uuid"
@@ -199,8 +200,16 @@ func TestPlatformConnection(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	// 更新平台状态为正常
-	_ = GetSyncService().UpdatePlatformStatus(ctx, req.Key, model.PlatformStatusActive, "connection successful")
+	// 按实际连接结果落库:connected=false 时记录失败详情,不能一律写成功
+	if result != nil && result.Connected {
+		_ = GetSyncService().UpdatePlatformStatus(ctx, req.Key, model.PlatformStatusActive, "connection successful")
+	} else {
+		failMsg := "connection failed"
+		if result != nil && result.Message != "" {
+			failMsg = result.Message
+		}
+		_ = GetSyncService().UpdatePlatformStatus(ctx, req.Key, model.PlatformStatusError, failMsg)
+	}
 
 	response.Success(c, map[string]interface{}{
 		"result": result,
@@ -234,9 +243,15 @@ func ListPlatformRepos(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	// SDK 不回传远端真实总数,total 语义为"当页条数";
+	// has_more 提示调用方还有下一页(返回条数打满请求页大小)。
+	reqPerPage, _ := strconv.Atoi(perPage)
 	response.Success(c, map[string]interface{}{
-		"repos": repos,
-		"total": len(repos),
+		"repos":     repos,
+		"total":     len(repos),
+		"has_more":  reqPerPage > 0 && len(repos) == reqPerPage,
+		"page":      page,
+		"per_page":  perPage,
 	})
 }
 

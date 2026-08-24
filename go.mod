@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.21.0
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/yi-nology/git-platform-sdk v0.43.0
+	github.com/yi-nology/git-platform-sdk v0.43.1-0.20260824105107-de1c152dc2eb // fix/membership-and-cache-key 分支补丁(membership 过滤+缓存键含 SkipTLS),SDK 发正式版后升级
 	golang.org/x/time v0.15.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.7

@@ -10,6 +10,7 @@ export interface Platform {
   api_url: string
   apiUrl: string  // camelCase from backend
   access_token?: string
+  has_token?: boolean  // 后端不回传令牌明文,仅回传是否已配置
   skip_tls_verify: boolean
   skipTlsVerify: boolean  // camelCase from backend
   ca_cert_path: string
@@ -84,9 +85,12 @@ export const platformApi = {
   setDefault: (key: string) =>
     api.post<any, { message: string }>('/platform/set-default', null, { params: { key } }),
 
-  // 列出平台上的仓库
-  listRepos: (key: string) =>
-    api.get<any, { repos: any[]; total: number }>('/platform/repos', { params: { key } }),
+  // 列出平台上的仓库(远程分页;has_more 提示是否还有下一页)
+  listRepos: (key: string, page = 1, perPage = 20) =>
+    api.get<any, { repos: any[]; total: number; has_more: boolean }>(
+      '/platform/repos',
+      { params: { key, page, per_page: perPage } },
+    ),
 
   // 同步仓库到本地
   syncRepos: (key: string) =>

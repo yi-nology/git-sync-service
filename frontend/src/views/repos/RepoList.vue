@@ -252,8 +252,8 @@
                 </p>
                 <p style="margin-bottom: 0;">
                   <strong>访问令牌:</strong>
-                  <a-tag :color="selectedPlatformConfig.token ? 'success' : 'error'" size="small">
-                    {{ selectedPlatformConfig.token ? '已配置' : '未配置' }}
+                  <a-tag :color="selectedPlatformConfig.has_token ? 'success' : 'error'" size="small">
+                    {{ selectedPlatformConfig.has_token ? '已配置' : '未配置' }}
                   </a-tag>
                 </p>
               </div>
@@ -324,17 +324,17 @@ import {
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { useRepoStore } from '@/stores/repo'
 import { useSyncTaskStore } from '@/stores/syncTask'
+import { platformApi } from '@/api/platform'
 import type { Repo } from '@/types'
 import { notifySuccess, notifyError, notifyWarning, notifyInfo } from '@/utils/notify'
 
-const PLATFORM_STORAGE_KEY = 'git-sync-platforms'
-
 interface PlatformConfig {
   id: string
+  key: string
   type: string
   name: string
   url: string
-  token: string
+  has_token: boolean
   skip_tls_verify: boolean
   ca_cert_path: string
   proxy_url: string
@@ -365,17 +365,27 @@ const filters = reactive({
   status: undefined as string | undefined,
 })
 
-// 从 localStorage 加载已配置的平台
+// 从后端加载已配置的平台(平台管理页与数据库同源)
 const configuredPlatforms = ref<PlatformConfig[]>([])
 
-function loadConfiguredPlatforms() {
-  const saved = localStorage.getItem(PLATFORM_STORAGE_KEY)
-  if (saved) {
-    try {
-      configuredPlatforms.value = JSON.parse(saved)
-    } catch (e) {
-      configuredPlatforms.value = []
-    }
+async function loadConfiguredPlatforms() {
+  try {
+    const data = await platformApi.list()
+    configuredPlatforms.value = (data.platforms || []).map(p => ({
+      id: String(p.id),
+      key: p.key,
+      type: p.type,
+      name: p.name,
+      url: p.api_url || p.apiUrl,
+      has_token: !!p.has_token,
+      skip_tls_verify: !!(p.skip_tls_verify ?? p.skipTlsVerify),
+      ca_cert_path: p.ca_cert_path || p.caCertPath || '',
+      proxy_url: p.proxy_url || p.proxyUrl || '',
+      isDefault: !!(p.is_default ?? p.isDefault),
+      status: ((p.status === 'error') ? 'error' : 'active'),
+    }))
+  } catch (e: any) {
+    configuredPlatforms.value = []
   }
 
   // 如果有默认平台，自动选中
@@ -530,8 +540,34 @@ function handlePageChange() {
   loadRepos()
 }
 
-function handleSyncPlatform() {
-  notifyInfo('同步平台仓库功能开发中...')
+async function handleSyncPlatform() {
+  try {
+    const data = await platformApi.list()
+    const platforms = data.platforms || []
+    if (!platforms.length) {
+      notifyWarning('请先在系统-平台管理中配置平台')
+      return
+    }
+    notifyInfo(`正在同步 ${platforms.length} 个平台的仓库...`)
+    let total = 0
+    const failed: string[] = []
+    for (const p of platforms) {
+      try {
+        const result = await platformApi.syncRepos(p.key)
+        total += result.synced_count || 0
+      } catch {
+        failed.push(p.name)
+      }
+    }
+    await loadRepos()
+    if (failed.length) {
+      notifyError(`部分平台同步失败: ${failed.join('、')}`)
+    } else {
+      notifySuccess(`同步完成，共导入 ${total} 个仓库`)
+    }
+  } catch (e: any) {
+    notifyError(e, '同步平台仓库失败')
+  }
 }
 
 onMounted(() => {
