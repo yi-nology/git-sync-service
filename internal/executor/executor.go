@@ -247,11 +247,13 @@ func (e *Executor) authConfig(repo *model.Repo) gitbackend.AuthConfig {
 	}
 	if token != "" {
 		slog.Debug("using access token", "repo", repo.Key, "fromPlatform", repo.AccessToken == "")
-		return gitbackend.AuthConfig{
-			Type:             gitbackend.AuthHTTPToken,
-			Token:            token,
-			InsecureSkipTLS:  skipTLS,
-		}
+		// git over HTTPS 走 HTTP Basic(占位用户名 + token 作密码)。
+		// 不能用 Bearer:xhttp.TokenAuth 发 Authorization: Bearer 头,
+		// GitLab/GitCode 等平台的 git 端点只认 Basic,Bearer 会报
+		// "HTTP Basic: Access denied"。
+		auth := gitbackend.NewTokenAuth(token)
+		auth.InsecureSkipTLS = skipTLS
+		return auth
 	}
 	slog.Debug("no auth configured", "repo", repo.Key)
 	return gitbackend.AuthConfig{Type: gitbackend.AuthNone, InsecureSkipTLS: skipTLS}
@@ -297,17 +299,14 @@ func (e *Executor) failStep(step *model.SyncRunStep, err error) {
 }
 
 func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, task *model.SyncTask) error {
-	// Use shallow clone by default for efficiency
-	depth := 1
-	// If force push is enabled, use full clone to avoid "shallow update not allowed"
-	if task.GitForce {
-		depth = 0
-	}
+	// 全量克隆:同步要把源仓库推到目标,浅克隆(depth=1)缺完整历史,
+	// 首次推送到空目标会被平台拒绝(shallow update not allowed),
+	// 且 gogit 会把该拒绝误报为 already up-to-date。
+	// workdir 成功后保留,后续执行走增量 fetch,全量克隆只是一次性成本。
 	return e.backend.Clone(ctx, gitbackend.CloneOptions{
 		URL:          repo.CloneURL,
 		Path:         dir,
 		Branch:       task.SourceBranch,
-		Depth:        depth,
 		SingleBranch: true,
 		Auth:         e.authConfig(repo),
 	})
@@ -346,7 +345,10 @@ func (e *Executor) ensureRemote(ctx context.Context, dir string, repo *model.Rep
 }
 
 func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, repo *model.Repo) error {
-	refSpec := fmt.Sprintf("%s:%s", task.SourceBranch, task.TargetBranch)
+	// 必须用完整 refspec:go-git 按全名严格匹配本地 ref,不做 git CLI 的
+	// 短名展开,"main:main" 匹配不到 refs/heads/main,会静默零推送
+	// (返回 already up-to-date,被误判成功)。
+	refSpec := fmt.Sprintf("refs/heads/%s:refs/heads/%s", task.SourceBranch, task.TargetBranch)
 
 	_, err := e.backend.Push(ctx, gitbackend.PushOptions{
 		RepoPath: dir,

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/yi-nology/git-platform-sdk/gitbackend"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
@@ -282,8 +283,14 @@ func TestAuthConfig_WithToken(t *testing.T) {
 	}
 
 	config := exec.authConfig(repo)
-	if config.Token != "test-token" {
-		t.Errorf("expected token 'test-token', got %q", config.Token)
+	if config.Type != gitbackend.AuthHTTPBasic {
+		t.Errorf("expected HTTP Basic auth, got %q", config.Type)
+	}
+	if config.Password != "test-token" {
+		t.Errorf("expected password 'test-token', got %q", config.Password)
+	}
+	if config.Username == "" {
+		t.Error("expected non-empty placeholder username for HTTP Basic")
 	}
 }
 
@@ -297,8 +304,8 @@ func TestAuthConfig_WithoutToken(t *testing.T) {
 	repo := &model.Repo{}
 
 	config := exec.authConfig(repo)
-	if config.Token != "" {
-		t.Errorf("expected empty token, got %q", config.Token)
+	if config.Type != gitbackend.AuthNone {
+		t.Errorf("expected auth type none, got %q", config.Type)
 	}
 }
 
@@ -545,8 +552,8 @@ func TestAuthConfig_WithPlatform(t *testing.T) {
 
 	config := exec.authConfig(repo)
 	// mockService returns a platform with AccessToken="test-token"
-	if config.Token != "test-token" {
-		t.Errorf("expected platform token 'test-token', got '%q'", config.Token)
+	if config.Password != "test-token" {
+		t.Errorf("expected platform token as password, got %q", config.Password)
 	}
 }
 
@@ -564,8 +571,8 @@ func TestAuthConfig_RepoTokenOverridesPlatform(t *testing.T) {
 
 	config := exec.authConfig(repo)
 	// Repo token should take precedence
-	if config.Token != "repo-specific-token" {
-		t.Errorf("expected repo token 'repo-specific-token', got '%q'", config.Token)
+	if config.Password != "repo-specific-token" {
+		t.Errorf("expected repo token as password, got %q", config.Password)
 	}
 }
 
