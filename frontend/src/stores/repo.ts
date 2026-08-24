@@ -20,7 +20,10 @@ export const useRepoStore = defineStore('repo', () => {
   async function fetchRepos(params?: RepoListParams) {
     loading.value = true
     try {
-      const data = await repoApi.list(params)
+      // 无参调用(任务向导、下拉选择等)需要全量列表;
+      // 后端默认 page_size=10,不传参会只拿到最新 10 条,导致下拉选不到大部分仓库
+      const query = { page: 1, page_size: 500, ...params }
+      const data = await repoApi.list(query)
       repos.value = data.list
       total.value = data.pagination?.total ?? 0
     } finally {
