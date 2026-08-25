@@ -93,7 +93,10 @@ func NewService(cfg *Config) (*Service, error) {
 		webhooks:     webhookService,
 		platforms:    platformService,
 		opLogs:       opLogService,
-		cron:         cron.New(cron.WithSeconds()),
+		// 标准 5 字段 crontab(分 时 日 月 周),与前端预设/用户习惯一致。
+		// 此前用 WithSeconds() 的 6 字段解析,导致 "* * * * *" 这类标准表达式
+		// 报 "expected exactly 6 fields, found 5",任务创建与定时注册全失败。
+		cron:         cron.New(),
 		cronEntryIDs: make(map[string]cron.EntryID),
 		cleanupDone:  make(chan struct{}),
 		bgCtx:        bgCtx,

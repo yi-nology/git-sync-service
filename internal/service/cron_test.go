@@ -40,7 +40,7 @@ func setupCronTestService(t *testing.T) (*Service, *gorm.DB) {
 
 	return &Service{
 		tasks:        taskService,
-		cron:         cron.New(cron.WithSeconds()),
+		cron:         cron.New(), // 与生产一致:标准 5 字段解析
 		cronEntryIDs: make(map[string]cron.EntryID),
 		cronMu:       sync.RWMutex{},
 	}, db
@@ -51,7 +51,7 @@ func TestAddCronJob(t *testing.T) {
 
 	task := &model.SyncTask{
 		Key:  "test-task-1",
-		Cron: "* * * * * *", // Every second
+		Cron: "* * * * *", // 标准五字段:每分钟
 	}
 
 	err := svc.addCronJob(task)
@@ -70,7 +70,7 @@ func TestAddCronJob_UpdateExisting(t *testing.T) {
 
 	task := &model.SyncTask{
 		Key:  "test-task-1",
-		Cron: "* * * * * *",
+		Cron: "*/5 * * * *",
 	}
 
 	// Add initial cron job
@@ -82,7 +82,7 @@ func TestAddCronJob_UpdateExisting(t *testing.T) {
 	initialEntryID := svc.cronEntryIDs[task.Key]
 
 	// Update the cron job
-	task.Cron = "*/2 * * * * *"
+	task.Cron = "*/2 * * * *"
 	err = svc.addCronJob(task)
 	if err != nil {
 		t.Fatalf("addCronJob update failed: %v", err)
@@ -114,7 +114,7 @@ func TestRemoveCronJob(t *testing.T) {
 
 	task := &model.SyncTask{
 		Key:  "test-task-1",
-		Cron: "* * * * * *",
+		Cron: "*/5 * * * *",
 	}
 
 	// Add a cron job first
@@ -152,8 +152,8 @@ func TestStartCronJobs(t *testing.T) {
 		key  string
 		cron string
 	}{
-		{"task-1", "* * * * * *"},
-		{"task-2", "*/2 * * * * *"},
+		{"task-1", "* * * * *"},
+		{"task-2", "*/2 * * * *"},
 	}
 
 	for _, tt := range tasks {
@@ -188,7 +188,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 
 	// Create tasks with some disabled
 	task1, err := svc.tasks.CreateTask(context.TODO(), &model.CreateTaskRequest{
-		Name: "task-1", Cron: "* * * * * *",
+		Name: "task-1", Cron: "*/5 * * * *",
 		SourceRepoKey: "source", SourceBranch: "main",
 		TargetRepoKey: "target", TargetBranch: "main",
 	})
@@ -196,7 +196,7 @@ func TestStartCronJobs_WithDisabledTasks(t *testing.T) {
 		t.Fatalf("Create task1 failed: %v", err)
 	}
 	task2, err := svc.tasks.CreateTask(context.TODO(), &model.CreateTaskRequest{
-		Name: "task-2", Cron: "*/2 * * * * *",
+		Name: "task-2", Cron: "*/2 * * * *",
 		SourceRepoKey: "source", SourceBranch: "main",
 		TargetRepoKey: "target", TargetBranch: "main",
 	})
@@ -272,7 +272,7 @@ func TestStopCronJobs(t *testing.T) {
 
 	task := &model.SyncTask{
 		Key:  "test-task-1",
-		Cron: "* * * * * *",
+		Cron: "*/5 * * * *",
 	}
 
 	// Add a cron job
@@ -283,4 +283,16 @@ func TestStopCronJobs(t *testing.T) {
 
 	// Stop cron jobs (should not panic)
 	svc.stopCronJobs()
+}
+
+func TestAddCronJob_StandardFiveFieldExpressions(t *testing.T) {
+	// 用户与前端预设输入的都是标准 5 字段 crontab;曾因生产用 6 字段
+	// (WithSeconds)解析器导致 "expected exactly 6 fields" 全部失败。
+	for _, expr := range []string{"* * * * *", "*/5 * * * *", "0 0 * * *", "0 9 * * 1-5", "30 2 1 * *"} {
+		svc, _ := setupCronTestService(t)
+		task := &model.SyncTask{Key: "five-field-" + expr, Cron: expr}
+		if err := svc.addCronJob(task); err != nil {
+			t.Errorf("标准五字段表达式 %q 注册失败: %v", expr, err)
+		}
+	}
 }
