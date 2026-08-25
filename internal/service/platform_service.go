@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
@@ -129,9 +131,23 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 	// 同步到本地
 	count := 0
 	for _, repo := range repos {
+		// 私有部署实例的 API 可能返回公网 clone 地址(如 gitcode.kylinos.cn
+		// 返回 gitcode.com),内网执行器不可达;按平台实例地址重写 host。
+		cloneURL := rewriteCloneHost(repo.CloneURL, platform)
+		sshURL := rewriteCloneHost(repo.SSHURL, platform)
+
 		// 检查是否已存在
 		existing, _ := s.repoDAO.FindByCloneURL(repo.CloneURL)
 		if existing != nil {
+			// 已存在:实例地址变化时刷新存量 clone/ssh 地址,保证下次执行可用
+			if existing.CloneURL != cloneURL {
+				existing.CloneURL = cloneURL
+				existing.SSHURL = sshURL
+				if err := s.repoDAO.Update(existing); err != nil {
+					continue
+				}
+				count++
+			}
 			continue
 		}
 
@@ -143,8 +159,8 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 			Platform:      platform.Type,
 			PlatformOwner: repo.Owner,
 			PlatformRepo:  repo.Name,
-			CloneURL:      repo.CloneURL,
-			SSHURL:        repo.SSHURL,
+			CloneURL:      cloneURL,
+			SSHURL:        sshURL,
 			DefaultBranch: repo.DefaultBranch,
 			Status:        "active",
 		}
@@ -159,6 +175,30 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 	_ = s.platformDAO.UpdateRepoCount(platform.ID)
 
 	return count, nil
+}
+
+// rewriteCloneHost 将仓库 clone/ssh 地址的 scheme+host 替换为平台实例地址。
+// 仅当平台配置了私有实例地址(instance_url)且与地址 host 不同时重写,
+// 避免 GitHub 等公网平台(api.github.com 与 github.com host 天然不同)被误改。
+func rewriteCloneHost(rawURL string, platform *model.Platform) string {
+	if rawURL == "" || platform == nil || platform.InstanceURL == "" {
+		return rawURL
+	}
+	instance := platform.InstanceURL
+	if !strings.Contains(instance, "://") {
+		instance = "https://" + instance
+	}
+	iu, err := url.Parse(instance)
+	if err != nil || iu.Host == "" {
+		return rawURL
+	}
+	cu, err := url.Parse(rawURL)
+	if err != nil || cu.Host == "" || cu.Host == iu.Host {
+		return rawURL
+	}
+	cu.Scheme = iu.Scheme
+	cu.Host = iu.Host
+	return cu.String()
 }
 
 // ListReposByPlatform 列出平台下的仓库
