@@ -26,6 +26,7 @@ service SyncTaskService {
     sync_task.RunTaskResp TaskRun(1: sync_task.RunTaskReq req) (api.post="/api/v1/sync/task/run")
     sync_task.PreviewSyncResp TaskPreview(1: sync_task.PreviewSyncReq req) (api.post="/api/v1/sync/preview")
     sync_task.ListHistoryResp TaskHistory(1: sync_task.ListHistoryReq req) (api.get="/api/v1/sync/history")
+    sync_task.DeleteHistoryResp DeleteHistory(1: sync_task.DeleteHistoryReq req) (api.post="/api/v1/sync/history/delete")
 }
 
 service WebhookService {

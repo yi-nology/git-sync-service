@@ -88,6 +88,8 @@ export const syncTaskApi = {
   }) => http.post<unknown, PreviewSyncData>('/sync/preview', data),
   history: (params: { task_key: string; limit?: number }) =>
     http.get<unknown, HistoryData>('/sync/history', { params }),
+  deleteHistory: (id: number) =>
+    http.post<unknown, { message: string }>('/sync/history/delete', null, { params: { id } }),
 }
 
 export const webhookApi = {

@@ -142,3 +142,11 @@ struct ListHistoryReq {
 struct ListHistoryResp {
     1: list<SyncRunInfo> runs (api.json="runs")
 }
+
+struct DeleteHistoryReq {
+    1: i64 id (api.query="id")
+}
+
+struct DeleteHistoryResp {
+    1: string message (api.json="message")
+}

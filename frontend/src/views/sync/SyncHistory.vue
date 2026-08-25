@@ -120,16 +120,30 @@
           <span class="duration-text">{{ formatDuration(record.duration_ms) }}</span>
         </template>
         <template v-if="column.key === 'actions'">
-          <a-tooltip title="重新运行">
-            <a-button
-              type="text"
-              size="small"
-              :loading="runningKeys[record.task_key]"
-              @click="rerun(record)"
+          <a-space :size="0">
+            <a-tooltip title="重新运行">
+              <a-button
+                type="text"
+                size="small"
+                :loading="runningKeys[record.task_key]"
+                @click="rerun(record)"
+              >
+                <template #icon><PlayCircleOutlined /></template>
+              </a-button>
+            </a-tooltip>
+            <a-popconfirm
+              title="确定删除这条执行记录?"
+              ok-text="删除"
+              cancel-text="取消"
+              @confirm="removeHistory(record)"
             >
-              <template #icon><PlayCircleOutlined /></template>
-            </a-button>
-          </a-tooltip>
+              <a-tooltip title="删除记录">
+                <a-button type="text" size="small" danger>
+                  <template #icon><DeleteOutlined /></template>
+                </a-button>
+              </a-tooltip>
+            </a-popconfirm>
+          </a-space>
         </template>
       </template>
       <template #emptyText>
@@ -149,6 +163,7 @@ import {
   ReloadOutlined,
   SearchOutlined,
   PlayCircleOutlined,
+  DeleteOutlined,
   ArrowRightOutlined,
   UnorderedListOutlined,
   CheckCircleOutlined,
@@ -318,6 +333,16 @@ async function rerun(record: any) {
     notifyError(e, '触发任务失败')
   } finally {
     runningKeys.value[record.task_key] = false
+  }
+}
+
+async function removeHistory(record: any) {
+  try {
+    await syncTaskApi.deleteHistory(record.id)
+    notifySuccess('已删除该执行记录')
+    refresh()
+  } catch (e) {
+    notifyError(e, '删除失败')
   }
 }
 

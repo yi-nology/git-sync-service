@@ -48,6 +48,7 @@ func Register(r *server.Hertz) {
 			{
 				_sync := _v1.Group("/sync", _syncMw()...)
 				_sync.GET("/history", append(_taskhistoryMw(), git_sync.TaskHistory)...)
+				_sync.POST("/history/delete", append(_deletehistoryMw(), git_sync.DeleteHistory)...)
 				_sync.POST("/preview", append(_taskpreviewMw(), git_sync.TaskPreview)...)
 				_sync.GET("/task", append(_taskgetMw(), git_sync.TaskGet)...)
 				_task := _sync.Group("/task", _taskMw()...)
