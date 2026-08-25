@@ -308,3 +308,26 @@ func TestPlatformService_GetByIDNotFound(t *testing.T) {
 		t.Error("expected error when getting non-existent platform")
 	}
 }
+
+func TestRewriteCloneHost(t *testing.T) {
+	cases := []struct {
+		name       string
+		rawURL     string
+		instance   string
+		want       string
+	}{
+		{"私有实例重写公网地址", "https://gitcode.com/yi-nology/iam-web.git", "gitcode.kylinos.cn", "https://gitcode.kylinos.cn/yi-nology/iam-web.git"},
+		{"实例地址带 scheme", "https://gitcode.com/a/b.git", "https://gitcode.kylinos.cn", "https://gitcode.kylinos.cn/a/b.git"},
+		{"host 相同不重写", "https://om-gitlab.kylinos.cn/obs/x.git", "om-gitlab.kylinos.cn", "https://om-gitlab.kylinos.cn/obs/x.git"},
+		{"公网平台无实例不重写", "https://github.com/o/r.git", "", "https://github.com/o/r.git"},
+		{"空地址不处理", "", "gitcode.kylinos.cn", ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := &model.Platform{InstanceURL: c.instance}
+			if got := rewriteCloneHost(c.rawURL, p); got != c.want {
+				t.Errorf("rewriteCloneHost(%q, %q) = %q, want %q", c.rawURL, c.instance, got, c.want)
+			}
+		})
+	}
+}
