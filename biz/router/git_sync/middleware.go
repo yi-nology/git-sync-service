@@ -104,6 +104,11 @@ func _retryeventMw() []app.HandlerFunc {
 	return nil
 }
 
+func _deletehistoryMw() []app.HandlerFunc {
+	// TODO: Add middleware
+	return nil
+}
+
 func _taskhistoryMw() []app.HandlerFunc {
 	// your code...
 	return nil

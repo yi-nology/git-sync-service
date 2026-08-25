@@ -194,3 +194,25 @@ func TaskHistory(ctx context.Context, c *app.RequestContext) {
 
 	response.Success(c, &sync_task.ListHistoryResp{Runs: converter.ToSyncRunInfoList(runs)})
 }
+
+// DeleteHistory 删除单条同步执行历史(失败记录清理用)。
+func DeleteHistory(ctx context.Context, c *app.RequestContext) {
+	var req sync_task.DeleteHistoryReq
+	if err := c.BindAndValidate(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if req.ID <= 0 {
+		response.BadRequest(c, "id is required")
+		return
+	}
+
+	if err := GetSyncService().DeleteHistory(ctx, uint(req.ID)); err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	recordAudit(ctx, c, "delete", "history", strconv.FormatInt(req.ID, 10),
+		fmt.Sprintf("删除同步历史记录 #%d", req.ID))
+	response.Success(c, &sync_task.DeleteHistoryResp{Message: "删除成功"})
+}

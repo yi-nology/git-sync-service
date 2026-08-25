@@ -5497,6 +5497,18 @@ type ListHistoryReq struct {
 	Limit   int32  `thrift:"limit,2" json:"limit" query:"limit"`
 }
 
+type DeleteHistoryReq struct {
+	ID int64 `thrift:"id,1" json:"id" query:"id"`
+}
+
+func (p *DeleteHistoryReq) GetID() (v int64) {
+	return p.ID
+}
+
+type DeleteHistoryResp struct {
+	Message string `thrift:"message,1" json:"message"`
+}
+
 func NewListHistoryReq() *ListHistoryReq {
 	return &ListHistoryReq{}
 }
