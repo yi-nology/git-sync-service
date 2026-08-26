@@ -238,7 +238,7 @@ const quickActions = [
   { label: '创建同步任务', icon: markRaw(SyncOutlined), color: 'blue', path: '/sync/new' },
   { label: '添加仓库', icon: markRaw(FolderAddOutlined), color: 'green', path: '/repos' },
   { label: '配置 Webhook', icon: markRaw(ApiOutlined), color: 'purple', path: '/webhook/rules' },
-  { label: '查看日志', icon: markRaw(HistoryOutlined), color: 'cyan', path: '/sync/history' },
+  { label: '查看日志', icon: markRaw(HistoryOutlined), color: 'cyan', path: '/sync/records' },
 ]
 
 const formatUptime = (seconds?: number) => {

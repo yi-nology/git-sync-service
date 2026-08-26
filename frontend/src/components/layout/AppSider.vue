@@ -32,9 +32,8 @@
       <a-sub-menu key="sync">
         <template #icon><SyncOutlined /></template>
         <template #title>同步管理</template>
-        <a-menu-item key="/sync">同步任务</a-menu-item>
-        <a-menu-item key="/sync/history">同步历史</a-menu-item>
-        <a-menu-item key="/sync/new">新建任务</a-menu-item>
+        <a-menu-item key="/sync">任务列表</a-menu-item>
+        <a-menu-item key="/sync/records">执行记录</a-menu-item>
       </a-sub-menu>
 
       <a-menu-item key="/repos">
@@ -42,28 +41,23 @@
         <span>仓库管理</span>
       </a-menu-item>
 
-      <a-sub-menu key="webhook">
+      <a-menu-item key="/webhook/rules">
         <template #icon><ApiOutlined /></template>
-        <template #title>触发配置</template>
-        <a-menu-item key="/webhook/rules">Webhook 规则</a-menu-item>
-        <a-menu-item key="/webhook/events">事件日志</a-menu-item>
-      </a-sub-menu>
+        <span>Webhook 规则</span>
+      </a-menu-item>
 
       <a-sub-menu key="logs">
         <template #icon><FileTextOutlined /></template>
-        <template #title>日志管理</template>
+        <template #title>日志中心</template>
         <a-menu-item key="/logs/operations">操作日志</a-menu-item>
-        <a-menu-item key="/logs/sync">同步执行日志</a-menu-item>
-        <a-menu-item key="/logs/system">系统运行日志</a-menu-item>
+        <a-menu-item key="/logs/system">系统日志</a-menu-item>
+        <a-menu-item key="/logs/webhook-events">Webhook 事件</a-menu-item>
       </a-sub-menu>
 
-      <a-sub-menu key="system">
+      <a-menu-item key="/settings/platforms">
         <template #icon><SettingOutlined /></template>
-        <template #title>系统</template>
-        <a-menu-item key="/settings">系统设置</a-menu-item>
-        <a-menu-item key="/settings/platforms">平台管理</a-menu-item>
-        <a-menu-item key="/settings/advanced">高级配置</a-menu-item>
-      </a-sub-menu>
+        <span>平台管理</span>
+      </a-menu-item>
     </a-menu>
   </a-layout-sider>
 </template>
@@ -96,16 +90,10 @@ const selectedKeys = computed(() => [activeKey.value])
 // 子菜单所属映射(用于自动展开当前路由所在分组)
 const SUBMENU_OF: Record<string, string> = {
   '/sync': 'sync',
-  '/sync/history': 'sync',
-  '/sync/new': 'sync',
-  '/webhook/rules': 'webhook',
-  '/webhook/events': 'webhook',
+  '/sync/records': 'sync',
   '/logs/operations': 'logs',
-  '/logs/sync': 'logs',
   '/logs/system': 'logs',
-  '/settings': 'system',
-  '/settings/platforms': 'system',
-  '/settings/advanced': 'system',
+  '/logs/webhook-events': 'logs',
 }
 
 const openKeys = ref<string[]>([])
