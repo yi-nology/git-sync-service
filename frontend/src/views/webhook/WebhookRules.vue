@@ -312,8 +312,7 @@ function loadRules() {
 
 onMounted(async () => {
   try {
-    await repoStore.fetchRepos()
-    await taskStore.fetchTasks()
+    await Promise.all([repoStore.fetchRepos(), taskStore.fetchTasks()])
     if (repoStore.repos.length > 0) {
       repoKey.value = repoStore.repos[0].key
       loadRules()

@@ -145,8 +145,9 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 		existingMap[r.PlatformRepo] = r
 	}
 
-	// 同步到本地
-	count := 0
+	// 同步到本地:收集待创建和待更新的仓库,最后批量写入
+	var toCreate []*model.Repo
+	var toUpdate []*model.Repo
 	for _, repo := range repos {
 		// 私有部署实例的 API 可能返回公网 clone 地址(如 gitcode.kylinos.cn
 		// 返回 gitcode.com),内网执行器不可达;按平台实例地址重写 host。
@@ -156,22 +157,16 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 		// 内存查重:比逐条 DB 查询快一个数量级。
 		existing := existingMap[repo.Name]
 		if existing != nil {
-			// 已存在:实例地址变化时刷新存量 clone/ssh 地址,保证下次执行可用
 			if existing.CloneURL != cloneURL {
 				existing.CloneURL = cloneURL
 				existing.SSHURL = sshURL
-				if err := s.repoDAO.Update(existing); err != nil {
-					slog.Error("sync repo: update clone URL failed", "repo", repo.FullName, "error", err)
-					continue
-				}
-				count++
+				toUpdate = append(toUpdate, existing)
 			}
 			continue
 		}
 
-		// 创建新仓库
-		newRepo := &model.Repo{
-			Key:           repo.FullName, // 使用全名作为 key
+		toCreate = append(toCreate, &model.Repo{
+			Key:           repo.FullName,
 			Name:          repo.Name,
 			PlatformID:    platform.ID,
 			Platform:      platform.Type,
@@ -181,13 +176,35 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 			SSHURL:        sshURL,
 			DefaultBranch: repo.DefaultBranch,
 			Status:        "active",
-		}
+		})
+	}
 
-		if err := s.repoDAO.Create(newRepo); err != nil {
-			slog.Error("sync repo: create failed", "repo", repo.FullName, "error", err)
-			continue
+	count := 0
+
+	// 批量更新已有仓库的 clone URL(事务内)
+	if len(toUpdate) > 0 {
+		if err := s.repoDAO.BatchUpdateCloneURLs(toUpdate); err != nil {
+			slog.Error("sync repo: batch update clone URLs failed", "error", err, "count", len(toUpdate))
+		} else {
+			count += len(toUpdate)
 		}
-		count++
+	}
+
+	// 批量创建新仓库
+	if len(toCreate) > 0 {
+		if err := s.repoDAO.BatchCreate(toCreate, 100); err != nil {
+			slog.Error("sync repo: batch create failed", "error", err, "count", len(toCreate))
+			// 批量失败时回退到逐条创建,尽量不丢数据
+			for _, r := range toCreate {
+				if err := s.repoDAO.Create(r); err != nil {
+					slog.Error("sync repo: single create failed", "repo", r.Key, "error", err)
+				} else {
+					count++
+				}
+			}
+		} else {
+			count += len(toCreate)
+		}
 	}
 
 	// 更新平台仓库数量
@@ -227,4 +244,16 @@ func (s *PlatformService) ListReposByPlatform(ctx context.Context, platformKey s
 		return nil, err
 	}
 	return s.repoDAO.FindByPlatformID(platform.ID)
+}
+
+// CountReposByPlatform 统计平台下的仓库数量(不加载数据)
+func (s *PlatformService) CountReposByPlatform(ctx context.Context, platformKey string) (int64, error) {
+	platform, err := s.platformDAO.FindByKey(platformKey)
+	if err != nil {
+		return 0, err
+	}
+	if platform == nil {
+		return 0, fmt.Errorf("platform not found: %s", platformKey)
+	}
+	return s.repoDAO.CountByPlatformID(platform.ID)
 }

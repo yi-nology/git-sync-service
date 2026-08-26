@@ -106,6 +106,45 @@ func (d *RepoDAO) Update(repo *model.Repo) error {
 	return d.db.Save(repo).Error
 }
 
+// BatchCreate 批量创建仓库(用于同步场景,逐条加密后批量插入)。
+func (d *RepoDAO) BatchCreate(repos []*model.Repo, batchSize int) error {
+	for _, r := range repos {
+		if r.AccessToken != "" {
+			encrypted, err := d.cm.Encrypt(r.AccessToken)
+			if err != nil {
+				return err
+			}
+			r.AccessToken = encrypted
+		}
+		if r.WebhookSecret != "" {
+			encrypted, err := d.cm.Encrypt(r.WebhookSecret)
+			if err != nil {
+				return err
+			}
+			r.WebhookSecret = encrypted
+		}
+	}
+	if batchSize <= 0 {
+		batchSize = 100
+	}
+	return d.db.CreateInBatches(repos, batchSize).Error
+}
+
+// BatchUpdateCloneURLs 批量更新仓库的 CloneURL/SSHURL(事务内逐条 Save,保证加密字段不被覆盖)。
+func (d *RepoDAO) BatchUpdateCloneURLs(repos []*model.Repo) error {
+	return d.db.Transaction(func(tx *gorm.DB) error {
+		for _, r := range repos {
+			if err := tx.Model(r).Updates(map[string]interface{}{
+				"clone_url": r.CloneURL,
+				"ssh_url":   r.SSHURL,
+			}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func (d *RepoDAO) Delete(key string) error {
 	return d.db.Where("`key` = ?", key).Delete(&model.Repo{}).Error
 }
@@ -146,6 +185,13 @@ func (d *RepoDAO) FindByPlatformID(platformID uint) ([]*model.Repo, error) {
 		return nil, err
 	}
 	return repos, nil
+}
+
+// CountByPlatformID 统计平台下的仓库数量(不加载数据,比 FindByPlatformID + len 高效)
+func (d *RepoDAO) CountByPlatformID(platformID uint) (int64, error) {
+	var count int64
+	err := d.db.Model(&model.Repo{}).Where("platform_id = ?", platformID).Count(&count).Error
+	return count, err
 }
 
 // RepoFilter contains optional filters for listing repositories.

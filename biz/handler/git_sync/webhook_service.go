@@ -159,13 +159,13 @@ func ListEvents(ctx context.Context, c *app.RequestContext) {
 
 	offset, _ := strconv.Atoi(c.Query("offset"))
 	page := dao.DefaultPagination(offset, int(req.Limit))
-	events, _, err := GetSyncService().ListEvents(ctx, req.RepoKey, page.Offset, page.Limit)
+	events, total, err := GetSyncService().ListEvents(ctx, req.RepoKey, page.Offset, page.Limit)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.Success(c, &webhook.ListEventsResp{Events: converter.ToEventInfoList(events)})
+	response.Paginated(c, converter.ToEventInfoList(events), total, page.Offset/page.Limit+1, page.Limit)
 }
 
 func RetryEvent(ctx context.Context, c *app.RequestContext) {

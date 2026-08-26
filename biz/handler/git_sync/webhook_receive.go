@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -80,7 +82,11 @@ func ReceiveWebhook(ctx context.Context, c *app.RequestContext) {
 		bodySizeLimit = cfg.Webhook.MaxBodySize
 	}
 
-	bodyBytes, _ := c.Body()
+	bodyBytes, bodyErr := c.Body()
+	if bodyErr != nil {
+		response.BadRequest(c, "failed to read request body")
+		return
+	}
 	if len(bodyBytes) > bodySizeLimit {
 		response.Error(c, consts.StatusRequestEntityTooLarge, "request body too large")
 		return
@@ -108,7 +114,13 @@ func ReceiveWebhook(ctx context.Context, c *app.RequestContext) {
 
 	err = GetSyncService().ReceiveWebhook(ctx, repoKey, httpReq)
 	if err != nil {
-		response.InternalError(c, err.Error())
+		// 签名验证失败是认证错误,返 401 而非 500;细节记服务端日志,不暴露给调用方
+		if strings.Contains(err.Error(), "signature") || strings.Contains(err.Error(), "unauthorized") {
+			slog.Warn("webhook signature verification failed", "repo", repoKey, "error", err, "client_ip", c.ClientIP())
+			response.Error(c, consts.StatusUnauthorized, "invalid webhook signature")
+		} else {
+			response.InternalError(c, err.Error())
+		}
 		return
 	}
 

@@ -33,7 +33,7 @@ tidy:
 	@go mod tidy
 
 test:
-	@go test ./... -v
+	@go test ./... -v -race -count=1
 
 clean:
 	@rm -rf $(BUILD_DIR) data/

@@ -15,11 +15,22 @@ func NewSyncRunDAO(db *gorm.DB) *SyncRunDAO {
 	return &SyncRunDAO{db: db}
 }
 
+// FindByTaskKey 列表查询,不加载 Steps(列表页不需要步骤详情,避免 N+1)。
 func (d *SyncRunDAO) FindByTaskKey(taskKey string, page Pagination) ([]*model.SyncRun, int64, error) {
 	var runs []*model.SyncRun
-	query := d.db.Preload("Steps").Where("task_key = ?", taskKey)
+	query := d.db.Where("task_key = ?", taskKey)
 	total, err := Paginate(query, page, &runs)
 	return runs, total, err
+}
+
+// FindByIDWithSteps 单条详情查询,加载 Steps 子记录。
+func (d *SyncRunDAO) FindByIDWithSteps(id uint) (*model.SyncRun, error) {
+	var run model.SyncRun
+	err := d.db.Preload("Steps").First(&run, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &run, nil
 }
 
 func (d *SyncRunDAO) Create(run *model.SyncRun) error {
@@ -42,8 +53,18 @@ func (d *SyncRunDAO) FindRecent(page Pagination) ([]*model.SyncRun, error) {
 
 func (d *SyncRunDAO) CleanupOlderThan(olderThan time.Duration) (int64, error) {
 	cutoff := time.Now().Add(-olderThan)
-	result := d.db.Where("created_at < ?", cutoff).Delete(&model.SyncRun{})
-	return result.RowsAffected, result.Error
+	var total int64
+	for {
+		result := d.db.Where("created_at < ?", cutoff).Limit(1000).Delete(&model.SyncRun{})
+		if result.Error != nil {
+			return total, result.Error
+		}
+		total += result.RowsAffected
+		if result.RowsAffected == 0 {
+			break
+		}
+	}
+	return total, nil
 }
 
 func (d *SyncRunDAO) CountByTaskKey(taskKey string) (int64, error) {

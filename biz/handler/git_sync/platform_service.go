@@ -145,13 +145,13 @@ func DeletePlatform(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	// 检查是否有关联的仓库
-	repos, err := GetSyncService().ListReposByPlatform(ctx, req.Key)
+	// 检查是否有关联的仓库(用 COUNT 而非全量加载)
+	repoCount, err := GetSyncService().CountReposByPlatform(ctx, req.Key)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
-	if len(repos) > 0 {
+	if repoCount > 0 {
 		response.BadRequest(c, "该平台下还有仓库，请先删除关联的仓库")
 		return
 	}

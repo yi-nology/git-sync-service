@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/yi-nology/git-sync-service/internal/lock"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
 
@@ -145,7 +146,7 @@ func TestConcurrencyGuardLocalDefaultMax(t *testing.T) {
 }
 
 func TestNewGuardLocal(t *testing.T) {
-	guard, err := newGuard("", "", 0, 5)
+	guard, err := newGuard("", "", 0, 5, lock.RedisPoolOptions{})
 	if err != nil {
 		t.Fatalf("Failed to create local guard: %v", err)
 	}
@@ -163,7 +164,7 @@ func TestNewGuardRedis(t *testing.T) {
 	mr := miniredis.RunT(t)
 	defer mr.Close()
 
-	guard, err := newGuard(mr.Addr(), "", 0, 5)
+	guard, err := newGuard(mr.Addr(), "", 0, 5, lock.RedisPoolOptions{})
 	if err != nil {
 		t.Fatalf("Failed to create Redis guard: %v", err)
 	}

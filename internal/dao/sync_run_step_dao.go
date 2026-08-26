@@ -31,6 +31,16 @@ func (d *SyncRunStepDAO) FindByRunID(runID uint) ([]*model.SyncRunStep, error) {
 
 func (d *SyncRunStepDAO) CleanupOlderThan(olderThan time.Duration) (int64, error) {
 	cutoff := time.Now().Add(-olderThan)
-	result := d.db.Where("created_at < ?", cutoff).Delete(&model.SyncRunStep{})
-	return result.RowsAffected, result.Error
+	var total int64
+	for {
+		result := d.db.Where("created_at < ?", cutoff).Limit(1000).Delete(&model.SyncRunStep{})
+		if result.Error != nil {
+			return total, result.Error
+		}
+		total += result.RowsAffected
+		if result.RowsAffected == 0 {
+			break
+		}
+	}
+	return total, nil
 }

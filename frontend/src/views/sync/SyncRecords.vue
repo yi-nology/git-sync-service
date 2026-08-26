@@ -300,6 +300,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'SyncRecords' })
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Empty } from 'ant-design-vue'
 import {
@@ -518,13 +519,16 @@ function resetFilters() {
 async function fetchRecords() {
   loading.value = true
   try {
+    // 并行请求所有任务的执行记录,而非逐个串行等待
+    const results = await Promise.allSettled(
+      taskStore.tasks.map((task) =>
+        syncTaskApi.history({ task_key: task.key, limit: 50 })
+      ),
+    )
     const allRuns: SyncRun[] = []
-    for (const task of taskStore.tasks) {
-      try {
-        const resp = await syncTaskApi.history({ task_key: task.key, limit: 50 })
-        allRuns.push(...(resp.runs || []))
-      } catch {
-        // 忽略单个任务的失败
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        allRuns.push(...(r.value.runs || []))
       }
     }
     allRuns.sort(

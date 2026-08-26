@@ -12,6 +12,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/executor"
+	"github.com/yi-nology/git-sync-service/internal/lock"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
 	"gorm.io/gorm"
@@ -55,6 +56,8 @@ func NewService(cfg *Config) (*Service, error) {
 	}
 	sqlDB.SetMaxIdleConns(cfg.Database.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(cfg.Database.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.ConnMaxLifeSec) * time.Second)
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Database.ConnMaxIdleSec) * time.Second)
 
 	if err := os.MkdirAll(cfg.Git.TempDir, 0o750); err != nil {
 		return nil, fmt.Errorf("create temp dir failed: %w", err)
@@ -104,7 +107,12 @@ func NewService(cfg *Config) (*Service, error) {
 	}
 
 	// 并发控制:配了 redis 用分布式(多实例安全),否则进程内(单实例)
-	guard, err := newGuard(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB, cfg.Sync.MaxConcurrent)
+	guard, err := newGuard(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB, cfg.Sync.MaxConcurrent, lock.RedisPoolOptions{
+		PoolSize:        cfg.Redis.PoolSize,
+		MinIdleConns:    cfg.Redis.MinIdleConns,
+		DialTimeoutSec:  cfg.Redis.DialTimeoutSec,
+		ReadTimeoutSec:  cfg.Redis.ReadTimeoutSec,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("init concurrency guard failed: %w", err)
 	}
@@ -116,7 +124,11 @@ func NewService(cfg *Config) (*Service, error) {
 	}
 	svc.executor = exec
 
-	go svc.cleanupTriggerTimes()
+	svc.wg.Add(1)
+	go func() {
+		defer svc.wg.Done()
+		svc.cleanupTriggerTimes()
+	}()
 
 	return svc, nil
 }
@@ -208,18 +220,21 @@ func (s *Service) HealthCheck() map[string]string {
 		"service":  "ok",
 	}
 
-	// Check database connectivity
+	// Check database connectivity — 只暴露 unhealthy 状态,不泄露连接字符串等内部细节
 	sqlDB, err := s.db.DB()
 	if err != nil {
-		status["database"] = err.Error()
+		slog.Error("healthcheck: db error", "error", err)
+		status["database"] = "unhealthy"
 	} else if err := sqlDB.Ping(); err != nil {
-		status["database"] = err.Error()
+		slog.Error("healthcheck: db ping failed", "error", err)
+		status["database"] = "unhealthy"
 	}
 
 	// Check Redis connectivity (if configured)
 	if s.config.Redis.Addr != "" {
 		if err := s.guard.Ping(); err != nil {
-			status["redis"] = err.Error()
+			slog.Error("healthcheck: redis ping failed", "error", err)
+			status["redis"] = "unhealthy"
 		}
 	} else {
 		status["redis"] = "not configured"
@@ -283,6 +298,11 @@ func (s *Service) SyncPlatformRepos(ctx context.Context, key string) (int, error
 // ListReposByPlatform 列出平台下的仓库
 func (s *Service) ListReposByPlatform(ctx context.Context, platformKey string) ([]*model.Repo, error) {
 	return s.platforms.ListReposByPlatform(ctx, platformKey)
+}
+
+// CountReposByPlatform 统计平台下的仓库数量
+func (s *Service) CountReposByPlatform(ctx context.Context, platformKey string) (int64, error) {
+	return s.platforms.CountReposByPlatform(ctx, platformKey)
 }
 
 // Operation log (audit) related methods

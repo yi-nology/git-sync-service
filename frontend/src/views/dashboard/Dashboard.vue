@@ -189,6 +189,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'Dashboard' })
+
 import { computed, onMounted, ref, markRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRepoStore } from '@/stores/repo'
@@ -274,9 +276,10 @@ async function fetchSystemStatus() {
 
 onMounted(async () => {
   try {
+    // Dashboard 只需总量 + 最近几条 + 状态统计,不必拉全量列表
     await Promise.all([
-      repoStore.fetchRepos(),
-      taskStore.fetchTasks(),
+      repoStore.fetchRepos({ page: 1, page_size: 5 }),
+      taskStore.fetchTasks({ page: 1, page_size: 50 }),
       fetchSystemStatus(),
     ])
   } catch (e) {

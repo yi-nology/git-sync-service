@@ -38,25 +38,34 @@ export const useRepoStore = defineStore('repo', () => {
 
   async function createRepo(req: CreateRepoRequest): Promise<Repo> {
     const data = await repoApi.create(req)
-    await fetchRepos()
+    // 乐观更新:插入本地列表,避免全量 refetch
+    repos.value.unshift(data.repo)
+    total.value++
     return data.repo
   }
 
   async function updateRepo(req: UpdateRepoRequest): Promise<Repo> {
     const data = await repoApi.update(req)
-    await fetchRepos()
+    // 乐观更新:替换本地列表中的对应项
+    const idx = repos.value.findIndex((r) => r.key === req.key)
+    if (idx !== -1) repos.value[idx] = data.repo
     return data.repo
   }
 
   async function deleteRepo(key: string) {
     await repoApi.delete(key)
-    await fetchRepos()
+    // 乐观更新:从本地列表移除
+    repos.value = repos.value.filter((r) => r.key !== key)
+    total.value = Math.max(0, total.value - 1)
   }
 
   /** 批量删除(后端 /repos/batch 支持) */
   async function batchDelete(keys: string[]): Promise<{ succeeded: number; failed: number }> {
     const data = await repoApi.batchDelete(keys)
-    await fetchRepos()
+    // 乐观更新:从本地列表移除已删除项
+    const keySet = new Set(keys)
+    repos.value = repos.value.filter((r) => !keySet.has(r.key))
+    total.value = Math.max(0, total.value - data.success)
     return { succeeded: data.success, failed: data.failed }
   }
 

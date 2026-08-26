@@ -50,7 +50,6 @@
         <template #icon><FileTextOutlined /></template>
         <template #title>日志中心</template>
         <a-menu-item key="/logs/operations">操作日志</a-menu-item>
-        <a-menu-item key="/logs/system">系统日志</a-menu-item>
         <a-menu-item key="/logs/webhook-events">Webhook 事件</a-menu-item>
       </a-sub-menu>
 
@@ -92,7 +91,6 @@ const SUBMENU_OF: Record<string, string> = {
   '/sync': 'sync',
   '/sync/records': 'sync',
   '/logs/operations': 'logs',
-  '/logs/system': 'logs',
   '/logs/webhook-events': 'logs',
 }
 

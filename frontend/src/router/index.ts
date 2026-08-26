@@ -26,7 +26,6 @@ const routes: RouteRecordRaw[] = [
       { path: 'repos/config/:id', name: 'RepoConfig', component: () => import('@/views/repos/RepoUnifiedConfig.vue'), meta: { title: '仓库配置' } },
       { path: 'local-repos/:id', name: 'LocalRepoDetail', component: () => import('@/views/repos/LocalRepoDetail.vue'), meta: { title: '本地仓库' } },
       { path: 'logs/operations', name: 'OperationLogs', component: () => import('@/views/logs/OperationLogs.vue'), meta: { title: '操作日志' } },
-      { path: 'logs/system', name: 'SystemLogs', component: () => import('@/views/logs/SystemLogs.vue'), meta: { title: '系统日志' } },
       { path: 'settings/platforms', name: 'PlatformSettings', component: () => import('@/views/settings/PlatformSettings.vue'), meta: { title: '平台管理' } },
       { path: ':pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFound.vue'), meta: { title: '页面不存在' } },
     ],

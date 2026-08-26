@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/yi-nology/git-sync-service/biz/handler/git_sync"
 	"github.com/yi-nology/git-sync-service/sync"
@@ -69,7 +70,22 @@ func main() {
 		return syncSvc
 	})
 
-	h := server.Default(server.WithHostPorts(fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)))
+	h := server.Default(
+		server.WithHostPorts(fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)),
+		server.WithMaxRequestBodySize(cfg.Webhook.MaxBodySize),
+	)
+
+	// Recovery 中间件:handler panic 时返回 500 而非崩进程
+	h.Use(func(c context.Context, ctx *app.RequestContext) {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("handler panic recovered", "error", r, "path", string(ctx.Path()))
+				ctx.JSON(500, map[string]string{"error": "internal server error"})
+				ctx.Abort()
+			}
+		}()
+		ctx.Next(c)
+	})
 
 	register(h)
 

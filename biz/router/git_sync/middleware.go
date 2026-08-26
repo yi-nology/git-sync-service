@@ -4,7 +4,9 @@ package git_sync
 
 import (
 	"context"
+	crypto_rand "crypto/rand"
 	"crypto/subtle"
+	"encoding/hex"
 	"log/slog"
 	"net/http"
 	"time"
@@ -35,19 +37,39 @@ func AuthMiddleware() app.HandlerFunc {
 	}
 }
 
-// RequestLogMiddleware logs API requests with method, path, status code, and latency.
+// RequestLogMiddleware 为每个请求生成唯一 request_id 并记录日志。
+// 常规请求用 Debug 级别;慢请求(>1s)或服务端错误(>=500)升级为 Warn。
 func RequestLogMiddleware() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
+		requestID := generateRequestID()
+		c.Set("request_id", requestID)
+		c.Response.Header.Set("X-Request-ID", requestID)
+
 		start := time.Now()
 		c.Next(ctx)
-		slog.Info("api request",
+
+		latency := time.Since(start)
+		status := c.Response.StatusCode()
+		logAttrs := []any{
 			"method", string(c.Method()),
 			"path", string(c.Path()),
-			"status", c.Response.StatusCode(),
-			"latency", time.Since(start).String(),
+			"status", status,
+			"latency", latency.String(),
 			"client_ip", c.ClientIP(),
-		)
+			"request_id", requestID,
+		}
+		if latency > 1*time.Second || status >= 500 {
+			slog.Warn("api request", logAttrs...)
+		} else {
+			slog.Debug("api request", logAttrs...)
+		}
 	}
+}
+
+func generateRequestID() string {
+	b := make([]byte, 8)
+	_, _ = crypto_rand.Read(b)
+	return hex.EncodeToString(b)
 }
 
 func rootMw() []app.HandlerFunc {

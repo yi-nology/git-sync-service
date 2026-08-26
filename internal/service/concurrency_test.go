@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/yi-nology/git-sync-service/internal/lock"
 )
 
 // TestLocalGuard_TaskMutexAndConcurrency 验证进程内 guard:同 taskKey 互斥 + 全局并发上限。
@@ -92,12 +93,12 @@ func TestLocalGuard_ConcurrentStress(t *testing.T) {
 // 两个 guard(模拟两个实例)共享同一 redis,同 taskKey 必须跨实例互斥。
 func TestRedisGuard_CrossInstanceMutex(t *testing.T) {
 	mr := miniredis.RunT(t)
-	g1, err := newRedisGuard(mr.Addr(), "", 0, 2)
+	g1, err := newRedisGuard(mr.Addr(), "", 0, 2, lock.RedisPoolOptions{})
 	if err != nil {
 		t.Fatalf("newRedisGuard g1: %v", err)
 	}
 	defer func() { _ = g1.Close() }()
-	g2, err := newRedisGuard(mr.Addr(), "", 0, 2)
+	g2, err := newRedisGuard(mr.Addr(), "", 0, 2, lock.RedisPoolOptions{})
 	if err != nil {
 		t.Fatalf("newRedisGuard g2: %v", err)
 	}
@@ -126,12 +127,12 @@ func TestRedisGuard_CrossInstanceMutex(t *testing.T) {
 // g1 占满槽,g2 拿不到(即便不同 taskKey)。
 func TestRedisGuard_CrossInstanceConcurrencyCap(t *testing.T) {
 	mr := miniredis.RunT(t)
-	g1, err := newRedisGuard(mr.Addr(), "", 0, 1) // max 1
+	g1, err := newRedisGuard(mr.Addr(), "", 0, 1, lock.RedisPoolOptions{}) // max 1
 	if err != nil {
 		t.Fatalf("g1: %v", err)
 	}
 	defer func() { _ = g1.Close() }()
-	g2, err := newRedisGuard(mr.Addr(), "", 0, 1)
+	g2, err := newRedisGuard(mr.Addr(), "", 0, 1, lock.RedisPoolOptions{})
 	if err != nil {
 		t.Fatalf("g2: %v", err)
 	}

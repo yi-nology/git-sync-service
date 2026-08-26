@@ -223,16 +223,17 @@ async function loadHistory() {
     tasks.value = taskStore.tasks
   }
 
-  history.value = []
-  for (const task of tasks.value) {
-    try {
-      await taskStore.fetchHistory(task.key, 20)
-      history.value.push(...taskStore.history.map(h => ({ ...h })))
-    } catch {
-      // ignore
+  // 并行请求所有任务的执行记录,使用返回值而非共享 store ref
+  const results = await Promise.allSettled(
+    tasks.value.map((task) => taskStore.fetchHistory(task.key, 20)),
+  )
+  const allRuns: SyncRun[] = []
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      allRuns.push(...r.value)
     }
   }
-  history.value.sort((a, b) => new Date(b.start_time || 0).getTime() - new Date(a.start_time || 0).getTime())
+  history.value = allRuns.sort((a, b) => new Date(b.start_time || 0).getTime() - new Date(a.start_time || 0).getTime())
 }
 
 async function refresh() {

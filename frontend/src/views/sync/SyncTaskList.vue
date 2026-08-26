@@ -286,6 +286,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'SyncTaskList' })
+
 import { onMounted, ref, reactive, computed } from 'vue'
 import {
   PlusOutlined,
@@ -335,10 +337,19 @@ function clearSelection() {
   selectedRowKeys.value = []
 }
 
-// -- Computed stats --
-const successCount = computed(() => taskStore.tasks.filter(t => t.last_status === 'success').length)
-const runningCount = computed(() => taskStore.tasks.filter(t => t.last_status === 'running').length)
-const failedCount = computed(() => taskStore.tasks.filter(t => t.last_status === 'failed').length)
+// -- Computed stats (单次遍历) --
+const taskStats = computed(() => {
+  let success = 0, running = 0, failed = 0
+  for (const t of taskStore.tasks) {
+    if (t.last_status === 'success') success++
+    else if (t.last_status === 'running') running++
+    else if (t.last_status === 'failed') failed++
+  }
+  return { success, running, failed }
+})
+const successCount = computed(() => taskStats.value.success)
+const runningCount = computed(() => taskStats.value.running)
+const failedCount = computed(() => taskStats.value.failed)
 
 // -- Columns --
 const columns = [
@@ -368,9 +379,16 @@ function filterRepoOption(input: string, option: any) {
   return repo.name.toLowerCase().includes(search) || repo.key.toLowerCase().includes(search)
 }
 
+// 预计算 repoKey → repoName 的 Map,避免模板循环中 O(n×m) 逐次 find
+const repoNameMap = computed(() => {
+  const map = new Map<string, string>()
+  for (const r of repoStore.repos) {
+    map.set(r.key, r.name)
+  }
+  return map
+})
 function getRepoName(key: string): string {
-  const repo = repoStore.repos.find(r => r.key === key)
-  return repo?.name || key.substring(0, 8) + '...'
+  return repoNameMap.value.get(key) || key.substring(0, 8) + '...'
 }
 
 function buildParams() {

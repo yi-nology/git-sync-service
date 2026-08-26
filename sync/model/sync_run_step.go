@@ -15,7 +15,7 @@ type SyncRunStep struct {
 	ErrorType  string     `json:"errorType" gorm:"size:30"`
 	Output     string     `json:"output" gorm:"type:text"`
 	RetryCount int        `json:"retryCount"`
-	CreatedAt  time.Time  `json:"createdAt"`
+	CreatedAt  time.Time  `json:"createdAt" gorm:"index"`
 }
 
 func (SyncRunStep) TableName() string {

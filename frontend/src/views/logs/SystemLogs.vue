@@ -250,16 +250,22 @@ const columns = [
   { title: '操作', key: 'action', width: 100, fixed: 'right' as const },
 ]
 
+// 缓存 record.id → module 映射,避免模板循环中反复 JSON.parse
+const moduleCache = new Map<number, string>()
 function getModule(record: SystemLog): string {
-  if (!record.details) return '-'
-  try {
-    const parsed = JSON.parse(record.details)
-    if (parsed.module) return parsed.module
-  } catch {
-    const match = record.message?.match(/^\[([a-zA-Z]+)\]/)
-    if (match) return match[1]
+  if (moduleCache.has(record.id)) return moduleCache.get(record.id)!
+  let result = '-'
+  if (record.details) {
+    try {
+      const parsed = JSON.parse(record.details)
+      if (parsed.module) result = parsed.module
+    } catch {
+      const match = record.message?.match(/^\[([a-zA-Z]+)\]/)
+      if (match) result = match[1]
+    }
   }
-  return '-'
+  moduleCache.set(record.id, result)
+  return result
 }
 
 function getStackTrace(record: SystemLog): string | null {
@@ -355,9 +361,15 @@ function openDrawer(record: SystemLog) {
 }
 
 function calculateStats(logList: SystemLog[]) {
-  stats.errorCount = logList.filter((l) => l.level === 'ERROR').length
-  stats.warnCount = logList.filter((l) => l.level === 'WARN').length
-  stats.infoCount = logList.filter((l) => l.level === 'INFO').length
+  let errors = 0, warns = 0, infos = 0
+  for (const l of logList) {
+    if (l.level === 'ERROR') errors++
+    else if (l.level === 'WARN') warns++
+    else if (l.level === 'INFO') infos++
+  }
+  stats.errorCount = errors
+  stats.warnCount = warns
+  stats.infoCount = infos
 }
 
 function handleAutoRefreshChange(value: number) {

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -76,11 +77,11 @@ type redisGuard struct {
 	sem   *lock.Semaphore
 }
 
-func newRedisGuard(addr, password string, db, maxConcurrent int) (*redisGuard, error) {
+func newRedisGuard(addr, password string, db, maxConcurrent int, poolOpts lock.RedisPoolOptions) (*redisGuard, error) {
 	if maxConcurrent <= 0 {
 		maxConcurrent = 5
 	}
-	rl := lock.NewRedisLock(addr, password, db)
+	rl := lock.NewRedisLock(addr, password, db, lock.WithPoolOptions(poolOpts))
 	if err := rl.Ping(context.Background()); err != nil {
 		_ = rl.Close()
 		return nil, fmt.Errorf("redis ping failed: %w", err)
@@ -118,9 +119,9 @@ func (g *redisGuard) Acquire(ctx context.Context, taskKey string) (releaseFunc, 
 
 	return func() {
 		close(stop)
-		// 用独立 context 释放,避免外层 ctx 已取消导致释放失败、锁残留
-		//nolint:gosec // 释放锁/信号量需要独立于请求生命周期的 context
-		releaseCtx := context.Background()
+		// 用带超时的独立 context 释放,避免 Redis 不可响应时 goroutine 永久挂死
+		releaseCtx, releaseCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer releaseCancel()
 		_ = g.rlock.UnlockWithValue(releaseCtx, lockKey, value)
 		_ = g.sem.Release(releaseCtx, semID)
 	}, nil
@@ -133,13 +134,19 @@ func (g *redisGuard) watchdog(lockKey, value, semID string, stop <-chan struct{}
 	t := time.NewTicker(renewInterval)
 	defer t.Stop()
 	ctx := context.Background() //nolint:gosec // watchdog goroutine intentionally uses background context
+	failures := 0
 	for {
 		select {
 		case <-stop:
 			return
 		case <-t.C:
-			// 续期失败(如 redis 不可达)忽略:锁/槽会在 TTL 后自动释放,表现为 fail-open
-			if _, err := g.rlock.ExtendLockWithValue(ctx, lockKey, value, taskLockTTL); err == nil {
+			if _, err := g.rlock.ExtendLockWithValue(ctx, lockKey, value, taskLockTTL); err != nil {
+				failures++
+				if failures%3 == 1 { // 每 3 次失败记一条日志,避免刷屏
+					slog.Warn("watchdog: failed to extend lock", "lockKey", lockKey, "error", err, "consecutive_failures", failures)
+				}
+			} else {
+				failures = 0
 				_ = g.sem.Renew(ctx, semID)
 			}
 		}
@@ -155,9 +162,9 @@ func (g *redisGuard) Close() error {
 }
 
 // newGuard 按是否配置 redis 选择实现。配了 redis 用分布式,否则用进程内。
-func newGuard(redisAddr, redisPassword string, redisDB, maxConcurrent int) (concurrencyGuard, error) {
+func newGuard(redisAddr, redisPassword string, redisDB, maxConcurrent int, poolOpts lock.RedisPoolOptions) (concurrencyGuard, error) {
 	if redisAddr != "" {
-		rg, err := newRedisGuard(redisAddr, redisPassword, redisDB, maxConcurrent)
+		rg, err := newRedisGuard(redisAddr, redisPassword, redisDB, maxConcurrent, poolOpts)
 		if err != nil {
 			// redis 连不上不应让整个服务起不来:回退到本地模式并告警
 			return nil, fmt.Errorf("init redis guard failed (check redis config or remove redis.addr to use single-instance mode): %w", err)

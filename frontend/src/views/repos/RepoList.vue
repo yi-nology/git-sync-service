@@ -300,6 +300,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'RepoList' })
+
 import { onMounted, ref, reactive, computed, markRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -489,9 +491,19 @@ const urlTip = computed(() => platformConfig[selectedPlatform.value]?.urlTip || 
 const tokenTip = computed(() => platformConfig[selectedPlatform.value]?.tokenTip || '')
 const tokenGuide = computed(() => platformConfig[selectedPlatform.value]?.tokenGuide || '')
 
-// Get task count for a repo
+// 预计算 repoKey → 任务数 的 Map,避免模板循环中 O(n×m) 逐次 filter
+const taskCountMap = computed(() => {
+  const map = new Map<string, number>()
+  for (const t of taskStore.tasks) {
+    map.set(t.source_repo_key, (map.get(t.source_repo_key) || 0) + 1)
+    if (t.target_repo_key && t.target_repo_key !== t.source_repo_key) {
+      map.set(t.target_repo_key, (map.get(t.target_repo_key) || 0) + 1)
+    }
+  }
+  return map
+})
 function getTaskCount(repoKey: string): number {
-  return taskStore.tasks.filter(t => t.source_repo_key === repoKey || t.target_repo_key === repoKey).length
+  return taskCountMap.value.get(repoKey) || 0
 }
 
 function handlePlatformConfigSelect(platformId: string) {

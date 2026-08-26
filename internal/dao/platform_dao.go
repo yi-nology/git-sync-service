@@ -146,15 +146,14 @@ func (d *PlatformDAO) Delete(key string) error {
 	return d.db.Where("key = ?", key).Delete(&model.Platform{}).Error
 }
 
-// SetDefault 设置默认平台
+// SetDefault 设置默认平台(事务保证原子性:先清后设,不会出现无默认的窗口)
 func (d *PlatformDAO) SetDefault(key string) error {
-	// 先取消所有默认
-	err := d.db.Model(&model.Platform{}).Where("is_default = ?", true).Update("is_default", false).Error
-	if err != nil {
-		return err
-	}
-	// 设置新的默认
-	return d.db.Model(&model.Platform{}).Where("key = ?", key).Update("is_default", true).Error
+	return d.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Platform{}).Where("is_default = ?", true).Update("is_default", false).Error; err != nil {
+			return err
+		}
+		return tx.Model(&model.Platform{}).Where("key = ?", key).Update("is_default", true).Error
+	})
 }
 
 // UpdateRepoCount 更新平台关联的仓库数量

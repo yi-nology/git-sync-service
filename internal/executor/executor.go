@@ -73,6 +73,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	// Build a summary details string for backward compatibility
 	var details strings.Builder
+	const maxDetailsSize = 64 * 1024 // 64KB 上限,防止超长任务撑爆 DB
 	fmt.Fprintf(&details, "=== Sync Task: %s ===\n", task.Name)
 	fmt.Fprintf(&details, "Trigger: %s\n", trigger)
 	fmt.Fprintf(&details, "Time: %s\n\n", startTime.Format(time.RFC3339))
@@ -80,7 +81,11 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	defer func() {
 		run.EndTime = timePtr(time.Now())
 		run.DurationMs = run.EndTime.Sub(startTime).Milliseconds()
-		run.Details = details.String()
+		detailStr := details.String()
+		if len(detailStr) > maxDetailsSize {
+			detailStr = detailStr[:maxDetailsSize] + "\n... (truncated)"
+		}
+		run.Details = detailStr
 		if err := e.service.CompleteRun(run); err != nil {
 			slog.Error("failed to complete sync run", "error", err)
 		}
@@ -91,7 +96,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	sourceRepo, err := e.service.GetRepoByKey(task.SourceRepoKey)
 	if err != nil {
-		return failRun(run, fmt.Errorf("query source repo failed: %v", err))
+		return failRun(run, fmt.Errorf("query source repo failed: %w", err))
 	}
 	if sourceRepo == nil {
 		return failRun(run, fmt.Errorf("source repo not found: %s", task.SourceRepoKey))
@@ -99,7 +104,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	targetRepo, err := e.service.GetRepoByKey(task.TargetRepoKey)
 	if err != nil {
-		return failRun(run, fmt.Errorf("query target repo failed: %v", err))
+		return failRun(run, fmt.Errorf("query target repo failed: %w", err))
 	}
 	if targetRepo == nil {
 		return failRun(run, fmt.Errorf("target repo not found: %s", task.TargetRepoKey))
@@ -110,7 +115,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	workDir := e.service.GetTempDir(task.Key)
 	if err := os.MkdirAll(workDir, 0o750); err != nil {
-		return failRun(run, fmt.Errorf("create work dir failed: %v", err))
+		return failRun(run, fmt.Errorf("create work dir failed: %w", err))
 	}
 
 	defer func() {
@@ -147,14 +152,14 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		if err := e.cloneRepo(execCtx, repoDir, sourceRepo, task, platforms[sourceRepo.PlatformID]); err != nil {
 			e.failStep(step1, err)
 			fmt.Fprintf(&details, "clone error: %v\n", err)
-			return failRun(run, fmt.Errorf("clone failed: %v", err))
+			return failRun(run, fmt.Errorf("clone failed: %w", err))
 		}
 	} else {
 		details.WriteString("Step 1: Fetch updates from source repo...\n")
 		if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo, platforms[sourceRepo.PlatformID]); err != nil {
 			e.failStep(step1, err)
 			fmt.Fprintf(&details, "fetch error: %v\n", err)
-			return failRun(run, fmt.Errorf("fetch failed: %v", err))
+			return failRun(run, fmt.Errorf("fetch failed: %w", err))
 		}
 	}
 	e.completeStep(step1, "")
@@ -166,7 +171,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	if err := e.ensureRemote(execCtx, repoDir, targetRepo); err != nil {
 		e.failStep(step2, err)
 		fmt.Fprintf(&details, "add remote error: %v\n", err)
-		return failRun(run, fmt.Errorf("add remote failed: %v", err))
+		return failRun(run, fmt.Errorf("add remote failed: %w", err))
 	}
 	e.completeStep(step2, "")
 	details.WriteString("Step 2: completed\n")
@@ -215,7 +220,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	if pushErr != nil {
 		e.failStep(step3, pushErr)
 		fmt.Fprintf(&details, "push error: %v\n", pushErr)
-		return failRun(run, fmt.Errorf("push failed after %d attempts: %v", maxRetries, pushErr))
+		return failRun(run, fmt.Errorf("push failed after %d attempts: %w", maxRetries, pushErr))
 	}
 	e.completeStep(step3, "")
 	details.WriteString("Step 3: completed\n")

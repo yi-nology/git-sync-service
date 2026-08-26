@@ -65,15 +65,51 @@ type RedisLock struct {
 	lockValues map[string]string
 }
 
-func NewRedisLock(addr, password string, db int) *RedisLock {
-	client := redis.NewClient(&redis.Options{
+// RedisPoolOptions 连接池可选配置,零值使用 go-redis 默认。
+type RedisPoolOptions struct {
+	PoolSize        int // 连接池大小,默认 10*GOMAXPROCS
+	MinIdleConns    int // 最小空闲连接数,默认 0(冷启动无预热)
+	DialTimeoutSec  int // 建连超时秒数,默认使用 OS TCP 超时
+	ReadTimeoutSec  int // 读超时秒数
+	WriteTimeoutSec int // 写超时秒数
+}
+
+// Option functional option for NewRedisLock.
+type Option func(*redis.Options)
+
+// WithPoolOptions 设置连接池参数。
+func WithPoolOptions(pool RedisPoolOptions) Option {
+	return func(o *redis.Options) {
+		if pool.PoolSize > 0 {
+			o.PoolSize = pool.PoolSize
+		}
+		if pool.MinIdleConns > 0 {
+			o.MinIdleConns = pool.MinIdleConns
+		}
+		if pool.DialTimeoutSec > 0 {
+			o.DialTimeout = time.Duration(pool.DialTimeoutSec) * time.Second
+		}
+		if pool.ReadTimeoutSec > 0 {
+			o.ReadTimeout = time.Duration(pool.ReadTimeoutSec) * time.Second
+		}
+		if pool.WriteTimeoutSec > 0 {
+			o.WriteTimeout = time.Duration(pool.WriteTimeoutSec) * time.Second
+		}
+	}
+}
+
+func NewRedisLock(addr, password string, db int, opts ...Option) *RedisLock {
+	o := &redis.Options{
 		Addr:     addr,
 		Password: password,
 		DB:       db,
-	})
+	}
+	for _, opt := range opts {
+		opt(o)
+	}
 
 	return &RedisLock{
-		client:     client,
+		client:     redis.NewClient(o),
 		lockValues: make(map[string]string),
 	}
 }
@@ -111,6 +147,11 @@ func (l *RedisLock) LockWithTTL(ctx context.Context, key string, ttl time.Durati
 	if err != nil {
 		return false, "", fmt.Errorf("redis setnx failed: %w", err)
 	}
+	if ok {
+		l.mu.Lock()
+		l.lockValues[key] = value
+		l.mu.Unlock()
+	}
 	return ok, value, nil
 }
 
@@ -135,6 +176,8 @@ func (l *RedisLock) ExtendLockWithValue(ctx context.Context, key, value string, 
 }
 
 func (l *RedisLock) Lock(ctx context.Context, key string) error {
+	backoff := 100 * time.Millisecond
+	const maxBackoff = 5 * time.Second
 	for {
 		select {
 		case <-ctx.Done():
@@ -144,7 +187,6 @@ func (l *RedisLock) Lock(ctx context.Context, key string) error {
 
 		ok, _, err := l.LockWithTTL(ctx, key, defaultLockTTL)
 		if err != nil {
-			// If context was cancelled during the operation, return context error
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
@@ -154,10 +196,17 @@ func (l *RedisLock) Lock(ctx context.Context, key string) error {
 			return nil
 		}
 
+		timer := time.NewTimer(backoff)
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			return ctx.Err()
-		case <-time.After(100 * time.Millisecond):
+		case <-timer.C:
+		}
+		// 指数退避,上限 5s
+		backoff = backoff * 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
 		}
 	}
 }
@@ -171,23 +220,24 @@ func (l *RedisLock) Unlock(ctx context.Context, key string) error {
 	l.mu.Unlock()
 
 	if !exists || value == "" {
-		lockKey := "git-sync:lock:" + key
-		_, err := l.client.Del(ctx, lockKey).Result()
-		if err != nil {
-			return fmt.Errorf("redis del failed: %w", err)
-		}
+		// 无法确认锁的所有权,不做无条件 DEL 以免误删其他进程的锁。
 		return nil
 	}
 	return l.UnlockWithValue(ctx, key, value)
 }
 
+// ExtendLock 续期:从 lockValues 取出持有值,用 Lua 脚本安全续期。
+// 若 lockValues 中无记录(非本进程持有),返回错误而非盲目续期。
 func (l *RedisLock) ExtendLock(ctx context.Context, key string, ttl time.Duration) error {
-	lockKey := "git-sync:lock:" + key
-	_, err := l.client.Expire(ctx, lockKey, ttl).Result()
-	if err != nil {
-		return fmt.Errorf("redis expire failed: %w", err)
+	l.mu.Lock()
+	value, exists := l.lockValues[key]
+	l.mu.Unlock()
+
+	if !exists || value == "" {
+		return fmt.Errorf("cannot extend lock %q: no stored value (not owned by this instance)", key)
 	}
-	return nil
+	_, err := l.ExtendLockWithValue(ctx, key, value, ttl)
+	return err
 }
 
 func (l *RedisLock) Ping(ctx context.Context) error {
@@ -230,10 +280,18 @@ func (s *Semaphore) Acquire(ctx context.Context, identifier string) (bool, error
 	return result == 1, nil
 }
 
-// Renew 续期持有的槽(把 score 推到 now+slotTTL),供 watchdog 调用。
+// renewScript 仅当成员已存在于集合中才续期,防止过期后重新加入导致超限。
+var renewScript = redis.NewScript(`
+	if redis.call("ZSCORE", KEYS[1], ARGV[1]) then
+		return redis.call("ZADD", KEYS[1], ARGV[2], ARGV[1])
+	end
+	return 0
+`)
+
+// Renew 续期持有的槽(把 score 推到 now+slotTTL),仅当成员已存在才续期。
 func (s *Semaphore) Renew(ctx context.Context, identifier string) error {
 	expire := time.Now().Add(s.slotTTL).UnixMilli()
-	_, err := s.client.ZAdd(ctx, s.key, redis.Z{Score: float64(expire), Member: identifier}).Result()
+	_, err := renewScript.Run(ctx, s.client, []string{s.key}, identifier, expire).Result()
 	return err
 }
 
@@ -283,15 +341,23 @@ func (l *LocalLock) TryLockWithTTL(ctx context.Context, key string, ttl time.Dur
 }
 
 func (l *LocalLock) Lock(ctx context.Context, key string) error {
+	backoff := 100 * time.Millisecond
+	const maxBackoff = 5 * time.Second
 	for {
 		ok, _ := l.TryLock(ctx, key)
 		if ok {
 			return nil
 		}
+		timer := time.NewTimer(backoff)
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			return ctx.Err()
-		case <-time.After(100 * time.Millisecond):
+		case <-timer.C:
+		}
+		backoff = backoff * 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
 		}
 	}
 }

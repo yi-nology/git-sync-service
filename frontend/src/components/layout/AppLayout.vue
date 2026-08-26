@@ -6,7 +6,9 @@
       <a-layout-content class="app-content">
         <router-view v-slot="{ Component }">
           <transition name="page-fade" mode="out-in">
-            <component :is="Component" />
+            <keep-alive :include="cachedViews">
+              <component :is="Component" />
+            </keep-alive>
           </transition>
         </router-view>
       </a-layout-content>
@@ -21,6 +23,9 @@ import AppHeader from './AppHeader.vue'
 
 // 侧边栏折叠状态(由顶部按钮控制)
 const collapsed = ref(false)
+
+// keep-alive 缓存的高频页面名称,路由切换时不销毁这些组件实例
+const cachedViews = ['Dashboard', 'RepoList', 'SyncTaskList', 'SyncRecords']
 </script>
 
 <style scoped lang="scss">

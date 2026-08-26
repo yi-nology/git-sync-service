@@ -21,7 +21,7 @@ func newMiniredis(t *testing.T) *redis.Client {
 func TestRedisLock_ExtendLockWithValue_miniredis(t *testing.T) {
 	client := newMiniredis(t)
 	defer func() { _ = client.Close() }()
-	rl := &RedisLock{client: client}
+	rl := &RedisLock{client: client, lockValues: make(map[string]string)}
 	ctx := context.Background()
 
 	ok, value, err := rl.LockWithTTL(ctx, "k1", 2*time.Second)

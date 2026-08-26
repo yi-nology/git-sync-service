@@ -4,7 +4,7 @@ import "time"
 
 type SyncRun struct {
 	ID             uint           `json:"id" gorm:"primaryKey"`
-	TaskKey        string         `json:"taskKey" gorm:"size:36;not null;index"`
+	TaskKey        string         `json:"taskKey" gorm:"size:36;not null;index:idx_sync_runs_task_key_created,priority:1"`
 	TriggerSource  string         `json:"triggerSource" gorm:"size:20;not null"`
 	Status         string         `json:"status" gorm:"size:20;not null;index"`
 	StartTime      time.Time      `json:"startTime"`
@@ -17,7 +17,7 @@ type SyncRun struct {
 	ErrorType      string         `json:"errorType" gorm:"size:30"`
 	RetryTotal     int            `json:"retryTotal"`
 	Steps          []SyncRunStep  `json:"steps" gorm:"foreignKey:RunID"`
-	CreatedAt      time.Time      `json:"createdAt"`
+	CreatedAt      time.Time      `json:"createdAt" gorm:"index:idx_sync_runs_created_at;index:idx_sync_runs_task_key_created,priority:2"`
 }
 
 func (SyncRun) TableName() string {
