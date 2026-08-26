@@ -138,6 +138,13 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 		return 0, fmt.Errorf("list repos failed: %w", err)
 	}
 
+	// 一次加载该平台所有已有仓库到内存,避免 N 次 DB 查询。
+	existingRepos, _ := s.repoDAO.FindByPlatformID(platform.ID)
+	existingMap := make(map[string]*model.Repo, len(existingRepos))
+	for _, r := range existingRepos {
+		existingMap[r.PlatformRepo] = r
+	}
+
 	// 同步到本地
 	count := 0
 	for _, repo := range repos {
@@ -146,9 +153,8 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 		cloneURL := rewriteCloneHost(repo.CloneURL, platform)
 		sshURL := rewriteCloneHost(repo.SSHURL, platform)
 
-		// 按 (platform_id, platform_repo) 查重:比 CloneURL 可靠,
-		// 私有部署实例地址重写后 CloneURL 会变,但 platform_repo 是稳定的。
-		existing, _ := s.repoDAO.FindByPlatformAndRepo(platform.ID, repo.Name)
+		// 内存查重:比逐条 DB 查询快一个数量级。
+		existing := existingMap[repo.Name]
 		if existing != nil {
 			// 已存在:实例地址变化时刷新存量 clone/ssh 地址,保证下次执行可用
 			if existing.CloneURL != cloneURL {
