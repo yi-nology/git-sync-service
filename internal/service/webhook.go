@@ -6,23 +6,26 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/yi-nology/git-platform-sdk/pkg/branchfilter"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
 
-func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
-	repo, err := s.repos.GetRepo(ctx, repoKey)
-	if err != nil {
-		return err
+// isDuplicateKeyErr 判断错误是否为 DB 唯一约束冲突(MySQL 1062 / SQLite UNIQUE)。
+func isDuplicateKeyErr(err error) bool {
+	if err == nil {
+		return false
 	}
-	if repo == nil {
-		return ErrRepoNotFound
-	}
+	msg := err.Error()
+	return strings.Contains(msg, "Duplicate entry") || // MySQL
+		strings.Contains(msg, "UNIQUE constraint failed") || // SQLite
+		strings.Contains(msg, "duplicate key") // PostgreSQL
+}
 
-	// 与注册/测试连接等链路保持一致:优先按平台记录解析(支持自建平台),否则按 CloneURL 探测
-	prov, err := s.repos.resolveRepoProvider(repo)
+func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.Request) error {
+	repo, prov, err := s.repos.GetRepoWithProvider(repoKey)
 	if err != nil {
 		return err
 	}
@@ -62,8 +65,9 @@ func (s *Service) ReceiveWebhook(ctx context.Context, repoKey string, req *http.
 	}
 
 	if err := s.webhooks.CreateWebhookEvent(whEvent); err != nil {
-		// 并发去重:event_id 有唯一索引,插入冲突说明另一个请求已处理该事件,直接幂等返回
-		if dup, _ := s.webhooks.FindEventByEventID(event.ID); dup != nil {
+		// 并发去重:event_id 有唯一索引,插入冲突说明另一个请求已处理该事件,直接幂等返回。
+		// 依赖 DB 唯一约束保证正确性,不再做二次查询(消除竞态窗口+减少一次 DB 往返)。
+		if isDuplicateKeyErr(err) {
 			return nil
 		}
 		return err

@@ -18,17 +18,38 @@ import (
 func SystemStatus(ctx context.Context, c *app.RequestContext) {
 	svc := GetSyncService()
 
-	// 计数走 COUNT 聚合,不再全表加载进内存
-	repoCount, err := svc.CountRepos()
-	if err != nil {
+	// CountRepos 与 CountTasksByStatus 互不依赖,并行执行。
+	type repoCountResult struct {
+		count int64
+		err   error
+	}
+	type taskCountResult struct {
+		counts map[string]int64
+		err    error
+	}
+	repoCh := make(chan repoCountResult, 1)
+	taskCh := make(chan taskCountResult, 1)
+	go func() {
+		c, e := svc.CountRepos()
+		repoCh <- repoCountResult{c, e}
+	}()
+	go func() {
+		c, e := svc.CountTasksByStatus()
+		taskCh <- taskCountResult{c, e}
+	}()
+
+	rr := <-repoCh
+	if rr.err != nil {
 		response.InternalError(c, "get repo count failed")
 		return
 	}
-	taskCounts, err := svc.CountTasksByStatus()
-	if err != nil {
+	tr := <-taskCh
+	if tr.err != nil {
 		response.InternalError(c, "get task count failed")
 		return
 	}
+	repoCount := rr.count
+	taskCounts := tr.counts
 	taskTotal := taskCounts["total"]
 	runningCount := taskCounts["running"]
 	failedCount := taskCounts["failed"]

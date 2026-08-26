@@ -191,30 +191,39 @@ func TestPlatformDAO_Delete(t *testing.T) {
 		t.Fatalf("delete failed: %v", err)
 	}
 
-	// Try to get the deleted platform
-	_, err := d.FindByKey("github")
-	if err == nil {
-		t.Error("expected error when getting deleted platform")
+	// Try to get the deleted platform - should return (nil, nil)
+	p, err := d.FindByKey("github")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if p != nil {
+		t.Error("expected nil platform for deleted key")
 	}
 }
 
 func TestPlatformDAO_FindByKey_NotFound(t *testing.T) {
 	_, d := setupPlatformTestDB(t)
 
-	// Try to get a non-existent platform
-	_, err := d.FindByKey("nonexistent")
-	if err == nil {
-		t.Error("expected error when getting non-existent platform")
+	// Try to get a non-existent platform - should return (nil, nil)
+	p, err := d.FindByKey("nonexistent")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if p != nil {
+		t.Error("expected nil platform for non-existent key")
 	}
 }
 
 func TestPlatformDAO_FindByID_NotFound(t *testing.T) {
 	_, d := setupPlatformTestDB(t)
 
-	// Try to get a non-existent platform
-	_, err := d.FindByID(999)
-	if err == nil {
-		t.Error("expected error when getting non-existent platform")
+	// Try to get a non-existent platform - should return (nil, nil)
+	p, err := d.FindByID(999)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if p != nil {
+		t.Error("expected nil platform for non-existent ID")
 	}
 }
 

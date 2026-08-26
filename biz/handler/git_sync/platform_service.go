@@ -70,6 +70,10 @@ func GetPlatform(ctx context.Context, c *app.RequestContext) {
 
 	p, err := GetSyncService().GetPlatform(ctx, req.Key)
 	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+	if p == nil {
 		response.NotFound(c, "platform not found")
 		return
 	}
@@ -107,6 +111,10 @@ func UpdatePlatform(ctx context.Context, c *app.RequestContext) {
 
 	p, err := GetSyncService().GetPlatform(ctx, req.Key)
 	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+	if p == nil {
 		response.NotFound(c, "platform not found")
 		return
 	}

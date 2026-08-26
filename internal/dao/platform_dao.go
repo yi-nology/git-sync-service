@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/yi-nology/git-platform-sdk/pkg/credential"
@@ -62,10 +63,13 @@ func (d *PlatformDAO) Create(platform *model.Platform) error {
 	return d.db.Create(platform).Error
 }
 
-// FindByKey 根据 Key 查找平台
+// FindByKey 根据 Key 查找平台(not found 返回 nil,nil,与 RepoDAO 行为一致)。
 func (d *PlatformDAO) FindByKey(key string) (*model.Platform, error) {
 	var platform model.Platform
 	err := d.db.Where("key = ?", key).First(&platform).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -73,10 +77,13 @@ func (d *PlatformDAO) FindByKey(key string) (*model.Platform, error) {
 	return &platform, nil
 }
 
-// FindByID 根据 ID 查找平台
+// FindByID 根据 ID 查找平台(not found 返回 nil,nil,与 RepoDAO 行为一致)。
 func (d *PlatformDAO) FindByID(id uint) (*model.Platform, error) {
 	var platform model.Platform
 	err := d.db.Where("id = ?", id).First(&platform).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +113,13 @@ func (d *PlatformDAO) FindByType(platformType string) ([]*model.Platform, error)
 	return platforms, nil
 }
 
-// FindDefault 查找默认平台
+// FindDefault 查找默认平台(not found 返回 nil,nil)。
 func (d *PlatformDAO) FindDefault() (*model.Platform, error) {
 	var platform model.Platform
 	err := d.db.Where("is_default = ?", true).First(&platform).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,7 @@ func NewSyncRunDAO(db *gorm.DB) *SyncRunDAO {
 
 func (d *SyncRunDAO) FindByTaskKey(taskKey string, page Pagination) ([]*model.SyncRun, int64, error) {
 	var runs []*model.SyncRun
-	query := d.db.Where("task_key = ?", taskKey)
+	query := d.db.Preload("Steps").Where("task_key = ?", taskKey)
 	total, err := Paginate(query, page, &runs)
 	return runs, total, err
 }

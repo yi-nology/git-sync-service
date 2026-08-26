@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"strings"
 
@@ -71,7 +72,10 @@ func (s *PlatformService) UpdatePlatformStatus(ctx context.Context, key, status,
 func (s *PlatformService) TestPlatformConnection(ctx context.Context, key string) (*sdkprov.TestConnectionResult, error) {
 	platform, err := s.platformDAO.FindByKey(key)
 	if err != nil {
-		return nil, fmt.Errorf("platform not found: %w", err)
+		return nil, fmt.Errorf("query platform failed: %w", err)
+	}
+	if platform == nil {
+		return nil, fmt.Errorf("platform not found: %s", key)
 	}
 
 	provider, err := platformProvider(s.providerMgr, platform)
@@ -92,7 +96,10 @@ func (s *PlatformService) TestPlatformConnection(ctx context.Context, key string
 func (s *PlatformService) ListPlatformRepos(ctx context.Context, key, page, perPage string) ([]*sdkprov.PlatformRepo, error) {
 	platform, err := s.platformDAO.FindByKey(key)
 	if err != nil {
-		return nil, fmt.Errorf("platform not found: %w", err)
+		return nil, fmt.Errorf("query platform failed: %w", err)
+	}
+	if platform == nil {
+		return nil, fmt.Errorf("platform not found: %s", key)
 	}
 
 	provider, err := platformProvider(s.providerMgr, platform)
@@ -114,7 +121,10 @@ func (s *PlatformService) ListPlatformRepos(ctx context.Context, key, page, perP
 func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (int, error) {
 	platform, err := s.platformDAO.FindByKey(key)
 	if err != nil {
-		return 0, fmt.Errorf("platform not found: %w", err)
+		return 0, fmt.Errorf("query platform failed: %w", err)
+	}
+	if platform == nil {
+		return 0, fmt.Errorf("platform not found: %s", key)
 	}
 
 	provider, err := platformProvider(s.providerMgr, platform)
@@ -136,14 +146,16 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 		cloneURL := rewriteCloneHost(repo.CloneURL, platform)
 		sshURL := rewriteCloneHost(repo.SSHURL, platform)
 
-		// 检查是否已存在
-		existing, _ := s.repoDAO.FindByCloneURL(repo.CloneURL)
+		// 按 (platform_id, platform_repo) 查重:比 CloneURL 可靠,
+		// 私有部署实例地址重写后 CloneURL 会变,但 platform_repo 是稳定的。
+		existing, _ := s.repoDAO.FindByPlatformAndRepo(platform.ID, repo.Name)
 		if existing != nil {
 			// 已存在:实例地址变化时刷新存量 clone/ssh 地址,保证下次执行可用
 			if existing.CloneURL != cloneURL {
 				existing.CloneURL = cloneURL
 				existing.SSHURL = sshURL
 				if err := s.repoDAO.Update(existing); err != nil {
+					slog.Error("sync repo: update clone URL failed", "repo", repo.FullName, "error", err)
 					continue
 				}
 				count++
@@ -166,7 +178,8 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 		}
 
 		if err := s.repoDAO.Create(newRepo); err != nil {
-			continue // 跳过失败的
+			slog.Error("sync repo: create failed", "repo", repo.FullName, "error", err)
+			continue
 		}
 		count++
 	}

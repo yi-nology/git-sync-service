@@ -194,10 +194,13 @@ func TestPlatformService_Delete(t *testing.T) {
 		t.Fatalf("delete failed: %v", err)
 	}
 
-	// Try to get the deleted platform - should return error
-	_, err := svc.GetPlatform(ctx, "github")
-	if err == nil {
-		t.Error("expected error when getting deleted platform")
+	// Try to get the deleted platform - should return (nil, nil)
+	p, err := svc.GetPlatform(ctx, "github")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if p != nil {
+		t.Error("expected nil platform for deleted key")
 	}
 }
 
@@ -291,10 +294,13 @@ func TestPlatformService_GetNotFound(t *testing.T) {
 	_, svc := setupPlatformServiceTestDB(t)
 	ctx := context.Background()
 
-	// Try to get a non-existent platform - should return error
-	_, err := svc.GetPlatform(ctx, "nonexistent")
-	if err == nil {
-		t.Error("expected error when getting non-existent platform")
+	// Try to get a non-existent platform - should return (nil, nil)
+	p, err := svc.GetPlatform(ctx, "nonexistent")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if p != nil {
+		t.Error("expected nil platform for non-existent key")
 	}
 }
 
@@ -302,10 +308,13 @@ func TestPlatformService_GetByIDNotFound(t *testing.T) {
 	_, svc := setupPlatformServiceTestDB(t)
 	ctx := context.Background()
 
-	// Try to get a non-existent platform - should return error
-	_, err := svc.GetPlatformByID(ctx, 999)
-	if err == nil {
-		t.Error("expected error when getting non-existent platform")
+	// Try to get a non-existent platform - should return (nil, nil)
+	p, err := svc.GetPlatformByID(ctx, 999)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if p != nil {
+		t.Error("expected nil platform for non-existent ID")
 	}
 }
 

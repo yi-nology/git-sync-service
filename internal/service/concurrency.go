@@ -19,6 +19,8 @@ type concurrencyGuard interface {
 	// Acquire 尝试获取 taskKey 的执行权 + 一个全局并发槽。
 	// 成功返回 release;taskKey 已在跑返回 ErrTaskRunning;全局满返回 ErrTooManyConcurrent。
 	Acquire(ctx context.Context, taskKey string) (releaseFunc, error)
+	// Ping 检查后端连通性(本地实现始终返回 nil)。
+	Ping() error
 	Close() error
 }
 
@@ -62,6 +64,7 @@ func (g *localGuard) Acquire(_ context.Context, taskKey string) (releaseFunc, er
 	}, nil
 }
 
+func (g *localGuard) Ping() error  { return nil }
 func (g *localGuard) Close() error { return nil }
 
 // ---------------- 分布式(redis)实现 ----------------
@@ -141,6 +144,10 @@ func (g *redisGuard) watchdog(lockKey, value, semID string, stop <-chan struct{}
 			}
 		}
 	}
+}
+
+func (g *redisGuard) Ping() error {
+	return g.rlock.Ping(context.Background())
 }
 
 func (g *redisGuard) Close() error {

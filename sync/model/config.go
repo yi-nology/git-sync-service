@@ -112,5 +112,11 @@ func (c *Config) Validate() error {
 	if c.Sync.RetryCount <= 0 {
 		c.Sync.RetryCount = DefaultRetryCount
 	}
+	if c.Webhook.RateLimit <= 0 {
+		c.Webhook.RateLimit = 10
+	}
+	if c.Webhook.MaxBodySize <= 0 {
+		c.Webhook.MaxBodySize = 10 << 20 // 10MB
+	}
 	return nil
 }

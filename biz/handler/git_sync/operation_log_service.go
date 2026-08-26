@@ -35,17 +35,30 @@ func ListOperationLogs(ctx context.Context, c *app.RequestContext) {
 		EndDate:   req.EndDate,
 	}
 
-	list, total, err := GetSyncService().ListOperations(ctx, offset, limit, &filter)
+	// ListOperations 与 OperationStats 互不依赖,并行执行缩短响应时间。
+	type statsResult struct {
+		today, week, total int64
+		err                error
+	}
+	svc := GetSyncService()
+	statsCh := make(chan statsResult, 1)
+	go func() {
+		t, w, tot, e := svc.OperationStats(ctx)
+		statsCh <- statsResult{t, w, tot, e}
+	}()
+
+	list, total, err := svc.ListOperations(ctx, offset, limit, &filter)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	today, week, statsTotal, err := GetSyncService().OperationStats(ctx)
-	if err != nil {
-		response.InternalError(c, err.Error())
+	sr := <-statsCh
+	if sr.err != nil {
+		response.InternalError(c, sr.err.Error())
 		return
 	}
+	today, week, statsTotal := sr.today, sr.week, sr.total
 
 	totalPages := int32(0)
 	if req.PageSize > 0 && total > 0 {

@@ -6,20 +6,37 @@ import (
 )
 
 func (s *Service) CleanupOldData(maxAge time.Duration) (events, runs, steps int64, err error) {
-	events, err = s.webhooks.CleanupOldEvents(maxAge)
-	if err != nil {
-		return 0, 0, 0, err
+	// 三张表独立清理,互不依赖,并行执行缩短耗时。
+	type result struct {
+		count int64
+		err   error
 	}
-	runs, err = s.tasks.CleanupOldRuns(maxAge)
-	if err != nil {
-		return events, 0, 0, err
-	}
-	steps, err = s.tasks.CleanupOldRunSteps(maxAge)
-	if err != nil {
-		return events, runs, 0, err
+	ch := make(chan result, 3)
+
+	go func() {
+		c, e := s.webhooks.CleanupOldEvents(maxAge)
+		ch <- result{c, e}
+	}()
+	go func() {
+		c, e := s.tasks.CleanupOldRuns(maxAge)
+		ch <- result{c, e}
+	}()
+	go func() {
+		c, e := s.tasks.CleanupOldRunSteps(maxAge)
+		ch <- result{c, e}
+	}()
+
+	r1, r2, r3 := <-ch, <-ch, <-ch
+	events, runs, steps = r1.count, r2.count, r3.count
+
+	// 合并错误(任一失败都报告,但不中断其余结果)
+	for _, r := range []result{r1, r2, r3} {
+		if r.err != nil {
+			err = r.err
+		}
 	}
 	slog.Info("data cleanup completed", "events_deleted", events, "runs_deleted", runs, "steps_deleted", steps)
-	return events, runs, steps, nil
+	return events, runs, steps, err
 }
 
 func (s *Service) cleanupTriggerTimes() {

@@ -76,3 +76,25 @@ func (d *OperationLogDAO) CountAll() (int64, error) {
 	err := d.db.Model(&model.OperationLog{}).Count(&count).Error
 	return count, err
 }
+
+// StatsResult 审计日志统计结果。
+type StatsResult struct {
+	Today int64
+	Week  int64
+	Total int64
+}
+
+// StatsOnce 一次查询返回今日、近 7 天、总操作数(替代三次串行 COUNT)。
+func (d *OperationLogDAO) StatsOnce(startOfToday time.Time) (*StatsResult, error) {
+	var r StatsResult
+	weekStart := startOfToday.AddDate(0, 0, -6)
+	err := d.db.Model(&model.OperationLog{}).
+		Select(
+			"COUNT(*) AS total",
+			"SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) AS today",
+			"SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) AS week",
+			startOfToday, weekStart,
+		).
+		Scan(&r).Error
+	return &r, err
+}

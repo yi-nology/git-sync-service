@@ -218,7 +218,9 @@ func (s *Service) HealthCheck() map[string]string {
 
 	// Check Redis connectivity (if configured)
 	if s.config.Redis.Addr != "" {
-		status["redis"] = "not checked (lock service removed)"
+		if err := s.guard.Ping(); err != nil {
+			status["redis"] = err.Error()
+		}
 	} else {
 		status["redis"] = "not configured"
 	}

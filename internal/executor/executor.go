@@ -105,6 +105,9 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		return failRun(run, fmt.Errorf("target repo not found: %s", task.TargetRepoKey))
 	}
 
+	// 预取 source/target 的 platform 记录,避免后续每次 git 操作都查 DB。
+	platforms := e.prefetchPlatforms(sourceRepo, targetRepo)
+
 	workDir := e.service.GetTempDir(task.Key)
 	if err := os.MkdirAll(workDir, 0o750); err != nil {
 		return failRun(run, fmt.Errorf("create work dir failed: %v", err))
@@ -141,14 +144,14 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	step1 := e.beginStep(run.ID, step1Name)
 	if step1Name == model.StepClone {
 		details.WriteString("Step 1: Initial clone of source repo...\n")
-		if err := e.cloneRepo(execCtx, repoDir, sourceRepo, task); err != nil {
+		if err := e.cloneRepo(execCtx, repoDir, sourceRepo, task, platforms[sourceRepo.PlatformID]); err != nil {
 			e.failStep(step1, err)
 			fmt.Fprintf(&details, "clone error: %v\n", err)
 			return failRun(run, fmt.Errorf("clone failed: %v", err))
 		}
 	} else {
 		details.WriteString("Step 1: Fetch updates from source repo...\n")
-		if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo); err != nil {
+		if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo, platforms[sourceRepo.PlatformID]); err != nil {
 			e.failStep(step1, err)
 			fmt.Fprintf(&details, "fetch error: %v\n", err)
 			return failRun(run, fmt.Errorf("fetch failed: %v", err))
@@ -194,14 +197,14 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 			}
 		}
 
-		pushErr = e.push(execCtx, repoDir, task, targetRepo)
+		pushErr = e.push(execCtx, repoDir, task, targetRepo, platforms[targetRepo.PlatformID])
 		if pushErr == nil {
 			break
 		}
 
 		if attempt < maxRetries {
 			details.WriteString("Push failed, retrying fetch...\n")
-			if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo); err != nil {
+			if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo, platforms[sourceRepo.PlatformID]); err != nil {
 				fmt.Fprintf(&details, "Retry fetch failed: %v\n", err)
 			}
 		}
@@ -230,15 +233,39 @@ func failRun(run *model.SyncRun, err error) (*model.SyncRun, error) {
 	return run, err
 }
 
-func (e *Executor) authConfig(repo *model.Repo) gitbackend.AuthConfig {
-	// 平台记录只查一次:token 仅作回退,SkipTLSVerify 则无论 token 来源
-	// 是否为仓库自身都要生效(自签名证书平台的 git clone/fetch/push 依赖它)。
+// prefetchPlatforms 预取 source/target 的 platform 记录,返回 platformID→Platform 映射。
+// 一次 Execute 内复用,避免后续每次 git 操作都查 DB。
+func (e *Executor) prefetchPlatforms(repos ...*model.Repo) map[uint]*model.Platform {
+	platforms := make(map[uint]*model.Platform, 2)
+	for _, repo := range repos {
+		if repo.PlatformID == 0 {
+			continue
+		}
+		if _, ok := platforms[repo.PlatformID]; ok {
+			continue
+		}
+		p, err := e.service.GetPlatformByID(repo.PlatformID)
+		if err != nil {
+			slog.Warn("prefetch platform failed", "platformID", repo.PlatformID, "error", err)
+			continue
+		}
+		platforms[repo.PlatformID] = p
+	}
+	return platforms
+}
+
+// authConfig 构建 git 认证配置。platform 可选(为 nil 时回退查 DB)。
+func (e *Executor) authConfig(repo *model.Repo, platform *model.Platform) gitbackend.AuthConfig {
 	var skipTLS bool
 	var platformToken string
-	if repo.PlatformID > 0 {
-		if platform, err := e.service.GetPlatformByID(repo.PlatformID); err == nil && platform != nil {
-			skipTLS = platform.SkipTLSVerify
-			platformToken = platform.AccessToken
+	if platform != nil {
+		skipTLS = platform.SkipTLSVerify
+		platformToken = platform.AccessToken
+	} else if repo.PlatformID > 0 {
+		// 回退:platform 未预取时仍查一次(兼容直接调用)
+		if p, err := e.service.GetPlatformByID(repo.PlatformID); err == nil && p != nil {
+			skipTLS = p.SkipTLSVerify
+			platformToken = p.AccessToken
 		}
 	}
 	token := repo.AccessToken
@@ -298,7 +325,7 @@ func (e *Executor) failStep(step *model.SyncRunStep, err error) {
 	}
 }
 
-func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, task *model.SyncTask) error {
+func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, task *model.SyncTask, platform *model.Platform) error {
 	// 全量克隆:同步要把源仓库推到目标,浅克隆(depth=1)缺完整历史,
 	// 首次推送到空目标会被平台拒绝(shallow update not allowed),
 	// 且 gogit 会把该拒绝误报为 already up-to-date。
@@ -308,18 +335,18 @@ func (e *Executor) cloneRepo(ctx context.Context, dir string, repo *model.Repo, 
 		Path:         dir,
 		Branch:       task.SourceBranch,
 		SingleBranch: true,
-		Auth:         e.authConfig(repo),
+		Auth:         e.authConfig(repo, platform),
 	})
 }
 
-func (e *Executor) fetchRepo(ctx context.Context, dir string, task *model.SyncTask, repo *model.Repo) error {
+func (e *Executor) fetchRepo(ctx context.Context, dir string, task *model.SyncTask, repo *model.Repo, platform *model.Platform) error {
 	_, err := e.backend.Fetch(ctx, gitbackend.FetchOptions{
 		RepoPath: dir,
 		Remote:   RemoteOrigin,
 		Branches: []string{task.SourceBranch},
 		Tags:     task.GitTags,
 		Prune:    task.GitPrune,
-		Auth:     e.authConfig(repo),
+		Auth:     e.authConfig(repo, platform),
 	})
 	if err != nil {
 		return err
@@ -344,7 +371,7 @@ func (e *Executor) ensureRemote(ctx context.Context, dir string, repo *model.Rep
 	return e.backend.AddRemote(ctx, dir, RemoteTarget, repo.CloneURL)
 }
 
-func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, repo *model.Repo) error {
+func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, repo *model.Repo, platform *model.Platform) error {
 	// 必须用完整 refspec:go-git 按全名严格匹配本地 ref,不做 git CLI 的
 	// 短名展开,"main:main" 匹配不到 refs/heads/main,会静默零推送
 	// (返回 already up-to-date,被误判成功)。
@@ -355,7 +382,7 @@ func (e *Executor) push(ctx context.Context, dir string, task *model.SyncTask, r
 		Remote:   RemoteTarget,
 		RefSpecs: []string{refSpec},
 		Force:    task.GitForce,
-		Auth:     e.authConfig(repo),
+		Auth:     e.authConfig(repo, platform),
 	})
 	return err
 }

@@ -12,15 +12,7 @@ import (
 // (/api/webhook/receive/:repoKey)。secret 非空时持久化到仓库记录(加密存储),
 // 用于入站事件验签。events 为空时默认订阅 push。
 func (s *Service) RegisterPlatformWebhook(ctx context.Context, repoKey, callbackURL, secret string, events []string) (*sdkprov.PlatformWebhook, error) {
-	repo, err := s.repos.GetRepoByKey(repoKey)
-	if err != nil {
-		return nil, err
-	}
-	if repo == nil {
-		return nil, ErrRepoNotFound
-	}
-
-	prov, err := s.repos.resolveRepoProvider(repo)
+	repo, prov, err := s.repos.GetRepoWithProvider(repoKey)
 	if err != nil {
 		return nil, err
 	}
@@ -52,15 +44,7 @@ func (s *Service) RegisterPlatformWebhook(ctx context.Context, repoKey, callback
 
 // ListPlatformWebhooks 列出平台侧已注册的 Webhook。
 func (s *Service) ListPlatformWebhooks(ctx context.Context, repoKey string) ([]*sdkprov.PlatformWebhook, error) {
-	repo, err := s.repos.GetRepoByKey(repoKey)
-	if err != nil {
-		return nil, err
-	}
-	if repo == nil {
-		return nil, ErrRepoNotFound
-	}
-
-	prov, err := s.repos.resolveRepoProvider(repo)
+	repo, prov, err := s.repos.GetRepoWithProvider(repoKey)
 	if err != nil {
 		return nil, err
 	}
@@ -70,15 +54,7 @@ func (s *Service) ListPlatformWebhooks(ctx context.Context, repoKey string) ([]*
 
 // DeletePlatformWebhook 删除平台侧的 Webhook。
 func (s *Service) DeletePlatformWebhook(ctx context.Context, repoKey string, webhookID int64) error {
-	repo, err := s.repos.GetRepoByKey(repoKey)
-	if err != nil {
-		return err
-	}
-	if repo == nil {
-		return ErrRepoNotFound
-	}
-
-	prov, err := s.repos.resolveRepoProvider(repo)
+	repo, prov, err := s.repos.GetRepoWithProvider(repoKey)
 	if err != nil {
 		return err
 	}

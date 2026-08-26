@@ -145,7 +145,7 @@ func setupRepoTestDB(t *testing.T) (*gorm.DB, *RepoDAO) {
 	if err != nil {
 		t.Fatalf("failed to open test db: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Repo{}); err != nil {
+	if err := db.AutoMigrate(&model.Repo{}, &model.Platform{}); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
 

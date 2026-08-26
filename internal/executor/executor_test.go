@@ -282,7 +282,7 @@ func TestAuthConfig_WithToken(t *testing.T) {
 		AccessToken: "test-token",
 	}
 
-	config := exec.authConfig(repo)
+	config := exec.authConfig(repo, nil)
 	if config.Type != gitbackend.AuthHTTPBasic {
 		t.Errorf("expected HTTP Basic auth, got %q", config.Type)
 	}
@@ -303,7 +303,7 @@ func TestAuthConfig_WithoutToken(t *testing.T) {
 
 	repo := &model.Repo{}
 
-	config := exec.authConfig(repo)
+	config := exec.authConfig(repo, nil)
 	if config.Type != gitbackend.AuthNone {
 		t.Errorf("expected auth type none, got %q", config.Type)
 	}
@@ -550,7 +550,7 @@ func TestAuthConfig_WithPlatform(t *testing.T) {
 		PlatformID:  1,
 	}
 
-	config := exec.authConfig(repo)
+	config := exec.authConfig(repo, nil)
 	// mockService returns a platform with AccessToken="test-token"
 	if config.Password != "test-token" {
 		t.Errorf("expected platform token as password, got %q", config.Password)
@@ -569,7 +569,7 @@ func TestAuthConfig_RepoTokenOverridesPlatform(t *testing.T) {
 		PlatformID:  1,
 	}
 
-	config := exec.authConfig(repo)
+	config := exec.authConfig(repo, nil)
 	// Repo token should take precedence
 	if config.Password != "repo-specific-token" {
 		t.Errorf("expected repo token as password, got %q", config.Password)
@@ -588,7 +588,7 @@ func TestAuthConfig_NoPlatformID(t *testing.T) {
 		PlatformID:  0,
 	}
 
-	config := exec.authConfig(repo)
+	config := exec.authConfig(repo, nil)
 	if config.Type != "none" {
 		t.Errorf("expected auth type 'none', got '%q'", config.Type)
 	}
@@ -612,7 +612,7 @@ func TestCloneRepo_WithForceFlag(t *testing.T) {
 
 	// This will fail because we don't have a real git backend,
 	// but it exercises the depth=0 path
-	_ = exec.cloneRepo(context.Background(), "/tmp/test-clone", repo, task)
+	_ = exec.cloneRepo(context.Background(), "/tmp/test-clone", repo, task, nil)
 }
 
 func TestCloneRepo_ShallowClone(t *testing.T) {
@@ -633,7 +633,7 @@ func TestCloneRepo_ShallowClone(t *testing.T) {
 
 	// This will fail because we don't have a real git backend,
 	// but it exercises the depth=1 path
-	_ = exec.cloneRepo(context.Background(), "/tmp/test-clone", repo, task)
+	_ = exec.cloneRepo(context.Background(), "/tmp/test-clone", repo, task, nil)
 }
 
 func TestNewExecutor_WithBackendConfig(t *testing.T) {
@@ -802,7 +802,7 @@ func TestFetchRepo(t *testing.T) {
 
 	// This will fail because we don't have a real git repo,
 	// but it exercises the fetchRepo code path
-	_ = exec.fetchRepo(context.Background(), "/tmp/nonexistent", task, repo)
+	_ = exec.fetchRepo(context.Background(), "/tmp/nonexistent", task, repo, nil)
 }
 
 func TestEnsureRemote(t *testing.T) {
@@ -840,7 +840,7 @@ func TestPush(t *testing.T) {
 
 	// This will fail because we don't have a real git repo,
 	// but it exercises the push code path
-	_ = exec.push(context.Background(), "/tmp/nonexistent", task, repo)
+	_ = exec.push(context.Background(), "/tmp/nonexistent", task, repo, nil)
 }
 
 func TestExecute_WithDefaultTimeout(t *testing.T) {

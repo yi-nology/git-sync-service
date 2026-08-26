@@ -164,6 +164,23 @@ func (rs *RepoService) DeleteRepo(ctx context.Context, key string) error {
 	return nil
 }
 
+// GetRepoWithProvider 一次调用完成 repo 查找 + provider 解析,
+// 消除调用方重复的 "GetRepoByKey → nil check → resolveRepoProvider" 样板。
+func (rs *RepoService) GetRepoWithProvider(repoKey string) (*model.Repo, sdkprov.Provider, error) {
+	repo, err := rs.repoDAO.FindByKey(repoKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	if repo == nil {
+		return nil, nil, ErrRepoNotFound
+	}
+	prov, err := rs.resolveRepoProvider(repo)
+	if err != nil {
+		return nil, nil, err
+	}
+	return repo, prov, nil
+}
+
 // resolveRepoProvider 解析仓库对应的 provider:repo token 优先,回退关联平台 token;
 // 有关联平台记录时按平台配置构造(经 Manager 缓存),否则按 CloneURL 探测平台。
 func (rs *RepoService) resolveRepoProvider(repo *model.Repo) (sdkprov.Provider, error) {
@@ -201,15 +218,7 @@ func (rs *RepoService) SetWebhookSecret(repoKey, secret string) error {
 
 // TestConnection tests the connection to a repository.
 func (rs *RepoService) TestConnection(ctx context.Context, repoKey string) (*model.TestConnectionResult, error) {
-	repo, err := rs.repoDAO.FindByKey(repoKey)
-	if err != nil {
-		return nil, err
-	}
-	if repo == nil {
-		return &model.TestConnectionResult{Success: false, Message: "repo not found"}, nil
-	}
-
-	prov, err := rs.resolveRepoProvider(repo)
+	_, prov, err := rs.GetRepoWithProvider(repoKey)
 	if err != nil {
 		return &model.TestConnectionResult{Success: false, Message: err.Error()}, nil
 	}
@@ -224,15 +233,7 @@ func (rs *RepoService) TestConnection(ctx context.Context, repoKey string) (*mod
 
 // ListBranches returns a list of branches for a repository.
 func (rs *RepoService) ListBranches(ctx context.Context, repoKey string) ([]string, error) {
-	repo, err := rs.repoDAO.FindByKey(repoKey)
-	if err != nil {
-		return nil, err
-	}
-	if repo == nil {
-		return nil, ErrRepoNotFound
-	}
-
-	prov, err := rs.resolveRepoProvider(repo)
+	repo, prov, err := rs.GetRepoWithProvider(repoKey)
 	if err != nil {
 		return nil, err
 	}

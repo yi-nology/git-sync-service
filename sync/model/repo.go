@@ -24,9 +24,6 @@ type Repo struct {
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
-
-	// 关联
-	PlatformRef *Platform `json:"platformRef,omitempty" gorm:"foreignKey:PlatformID"`
 }
 
 func (Repo) TableName() string {
