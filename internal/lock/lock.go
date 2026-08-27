@@ -205,7 +205,7 @@ func (l *RedisLock) Lock(ctx context.Context, key string) error {
 		case <-timer.C:
 		}
 		// 指数退避,上限 5s
-		backoff = backoff * 2
+		backoff *= 2
 		if backoff > maxBackoff {
 			backoff = maxBackoff
 		}
@@ -356,7 +356,7 @@ func (l *LocalLock) Lock(ctx context.Context, key string) error {
 			return ctx.Err()
 		case <-timer.C:
 		}
-		backoff = backoff * 2
+		backoff *= 2
 		if backoff > maxBackoff {
 			backoff = maxBackoff
 		}

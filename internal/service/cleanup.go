@@ -29,8 +29,7 @@ func (s *Service) CleanupOldData(maxAge time.Duration) (events, runs, steps int6
 	r1, r2, r3 := <-ch, <-ch, <-ch
 	events, runs, steps = r1.count, r2.count, r3.count
 
-	// 合并错误(任一失败都报告,但不中断其余结果)
-	for _, r := range []result{r1, r2, r3} {
+	for _, r := range []result{r1, r2, r3} { // 任一失败都报告,但不中断其余结果
 		if r.err != nil {
 			err = r.err
 		}
