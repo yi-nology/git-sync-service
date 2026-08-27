@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	errors "github.com/cockroachdb/errors"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -129,7 +130,7 @@ func (l *RedisLock) TryLockWithTTL(ctx context.Context, key string, ttl time.Dur
 	value := generateLockValue()
 	ok, err := l.client.SetNX(ctx, lockKey, value, ttl).Result()
 	if err != nil {
-		return false, fmt.Errorf("redis setnx failed: %w", err)
+		return false, errors.Wrap(err, "redis setnx failed")
 	}
 	if ok {
 		l.mu.Lock()
@@ -145,7 +146,7 @@ func (l *RedisLock) LockWithTTL(ctx context.Context, key string, ttl time.Durati
 	value := generateLockValue()
 	ok, err := l.client.SetNX(ctx, lockKey, value, ttl).Result()
 	if err != nil {
-		return false, "", fmt.Errorf("redis setnx failed: %w", err)
+		return false, "", errors.Wrap(err, "redis setnx failed")
 	}
 	if ok {
 		l.mu.Lock()
@@ -159,7 +160,7 @@ func (l *RedisLock) UnlockWithValue(ctx context.Context, key, value string) erro
 	lockKey := "git-sync:lock:" + key
 	_, err := unlockScript.Run(ctx, l.client, []string{lockKey}, value).Result()
 	if err != nil {
-		return fmt.Errorf("redis unlock failed: %w", err)
+		return errors.Wrap(err, "redis unlock failed")
 	}
 	return nil
 }
@@ -170,7 +171,7 @@ func (l *RedisLock) ExtendLockWithValue(ctx context.Context, key, value string, 
 	lockKey := "git-sync:lock:" + key
 	res, err := extendScript.Run(ctx, l.client, []string{lockKey}, value, ttl.Milliseconds()).Int()
 	if err != nil {
-		return false, fmt.Errorf("redis extend failed: %w", err)
+		return false, errors.Wrap(err, "redis extend failed")
 	}
 	return res == 1, nil
 }
@@ -234,7 +235,7 @@ func (l *RedisLock) ExtendLock(ctx context.Context, key string, ttl time.Duratio
 	l.mu.Unlock()
 
 	if !exists || value == "" {
-		return fmt.Errorf("cannot extend lock %q: no stored value (not owned by this instance)", key)
+		return errors.Newf("cannot extend lock %q: no stored value (not owned by this instance)", key)
 	}
 	_, err := l.ExtendLockWithValue(ctx, key, value, ttl)
 	return err
@@ -275,7 +276,7 @@ func (s *Semaphore) Acquire(ctx context.Context, identifier string) (bool, error
 	expire := time.Now().Add(s.slotTTL).UnixMilli()
 	result, err := semaphoreAcquireScript.Run(ctx, s.client, []string{s.key}, identifier, s.max, now, expire).Int()
 	if err != nil {
-		return false, fmt.Errorf("semaphore acquire failed: %w", err)
+		return false, errors.Wrap(err, "semaphore acquire failed")
 	}
 	return result == 1, nil
 }

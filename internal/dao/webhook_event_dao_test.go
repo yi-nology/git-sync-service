@@ -4,20 +4,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
 
 func setupWebhookEventTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-	if err := db.AutoMigrate(&model.WebhookEvent{}); err != nil {
-		t.Fatalf("failed to migrate test db: %v", err)
-	}
+	require.NoError(t, err, "failed to open test db")
+
+	err = db.AutoMigrate(&model.WebhookEvent{})
+	require.NoError(t, err, "failed to migrate test db")
+
 	return db
 }
 
@@ -37,51 +38,23 @@ func TestWebhookEventDAO_CreateAndFindByID(t *testing.T) {
 		Status:    "pending",
 	}
 
-	if err := d.Create(event); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(event)
+	require.NoError(t, err, "create failed")
 
-	if event.ID == 0 {
-		t.Error("expected event ID to be set after create")
-	}
+	assert.NotZero(t, event.ID, "expected event ID to be set after create")
 
 	// Find by ID
 	got, err := d.FindByID(event.ID)
-	if err != nil {
-		t.Fatalf("find by ID failed: %v", err)
-	}
+	require.NoError(t, err, "find by ID failed")
 
-	if got.EventID != "evt-123" {
-		t.Errorf("expected event ID 'evt-123', got '%s'", got.EventID)
-	}
-
-	if got.RepoKey != "test-repo" {
-		t.Errorf("expected repo key 'test-repo', got '%s'", got.RepoKey)
-	}
-
-	if got.EventType != "push" {
-		t.Errorf("expected event type 'push', got '%s'", got.EventType)
-	}
-
-	if got.Source != "github" {
-		t.Errorf("expected source 'github', got '%s'", got.Source)
-	}
-
-	if got.ActorName != "testuser" {
-		t.Errorf("expected actor name 'testuser', got '%s'", got.ActorName)
-	}
-
-	if got.Branch != "main" {
-		t.Errorf("expected branch 'main', got '%s'", got.Branch)
-	}
-
-	if got.CommitSHA != "abc123" {
-		t.Errorf("expected commit SHA 'abc123', got '%s'", got.CommitSHA)
-	}
-
-	if got.Status != "pending" {
-		t.Errorf("expected status 'pending', got '%s'", got.Status)
-	}
+	assert.Equal(t, "evt-123", got.EventID, "expected event ID 'evt-123'")
+	assert.Equal(t, "test-repo", got.RepoKey, "expected repo key 'test-repo'")
+	assert.Equal(t, "push", got.EventType, "expected event type 'push'")
+	assert.Equal(t, "github", got.Source, "expected source 'github'")
+	assert.Equal(t, "testuser", got.ActorName, "expected actor name 'testuser'")
+	assert.Equal(t, "main", got.Branch, "expected branch 'main'")
+	assert.Equal(t, "abc123", got.CommitSHA, "expected commit SHA 'abc123'")
+	assert.Equal(t, "pending", got.Status, "expected status 'pending'")
 }
 
 func TestWebhookEventDAO_FindByRepoKey(t *testing.T) {
@@ -96,24 +69,16 @@ func TestWebhookEventDAO_FindByRepoKey(t *testing.T) {
 	}
 
 	for _, event := range events {
-		if err := d.Create(event); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(event)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find by repo key
 	got, total, err := d.FindByRepoKey("repo1", DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find by repo key failed: %v", err)
-	}
+	require.NoError(t, err, "find by repo key failed")
 
-	if total != 2 {
-		t.Fatalf("expected 2 events, got %d", total)
-	}
-
-	if len(got) != 2 {
-		t.Fatalf("expected 2 events, got %d", len(got))
-	}
+	require.Equal(t, int64(2), total, "expected 2 events")
+	require.Len(t, got, 2, "expected 2 events")
 }
 
 func TestWebhookEventDAO_FindByEventID(t *testing.T) {
@@ -128,23 +93,15 @@ func TestWebhookEventDAO_FindByEventID(t *testing.T) {
 		Status:    "pending",
 	}
 
-	if err := d.Create(event); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(event)
+	require.NoError(t, err, "create failed")
 
 	// Find by event ID
 	got, err := d.FindByEventID("evt-123")
-	if err != nil {
-		t.Fatalf("find by event ID failed: %v", err)
-	}
+	require.NoError(t, err, "find by event ID failed")
 
-	if got.EventID != "evt-123" {
-		t.Errorf("expected event ID 'evt-123', got '%s'", got.EventID)
-	}
-
-	if got.RepoKey != "test-repo" {
-		t.Errorf("expected repo key 'test-repo', got '%s'", got.RepoKey)
-	}
+	assert.Equal(t, "evt-123", got.EventID, "expected event ID 'evt-123'")
+	assert.Equal(t, "test-repo", got.RepoKey, "expected repo key 'test-repo'")
 }
 
 func TestWebhookEventDAO_Update(t *testing.T) {
@@ -159,32 +116,23 @@ func TestWebhookEventDAO_Update(t *testing.T) {
 		Status:    "pending",
 	}
 
-	if err := d.Create(event); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(event)
+	require.NoError(t, err, "create failed")
 
 	// Update the event
 	now := time.Now()
 	event.Status = "processed"
 	event.ProcessedAt = &now
 
-	if err := d.Update(event); err != nil {
-		t.Fatalf("update failed: %v", err)
-	}
+	err = d.Update(event)
+	require.NoError(t, err, "update failed")
 
 	// Find by ID to verify update
 	got, err := d.FindByID(event.ID)
-	if err != nil {
-		t.Fatalf("find by ID failed: %v", err)
-	}
+	require.NoError(t, err, "find by ID failed")
 
-	if got.Status != "processed" {
-		t.Errorf("expected status 'processed', got '%s'", got.Status)
-	}
-
-	if got.ProcessedAt == nil {
-		t.Error("expected processed at to be set")
-	}
+	assert.Equal(t, "processed", got.Status, "expected status 'processed'")
+	assert.NotNil(t, got.ProcessedAt, "expected processed at to be set")
 }
 
 func TestWebhookEventDAO_FindByID_NotFound(t *testing.T) {
@@ -193,13 +141,9 @@ func TestWebhookEventDAO_FindByID_NotFound(t *testing.T) {
 
 	// Try to get a non-existent event
 	got, err := d.FindByID(999)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err, "unexpected error")
 
-	if got != nil {
-		t.Error("expected nil when getting non-existent event")
-	}
+	assert.Nil(t, got, "expected nil when getting non-existent event")
 }
 
 func TestWebhookEventDAO_FindRecent(t *testing.T) {
@@ -214,20 +158,15 @@ func TestWebhookEventDAO_FindRecent(t *testing.T) {
 	}
 
 	for _, event := range events {
-		if err := d.Create(event); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(event)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find recent for repo1
 	got, err := d.FindRecent("repo1", DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find recent failed: %v", err)
-	}
+	require.NoError(t, err, "find recent failed")
 
-	if len(got) != 2 {
-		t.Fatalf("expected 2 events, got %d", len(got))
-	}
+	require.Len(t, got, 2, "expected 2 events")
 }
 
 func TestWebhookEventDAO_CountByRepoKey(t *testing.T) {
@@ -242,20 +181,15 @@ func TestWebhookEventDAO_CountByRepoKey(t *testing.T) {
 	}
 
 	for _, event := range events {
-		if err := d.Create(event); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(event)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Count by repo key
 	count, err := d.CountByRepoKey("repo1")
-	if err != nil {
-		t.Fatalf("count by repo key failed: %v", err)
-	}
+	require.NoError(t, err, "count by repo key failed")
 
-	if count != 2 {
-		t.Errorf("expected count 2, got %d", count)
-	}
+	assert.Equal(t, int64(2), count, "expected count 2")
 }
 
 func TestWebhookEventDAO_CleanupOlderThan(t *testing.T) {
@@ -277,37 +211,25 @@ func TestWebhookEventDAO_CleanupOlderThan(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	if err := db.Create(oldEvent).Error; err != nil {
-		t.Fatalf("create old event failed: %v", err)
-	}
+	err := db.Create(oldEvent).Error
+	require.NoError(t, err, "create old event failed")
 
-	if err := db.Create(newEvent).Error; err != nil {
-		t.Fatalf("create new event failed: %v", err)
-	}
+	err = db.Create(newEvent).Error
+	require.NoError(t, err, "create new event failed")
 
 	// Cleanup older than 24 hours
 	count, err := d.CleanupOlderThan(24 * time.Hour)
-	if err != nil {
-		t.Fatalf("cleanup failed: %v", err)
-	}
+	require.NoError(t, err, "cleanup failed")
 
-	if count != 1 {
-		t.Errorf("expected count 1, got %d", count)
-	}
+	assert.Equal(t, int64(1), count, "expected count 1")
 
 	// Verify only new event remains
 	got, err := d.FindRecent("repo1", DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find recent failed: %v", err)
-	}
+	require.NoError(t, err, "find recent failed")
 
-	if len(got) != 1 {
-		t.Fatalf("expected 1 event, got %d", len(got))
-	}
+	require.Len(t, got, 1, "expected 1 event")
 
-	if got[0].EventID != "evt-2" {
-		t.Errorf("expected event ID 'evt-2', got '%s'", got[0].EventID)
-	}
+	assert.Equal(t, "evt-2", got[0].EventID, "expected event ID 'evt-2'")
 }
 
 func TestWebhookEventDAO_Fields(t *testing.T) {
@@ -327,47 +249,15 @@ func TestWebhookEventDAO_Fields(t *testing.T) {
 		CreatedAt:    now,
 	}
 
-	if event.ID != 1 {
-		t.Errorf("expected ID 1, got %d", event.ID)
-	}
-
-	if event.EventID != "evt-123" {
-		t.Errorf("expected event ID 'evt-123', got '%s'", event.EventID)
-	}
-
-	if event.RepoKey != "test-repo" {
-		t.Errorf("expected repo key 'test-repo', got '%s'", event.RepoKey)
-	}
-
-	if event.EventType != "push" {
-		t.Errorf("expected event type 'push', got '%s'", event.EventType)
-	}
-
-	if event.Source != "github" {
-		t.Errorf("expected source 'github', got '%s'", event.Source)
-	}
-
-	if event.ActorName != "testuser" {
-		t.Errorf("expected actor name 'testuser', got '%s'", event.ActorName)
-	}
-
-	if event.Branch != "main" {
-		t.Errorf("expected branch 'main', got '%s'", event.Branch)
-	}
-
-	if event.CommitSHA != "abc123" {
-		t.Errorf("expected commit SHA 'abc123', got '%s'", event.CommitSHA)
-	}
-
-	if event.Status != "processed" {
-		t.Errorf("expected status 'processed', got '%s'", event.Status)
-	}
-
-	if event.ErrorMessage != "" {
-		t.Errorf("expected empty error message, got '%s'", event.ErrorMessage)
-	}
-
-	if event.ProcessedAt == nil {
-		t.Error("expected processed at to be set")
-	}
+	assert.Equal(t, uint(1), event.ID, "expected ID 1")
+	assert.Equal(t, "evt-123", event.EventID, "expected event ID 'evt-123'")
+	assert.Equal(t, "test-repo", event.RepoKey, "expected repo key 'test-repo'")
+	assert.Equal(t, "push", event.EventType, "expected event type 'push'")
+	assert.Equal(t, "github", event.Source, "expected source 'github'")
+	assert.Equal(t, "testuser", event.ActorName, "expected actor name 'testuser'")
+	assert.Equal(t, "main", event.Branch, "expected branch 'main'")
+	assert.Equal(t, "abc123", event.CommitSHA, "expected commit SHA 'abc123'")
+	assert.Equal(t, "processed", event.Status, "expected status 'processed'")
+	assert.Equal(t, "", event.ErrorMessage, "expected empty error message")
+	assert.NotNil(t, event.ProcessedAt, "expected processed at to be set")
 }

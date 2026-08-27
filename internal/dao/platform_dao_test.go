@@ -3,8 +3,10 @@ package dao
 import (
 	"testing"
 
-	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
 
@@ -15,17 +17,13 @@ func setupPlatformTestDB(t *testing.T) (*gorm.DB, *PlatformDAO) {
 	t.Setenv("ENCRYPTION_KEY", key)
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-	if err := db.AutoMigrate(&model.Platform{}, &model.Repo{}); err != nil {
-		t.Fatalf("failed to migrate test db: %v", err)
-	}
+	require.NoError(t, err, "failed to open test db")
+
+	err = db.AutoMigrate(&model.Platform{}, &model.Repo{})
+	require.NoError(t, err, "failed to migrate test db")
 
 	d, err := NewPlatformDAO(db)
-	if err != nil {
-		t.Fatalf("failed to create PlatformDAO: %v", err)
-	}
+	require.NoError(t, err, "failed to create PlatformDAO")
 
 	return db, d
 }
@@ -43,35 +41,19 @@ func TestPlatformDAO_CreateAndFindByKey(t *testing.T) {
 		Status:      "active",
 	}
 
-	if err := d.Create(platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(platform)
+	require.NoError(t, err, "create failed")
 
-	if platform.ID == 0 {
-		t.Error("expected platform ID to be set after create")
-	}
+	assert.NotZero(t, platform.ID, "expected platform ID to be set after create")
 
 	// Find by key
 	got, err := d.FindByKey("github")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.Key != "github" {
-		t.Errorf("expected key 'github', got '%s'", got.Key)
-	}
-
-	if got.Name != "GitHub" {
-		t.Errorf("expected name 'GitHub', got '%s'", got.Name)
-	}
-
-	if got.Type != "github" {
-		t.Errorf("expected type 'github', got '%s'", got.Type)
-	}
-
-	if got.Status != "active" {
-		t.Errorf("expected status 'active', got '%s'", got.Status)
-	}
+	assert.Equal(t, "github", got.Key, "expected key 'github'")
+	assert.Equal(t, "GitHub", got.Name, "expected name 'GitHub'")
+	assert.Equal(t, "github", got.Type, "expected type 'github'")
+	assert.Equal(t, "active", got.Status, "expected status 'active'")
 }
 
 func TestPlatformDAO_FindByID(t *testing.T) {
@@ -86,23 +68,15 @@ func TestPlatformDAO_FindByID(t *testing.T) {
 		Status:      "active",
 	}
 
-	if err := d.Create(platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(platform)
+	require.NoError(t, err, "create failed")
 
 	// Find by ID
 	got, err := d.FindByID(platform.ID)
-	if err != nil {
-		t.Fatalf("find by ID failed: %v", err)
-	}
+	require.NoError(t, err, "find by ID failed")
 
-	if got.Key != "gitlab" {
-		t.Errorf("expected key 'gitlab', got '%s'", got.Key)
-	}
-
-	if got.Name != "GitLab" {
-		t.Errorf("expected name 'GitLab', got '%s'", got.Name)
-	}
+	assert.Equal(t, "gitlab", got.Key, "expected key 'gitlab'")
+	assert.Equal(t, "GitLab", got.Name, "expected name 'GitLab'")
 }
 
 func TestPlatformDAO_FindAll(t *testing.T) {
@@ -116,20 +90,15 @@ func TestPlatformDAO_FindAll(t *testing.T) {
 	}
 
 	for _, p := range platforms {
-		if err := d.Create(p); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(p)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find all
 	got, err := d.FindAll()
-	if err != nil {
-		t.Fatalf("find all failed: %v", err)
-	}
+	require.NoError(t, err, "find all failed")
 
-	if len(got) != 3 {
-		t.Fatalf("expected 3 platforms, got %d", len(got))
-	}
+	require.Len(t, got, 3, "expected 3 platforms")
 }
 
 func TestPlatformDAO_Update(t *testing.T) {
@@ -144,31 +113,22 @@ func TestPlatformDAO_Update(t *testing.T) {
 		Status:      "active",
 	}
 
-	if err := d.Create(platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(platform)
+	require.NoError(t, err, "create failed")
 
 	// Update the platform
 	platform.Name = "GitHub Enterprise"
 	platform.InstanceURL = "https://github.example.com"
 
-	if err := d.Update(platform); err != nil {
-		t.Fatalf("update failed: %v", err)
-	}
+	err = d.Update(platform)
+	require.NoError(t, err, "update failed")
 
 	// Get the updated platform
 	got, err := d.FindByKey("github")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.Name != "GitHub Enterprise" {
-		t.Errorf("expected name 'GitHub Enterprise', got '%s'", got.Name)
-	}
-
-	if got.InstanceURL != "https://github.example.com" {
-		t.Errorf("expected instance URL 'https://github.example.com', got '%s'", got.InstanceURL)
-	}
+	assert.Equal(t, "GitHub Enterprise", got.Name, "expected name 'GitHub Enterprise'")
+	assert.Equal(t, "https://github.example.com", got.InstanceURL, "expected instance URL")
 }
 
 func TestPlatformDAO_Delete(t *testing.T) {
@@ -182,23 +142,17 @@ func TestPlatformDAO_Delete(t *testing.T) {
 		Status:      "active",
 	}
 
-	if err := d.Create(platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(platform)
+	require.NoError(t, err, "create failed")
 
 	// Delete the platform
-	if err := d.Delete("github"); err != nil {
-		t.Fatalf("delete failed: %v", err)
-	}
+	err = d.Delete("github")
+	require.NoError(t, err, "delete failed")
 
 	// Try to get the deleted platform - should return (nil, nil)
 	p, err := d.FindByKey("github")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if p != nil {
-		t.Error("expected nil platform for deleted key")
-	}
+	require.NoError(t, err, "unexpected error")
+	assert.Nil(t, p, "expected nil platform for deleted key")
 }
 
 func TestPlatformDAO_FindByKey_NotFound(t *testing.T) {
@@ -206,12 +160,8 @@ func TestPlatformDAO_FindByKey_NotFound(t *testing.T) {
 
 	// Try to get a non-existent platform - should return (nil, nil)
 	p, err := d.FindByKey("nonexistent")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if p != nil {
-		t.Error("expected nil platform for non-existent key")
-	}
+	require.NoError(t, err, "unexpected error")
+	assert.Nil(t, p, "expected nil platform for non-existent key")
 }
 
 func TestPlatformDAO_FindByID_NotFound(t *testing.T) {
@@ -219,12 +169,8 @@ func TestPlatformDAO_FindByID_NotFound(t *testing.T) {
 
 	// Try to get a non-existent platform - should return (nil, nil)
 	p, err := d.FindByID(999)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if p != nil {
-		t.Error("expected nil platform for non-existent ID")
-	}
+	require.NoError(t, err, "unexpected error")
+	assert.Nil(t, p, "expected nil platform for non-existent ID")
 }
 
 func TestPlatformDAO_SetDefault(t *testing.T) {
@@ -247,38 +193,27 @@ func TestPlatformDAO_SetDefault(t *testing.T) {
 		Status:    "active",
 	}
 
-	if err := d.Create(platform1); err != nil {
-		t.Fatalf("create platform1 failed: %v", err)
-	}
+	err := d.Create(platform1)
+	require.NoError(t, err, "create platform1 failed")
 
-	if err := d.Create(platform2); err != nil {
-		t.Fatalf("create platform2 failed: %v", err)
-	}
+	err = d.Create(platform2)
+	require.NoError(t, err, "create platform2 failed")
 
 	// Set platform2 as default
-	if err := d.SetDefault("gitlab"); err != nil {
-		t.Fatalf("set default failed: %v", err)
-	}
+	err = d.SetDefault("gitlab")
+	require.NoError(t, err, "set default failed")
 
 	// Verify platform2 is now default
 	got2, err := d.FindByKey("gitlab")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if !got2.IsDefault {
-		t.Error("expected platform2 to be default")
-	}
+	assert.True(t, got2.IsDefault, "expected platform2 to be default")
 
 	// Verify platform1 is no longer default
 	got1, err := d.FindByKey("github")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got1.IsDefault {
-		t.Error("expected platform1 to not be default")
-	}
+	assert.False(t, got1.IsDefault, "expected platform1 to not be default")
 }
 
 func TestPlatformDAO_UpdateStatus(t *testing.T) {
@@ -292,28 +227,19 @@ func TestPlatformDAO_UpdateStatus(t *testing.T) {
 		Status: "active",
 	}
 
-	if err := d.Create(platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(platform)
+	require.NoError(t, err, "create failed")
 
 	// Update status
-	if err := d.UpdateStatus("github", "inactive", "connection failed"); err != nil {
-		t.Fatalf("update status failed: %v", err)
-	}
+	err = d.UpdateStatus("github", "inactive", "connection failed")
+	require.NoError(t, err, "update status failed")
 
 	// Verify the status was updated
 	got, err := d.FindByKey("github")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.Status != "inactive" {
-		t.Errorf("expected status 'inactive', got '%s'", got.Status)
-	}
-
-	if got.LastTestResult != "connection failed" {
-		t.Errorf("expected last test result 'connection failed', got '%s'", got.LastTestResult)
-	}
+	assert.Equal(t, "inactive", got.Status, "expected status 'inactive'")
+	assert.Equal(t, "connection failed", got.LastTestResult, "expected last test result 'connection failed'")
 }
 
 func TestPlatformDAO_Count(t *testing.T) {
@@ -326,20 +252,15 @@ func TestPlatformDAO_Count(t *testing.T) {
 	}
 
 	for _, p := range platforms {
-		if err := d.Create(p); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(p)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Count
 	count, err := d.Count()
-	if err != nil {
-		t.Fatalf("count failed: %v", err)
-	}
+	require.NoError(t, err, "count failed")
 
-	if count != 2 {
-		t.Errorf("expected count 2, got %d", count)
-	}
+	assert.Equal(t, int64(2), count, "expected count 2")
 }
 
 func TestPlatformDAO_FindDefault(t *testing.T) {
@@ -362,27 +283,18 @@ func TestPlatformDAO_FindDefault(t *testing.T) {
 		Status:    "active",
 	}
 
-	if err := d.Create(platform1); err != nil {
-		t.Fatalf("create platform1 failed: %v", err)
-	}
+	err := d.Create(platform1)
+	require.NoError(t, err, "create platform1 failed")
 
-	if err := d.Create(platform2); err != nil {
-		t.Fatalf("create platform2 failed: %v", err)
-	}
+	err = d.Create(platform2)
+	require.NoError(t, err, "create platform2 failed")
 
 	// Find default
 	got, err := d.FindDefault()
-	if err != nil {
-		t.Fatalf("find default failed: %v", err)
-	}
+	require.NoError(t, err, "find default failed")
 
-	if got.Key != "gitlab" {
-		t.Errorf("expected key 'gitlab', got '%s'", got.Key)
-	}
-
-	if !got.IsDefault {
-		t.Error("expected platform to be default")
-	}
+	assert.Equal(t, "gitlab", got.Key, "expected key 'gitlab'")
+	assert.True(t, got.IsDefault, "expected platform to be default")
 }
 
 func TestPlatformDAO_FindByType(t *testing.T) {
@@ -396,20 +308,15 @@ func TestPlatformDAO_FindByType(t *testing.T) {
 	}
 
 	for _, p := range platforms {
-		if err := d.Create(p); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(p)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find by type
 	got, err := d.FindByType("github")
-	if err != nil {
-		t.Fatalf("find by type failed: %v", err)
-	}
+	require.NoError(t, err, "find by type failed")
 
-	if len(got) != 2 {
-		t.Fatalf("expected 2 platforms, got %d", len(got))
-	}
+	require.Len(t, got, 2, "expected 2 platforms")
 }
 
 func TestPlatformDAO_UpdateFields(t *testing.T) {
@@ -424,9 +331,8 @@ func TestPlatformDAO_UpdateFields(t *testing.T) {
 		Status:      "active",
 	}
 
-	if err := d.Create(platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(platform)
+	require.NoError(t, err, "create failed")
 
 	// Update specific fields
 	fields := map[string]interface{}{
@@ -434,32 +340,19 @@ func TestPlatformDAO_UpdateFields(t *testing.T) {
 		"instance_url": "https://github.example.com",
 	}
 
-	if err := d.UpdateFields("github", fields); err != nil {
-		t.Fatalf("update fields failed: %v", err)
-	}
+	err = d.UpdateFields("github", fields)
+	require.NoError(t, err, "update fields failed")
 
 	// Verify the fields were updated
 	got, err := d.FindByKey("github")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.Name != "GitHub Enterprise" {
-		t.Errorf("expected name 'GitHub Enterprise', got '%s'", got.Name)
-	}
-
-	if got.InstanceURL != "https://github.example.com" {
-		t.Errorf("expected instance URL 'https://github.example.com', got '%s'", got.InstanceURL)
-	}
+	assert.Equal(t, "GitHub Enterprise", got.Name, "expected name 'GitHub Enterprise'")
+	assert.Equal(t, "https://github.example.com", got.InstanceURL, "expected instance URL")
 
 	// Verify other fields were not changed
-	if got.Type != "github" {
-		t.Errorf("expected type 'github', got '%s'", got.Type)
-	}
-
-	if got.Status != "active" {
-		t.Errorf("expected status 'active', got '%s'", got.Status)
-	}
+	assert.Equal(t, "github", got.Type, "expected type 'github'")
+	assert.Equal(t, "active", got.Status, "expected status 'active'")
 }
 
 func TestPlatformDAO_UpdateRepoCount(t *testing.T) {
@@ -473,9 +366,8 @@ func TestPlatformDAO_UpdateRepoCount(t *testing.T) {
 		RepoCount: 0,
 	}
 
-	if err := d.Create(platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(platform)
+	require.NoError(t, err, "create failed")
 
 	// Create repos for the platform
 	repos := []*model.Repo{
@@ -485,23 +377,17 @@ func TestPlatformDAO_UpdateRepoCount(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := db.Create(repo).Error; err != nil {
-			t.Fatalf("create repo failed: %v", err)
-		}
+		err := db.Create(repo).Error
+		require.NoError(t, err, "create repo failed")
 	}
 
 	// Update repo count
-	if err := d.UpdateRepoCount(platform.ID); err != nil {
-		t.Fatalf("update repo count failed: %v", err)
-	}
+	err = d.UpdateRepoCount(platform.ID)
+	require.NoError(t, err, "update repo count failed")
 
 	// Verify the repo count was updated
 	got, err := d.FindByKey("github")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.RepoCount != 3 {
-		t.Errorf("expected repo count 3, got %d", got.RepoCount)
-	}
+	assert.Equal(t, 3, got.RepoCount, "expected repo count 3")
 }

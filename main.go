@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
-	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/app/middlewares/server/recovery"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/oklog/run"
 	"github.com/yi-nology/git-sync-service/biz/handler/git_sync"
 	"github.com/yi-nology/git-sync-service/sync"
 
@@ -42,17 +43,17 @@ func main() {
 		logLevel = slog.LevelInfo
 	}
 
-	var handler slog.Handler
+	var logHandler slog.Handler
 	if cfg.Log.Format == "text" {
-		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		logHandler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: logLevel,
 		})
 	} else {
-		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		logHandler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level: logLevel,
 		})
 	}
-	slog.SetDefault(slog.New(handler))
+	slog.SetDefault(slog.New(logHandler))
 
 	syncSvc, err = sync.NewService(cfg)
 	if err != nil {
@@ -64,7 +65,6 @@ func main() {
 		slog.Error("start sync service failed", "error", err)
 		os.Exit(1)
 	}
-	defer syncSvc.Stop()
 
 	git_sync.SetSyncServiceGetter(func() *sync.Service {
 		return syncSvc
@@ -75,33 +75,40 @@ func main() {
 		server.WithMaxRequestBodySize(cfg.Webhook.MaxBodySize),
 	)
 
-	// Recovery 中间件:handler panic 时返回 500 而非崩进程
-	h.Use(func(c context.Context, ctx *app.RequestContext) {
-		defer func() {
-			if r := recover(); r != nil {
-				slog.Error("handler panic recovered", "error", r, "path", string(ctx.Path()))
-				ctx.JSON(500, map[string]string{"error": "internal server error"})
-				ctx.Abort()
-			}
-		}()
-		ctx.Next(c)
-	})
+	// Recovery 中间件:handler panic 时返回 500 而非崩进程(内置实现带栈追踪)
+	h.Use(recovery.Recovery())
 
 	register(h)
 
-	go func() {
+	// Use oklog/run for structured concurrency with deterministic teardown.
+	var g run.Group
+
+	// Actor 1: HTTP server
+	g.Add(func() error {
 		h.Spin()
-	}()
+		return nil
+	}, func(error) {
+		slog.Info("shutting down server...")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := h.Shutdown(ctx); err != nil {
+			slog.Error("server shutdown error", "error", err)
+		}
+		slog.Info("server stopped")
+	})
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	// Actor 2: OS signal handler (SIGINT / SIGTERM)
+	g.Add(run.SignalHandler(context.Background(), syscall.SIGINT, syscall.SIGTERM))
 
-	slog.Info("shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := h.Shutdown(ctx); err != nil {
-		slog.Error("server shutdown error", "error", err)
+	// Block until the first actor returns; all actors are then interrupted
+	// and Run() returns only after every actor has exited.
+	err = g.Run()
+
+	// Clean up the sync service after the HTTP server has fully stopped.
+	syncSvc.Stop()
+
+	if err != nil && !errors.Is(err, run.ErrSignal) {
+		slog.Error("run group exited with error", "error", err)
+		os.Exit(1)
 	}
-	slog.Info("server stopped")
 }

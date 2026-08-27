@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.0",
+    "@tanstack/vue-query": "^5.102.6",
+    "@vueuse/core": "^14.4.0",
     "ant-design-vue": "^4.0.0",
     "axios": "^1.6.0",
+    "dayjs": "^1.11.23",
     "echarts": "^5.5.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",

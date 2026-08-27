@@ -4,20 +4,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
 
 func setupSyncTaskTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-	if err := db.AutoMigrate(&model.SyncTask{}, &model.SyncRun{}, &model.SyncRunStep{}); err != nil {
-		t.Fatalf("failed to migrate test db: %v", err)
-	}
+	require.NoError(t, err, "failed to open test db")
+
+	err = db.AutoMigrate(&model.SyncTask{}, &model.SyncRun{}, &model.SyncRunStep{})
+	require.NoError(t, err, "failed to migrate test db")
+
 	return db
 }
 
@@ -38,47 +39,22 @@ func TestSyncTaskDAO_CreateAndFindByKey(t *testing.T) {
 		Enabled:       true,
 	}
 
-	if err := d.Create(task); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(task)
+	require.NoError(t, err, "create failed")
 
-	if task.ID == 0 {
-		t.Error("expected task ID to be set after create")
-	}
+	assert.NotZero(t, task.ID, "expected task ID to be set after create")
 
 	// Find by key
 	got, err := d.FindByKey("test-task")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.Key != "test-task" {
-		t.Errorf("expected key 'test-task', got '%s'", got.Key)
-	}
-
-	if got.Name != "Test Task" {
-		t.Errorf("expected name 'Test Task', got '%s'", got.Name)
-	}
-
-	if got.SourceRepoKey != "source-repo" {
-		t.Errorf("expected source repo key 'source-repo', got '%s'", got.SourceRepoKey)
-	}
-
-	if got.TargetRepoKey != "target-repo" {
-		t.Errorf("expected target repo key 'target-repo', got '%s'", got.TargetRepoKey)
-	}
-
-	if got.SyncMode != "mirror" {
-		t.Errorf("expected sync mode 'mirror', got '%s'", got.SyncMode)
-	}
-
-	if got.Cron != "0 * * * *" {
-		t.Errorf("expected cron '0 * * * *', got '%s'", got.Cron)
-	}
-
-	if !got.Enabled {
-		t.Error("expected enabled to be true")
-	}
+	assert.Equal(t, "test-task", got.Key, "expected key 'test-task'")
+	assert.Equal(t, "Test Task", got.Name, "expected name 'Test Task'")
+	assert.Equal(t, "source-repo", got.SourceRepoKey, "expected source repo key 'source-repo'")
+	assert.Equal(t, "target-repo", got.TargetRepoKey, "expected target repo key 'target-repo'")
+	assert.Equal(t, "mirror", got.SyncMode, "expected sync mode 'mirror'")
+	assert.Equal(t, "0 * * * *", got.Cron, "expected cron '0 * * * *'")
+	assert.True(t, got.Enabled, "expected enabled to be true")
 }
 
 func TestSyncTaskDAO_FindAll(t *testing.T) {
@@ -93,24 +69,16 @@ func TestSyncTaskDAO_FindAll(t *testing.T) {
 	}
 
 	for _, task := range tasks {
-		if err := d.Create(task); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(task)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find all
 	got, total, err := d.FindAll(DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find all failed: %v", err)
-	}
+	require.NoError(t, err, "find all failed")
 
-	if total != 3 {
-		t.Fatalf("expected 3 tasks, got %d", total)
-	}
-
-	if len(got) != 3 {
-		t.Fatalf("expected 3 tasks, got %d", len(got))
-	}
+	require.Equal(t, int64(3), total, "expected 3 tasks")
+	require.Len(t, got, 3, "expected 3 tasks")
 }
 
 func TestSyncTaskDAO_Update(t *testing.T) {
@@ -124,31 +92,22 @@ func TestSyncTaskDAO_Update(t *testing.T) {
 		Cron: "0 * * * *",
 	}
 
-	if err := d.Create(task); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(task)
+	require.NoError(t, err, "create failed")
 
 	// Update the task
 	task.Name = "Updated Task"
 	task.Cron = "*/5 * * * *"
 
-	if err := d.Update(task); err != nil {
-		t.Fatalf("update failed: %v", err)
-	}
+	err = d.Update(task)
+	require.NoError(t, err, "update failed")
 
 	// Get the updated task
 	got, err := d.FindByKey("test-task")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.Name != "Updated Task" {
-		t.Errorf("expected name 'Updated Task', got '%s'", got.Name)
-	}
-
-	if got.Cron != "*/5 * * * *" {
-		t.Errorf("expected cron '*/5 * * * *', got '%s'", got.Cron)
-	}
+	assert.Equal(t, "Updated Task", got.Name, "expected name 'Updated Task'")
+	assert.Equal(t, "*/5 * * * *", got.Cron, "expected cron '*/5 * * * *'")
 }
 
 func TestSyncTaskDAO_Delete(t *testing.T) {
@@ -161,24 +120,18 @@ func TestSyncTaskDAO_Delete(t *testing.T) {
 		Name: "Test Task",
 	}
 
-	if err := d.Create(task); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(task)
+	require.NoError(t, err, "create failed")
 
 	// Delete the task
-	if err := d.Delete("test-task"); err != nil {
-		t.Fatalf("delete failed: %v", err)
-	}
+	err = d.Delete("test-task")
+	require.NoError(t, err, "delete failed")
 
 	// Try to get the deleted task - should return nil (soft delete)
 	got, err := d.FindByKey("test-task")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err, "unexpected error")
 
-	if got != nil {
-		t.Error("expected nil when getting deleted task")
-	}
+	assert.Nil(t, got, "expected nil when getting deleted task")
 }
 
 func TestSyncTaskDAO_FindByKey_NotFound(t *testing.T) {
@@ -187,13 +140,9 @@ func TestSyncTaskDAO_FindByKey_NotFound(t *testing.T) {
 
 	// Try to get a non-existent task
 	got, err := d.FindByKey("nonexistent")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err, "unexpected error")
 
-	if got != nil {
-		t.Error("expected nil when getting non-existent task")
-	}
+	assert.Nil(t, got, "expected nil when getting non-existent task")
 }
 
 func TestSyncTaskDAO_CountByStatus(t *testing.T) {
@@ -209,28 +158,17 @@ func TestSyncTaskDAO_CountByStatus(t *testing.T) {
 	}
 
 	for _, task := range tasks {
-		if err := d.Create(task); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(task)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Count by status
 	counts, err := d.CountByStatus()
-	if err != nil {
-		t.Fatalf("count by status failed: %v", err)
-	}
+	require.NoError(t, err, "count by status failed")
 
-	if counts["total"] != 4 {
-		t.Errorf("expected total 4, got %d", counts["total"])
-	}
-
-	if counts["success"] != 2 {
-		t.Errorf("expected success 2, got %d", counts["success"])
-	}
-
-	if counts["failed"] != 1 {
-		t.Errorf("expected failed 1, got %d", counts["failed"])
-	}
+	assert.Equal(t, int64(4), counts["total"], "expected total 4")
+	assert.Equal(t, int64(2), counts["success"], "expected success 2")
+	assert.Equal(t, int64(1), counts["failed"], "expected failed 1")
 }
 
 func TestSyncTaskDAO_FindAllEnabled(t *testing.T) {
@@ -246,37 +184,29 @@ func TestSyncTaskDAO_FindAllEnabled(t *testing.T) {
 	task4 := &model.SyncTask{Key: "task4", Name: "Task 4", Cron: "", WebhookToken: "token4"}
 
 	// Create tasks and explicitly set enabled status
-	if err := db.Create(task1).Error; err != nil {
-		t.Fatalf("create task1 failed: %v", err)
-	}
+	err := db.Create(task1).Error
+	require.NoError(t, err, "create task1 failed")
 	db.Model(task1).Update("enabled", true)
 
-	if err := db.Create(task2).Error; err != nil {
-		t.Fatalf("create task2 failed: %v", err)
-	}
+	err = db.Create(task2).Error
+	require.NoError(t, err, "create task2 failed")
 	db.Model(task2).Update("enabled", true)
 
-	if err := db.Create(task3).Error; err != nil {
-		t.Fatalf("create task3 failed: %v", err)
-	}
+	err = db.Create(task3).Error
+	require.NoError(t, err, "create task3 failed")
 	db.Model(task3).Update("enabled", false)
 
-	if err := db.Create(task4).Error; err != nil {
-		t.Fatalf("create task4 failed: %v", err)
-	}
+	err = db.Create(task4).Error
+	require.NoError(t, err, "create task4 failed")
 	db.Model(task4).Update("enabled", true)
 
 	// Find all enabled tasks
 	got, err := d.FindAllEnabled()
-	if err != nil {
-		t.Fatalf("find all enabled failed: %v", err)
-	}
+	require.NoError(t, err, "find all enabled failed")
 
 	// Should return task1 and task2 (enabled with cron)
 	// Should NOT return task3 (disabled) or task4 (no cron)
-	if len(got) != 2 {
-		t.Fatalf("expected 2 enabled tasks, got %d", len(got))
-	}
+	require.Len(t, got, 2, "expected 2 enabled tasks")
 }
 
 func TestSyncTaskDAO_FindByRepoKey(t *testing.T) {
@@ -291,24 +221,16 @@ func TestSyncTaskDAO_FindByRepoKey(t *testing.T) {
 	}
 
 	for _, task := range tasks {
-		if err := d.Create(task); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(task)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find by repo key
 	got, total, err := d.FindByRepoKey("repo1", DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find by repo key failed: %v", err)
-	}
+	require.NoError(t, err, "find by repo key failed")
 
-	if total != 2 {
-		t.Fatalf("expected 2 tasks, got %d", total)
-	}
-
-	if len(got) != 2 {
-		t.Fatalf("expected 2 tasks, got %d", len(got))
-	}
+	require.Equal(t, int64(2), total, "expected 2 tasks")
+	require.Len(t, got, 2, "expected 2 tasks")
 }
 
 func TestSyncTaskDAO_Fields(t *testing.T) {
@@ -334,55 +256,17 @@ func TestSyncTaskDAO_Fields(t *testing.T) {
 		UpdatedAt:     now,
 	}
 
-	if task.ID != 1 {
-		t.Errorf("expected ID 1, got %d", task.ID)
-	}
-
-	if task.Key != "test-task" {
-		t.Errorf("expected key 'test-task', got '%s'", task.Key)
-	}
-
-	if task.Name != "Test Task" {
-		t.Errorf("expected name 'Test Task', got '%s'", task.Name)
-	}
-
-	if task.SourceRepoKey != "source-repo" {
-		t.Errorf("expected source repo key 'source-repo', got '%s'", task.SourceRepoKey)
-	}
-
-	if task.TargetRepoKey != "target-repo" {
-		t.Errorf("expected target repo key 'target-repo', got '%s'", task.TargetRepoKey)
-	}
-
-	if task.SyncMode != "mirror" {
-		t.Errorf("expected sync mode 'mirror', got '%s'", task.SyncMode)
-	}
-
-	if task.Cron != "0 * * * *" {
-		t.Errorf("expected cron '0 * * * *', got '%s'", task.Cron)
-	}
-
-	if task.WebhookToken != "token123" {
-		t.Errorf("expected webhook token 'token123', got '%s'", task.WebhookToken)
-	}
-
-	if !task.Enabled {
-		t.Error("expected enabled to be true")
-	}
-
-	if !task.GitTags {
-		t.Error("expected git tags to be true")
-	}
-
-	if task.GitForce {
-		t.Error("expected git force to be false")
-	}
-
-	if !task.GitPrune {
-		t.Error("expected git prune to be true")
-	}
-
-	if task.LastStatus != "success" {
-		t.Errorf("expected last status 'success', got '%s'", task.LastStatus)
-	}
+	assert.Equal(t, uint(1), task.ID, "expected ID 1")
+	assert.Equal(t, "test-task", task.Key, "expected key 'test-task'")
+	assert.Equal(t, "Test Task", task.Name, "expected name 'Test Task'")
+	assert.Equal(t, "source-repo", task.SourceRepoKey, "expected source repo key 'source-repo'")
+	assert.Equal(t, "target-repo", task.TargetRepoKey, "expected target repo key 'target-repo'")
+	assert.Equal(t, "mirror", task.SyncMode, "expected sync mode 'mirror'")
+	assert.Equal(t, "0 * * * *", task.Cron, "expected cron '0 * * * *'")
+	assert.Equal(t, "token123", task.WebhookToken, "expected webhook token 'token123'")
+	assert.True(t, task.Enabled, "expected enabled to be true")
+	assert.True(t, task.GitTags, "expected git tags to be true")
+	assert.False(t, task.GitForce, "expected git force to be false")
+	assert.True(t, task.GitPrune, "expected git prune to be true")
+	assert.Equal(t, "success", task.LastStatus, "expected last status 'success'")
 }

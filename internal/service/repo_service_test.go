@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
@@ -18,22 +20,16 @@ func setupRepoServiceTestDB(t *testing.T) (*gorm.DB, *RepoService) {
 	t.Setenv("ENCRYPTION_KEY", key)
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-	if err := db.AutoMigrate(&model.Repo{}, &model.Platform{}); err != nil {
-		t.Fatalf("failed to migrate test db: %v", err)
-	}
+	require.NoError(t, err, "failed to open test db")
+
+	err = db.AutoMigrate(&model.Repo{}, &model.Platform{})
+	require.NoError(t, err, "failed to migrate test db")
 
 	repoDAO, err := dao.NewRepoDAO(db)
-	if err != nil {
-		t.Fatalf("failed to create RepoDAO: %v", err)
-	}
+	require.NoError(t, err, "failed to create RepoDAO")
 
 	platformDAO, err := dao.NewPlatformDAO(db)
-	if err != nil {
-		t.Fatalf("failed to create PlatformDAO: %v", err)
-	}
+	require.NoError(t, err, "failed to create PlatformDAO")
 
 	providerMgr := sdkprov.NewManager(0)
 	svc := NewRepoService(repoDAO, platformDAO, providerMgr)
@@ -53,24 +49,16 @@ func TestRepoService_List(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := db.Create(repo).Error; err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := db.Create(repo).Error
+		require.NoError(t, err, "create failed")
 	}
 
 	// List all
 	got, total, err := svc.ListRepos(ctx, 0, 50)
-	if err != nil {
-		t.Fatalf("list failed: %v", err)
-	}
+	require.NoError(t, err, "list failed")
 
-	if total != 3 {
-		t.Fatalf("expected 3 repos, got %d", total)
-	}
-
-	if len(got) != 3 {
-		t.Fatalf("expected 3 repos, got %d", len(got))
-	}
+	require.Equal(t, int64(3), total, "expected 3 repos")
+	require.Len(t, got, 3, "expected 3 repos")
 }
 
 func TestRepoService_GetNotFound(t *testing.T) {
@@ -78,13 +66,9 @@ func TestRepoService_GetNotFound(t *testing.T) {
 
 	// Try to get a non-existent repo
 	got, err := svc.GetRepoByKey("nonexistent")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err, "unexpected error")
 
-	if got != nil {
-		t.Error("expected nil when getting non-existent repo")
-	}
+	assert.Nil(t, got, "expected nil when getting non-existent repo")
 }
 
 func TestRepoService_Count(t *testing.T) {
@@ -97,20 +81,15 @@ func TestRepoService_Count(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := db.Create(repo).Error; err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := db.Create(repo).Error
+		require.NoError(t, err, "create failed")
 	}
 
 	// Count
 	count, err := svc.CountRepos()
-	if err != nil {
-		t.Fatalf("count failed: %v", err)
-	}
+	require.NoError(t, err, "count failed")
 
-	if count != 2 {
-		t.Errorf("expected count 2, got %d", count)
-	}
+	assert.Equal(t, int64(2), count, "expected count 2")
 }
 
 func TestRepoService_GetRepoByKey(t *testing.T) {
@@ -122,23 +101,15 @@ func TestRepoService_GetRepoByKey(t *testing.T) {
 		Name: "Test Repo",
 	}
 
-	if err := db.Create(repo).Error; err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := db.Create(repo).Error
+	require.NoError(t, err, "create failed")
 
 	// Get by key
 	got, err := svc.GetRepoByKey("test-repo")
-	if err != nil {
-		t.Fatalf("get failed: %v", err)
-	}
+	require.NoError(t, err, "get failed")
 
-	if got.Key != "test-repo" {
-		t.Errorf("expected key 'test-repo', got '%s'", got.Key)
-	}
-
-	if got.Name != "Test Repo" {
-		t.Errorf("expected name 'Test Repo', got '%s'", got.Name)
-	}
+	assert.Equal(t, "test-repo", got.Key, "expected key 'test-repo'")
+	assert.Equal(t, "Test Repo", got.Name, "expected name 'Test Repo'")
 }
 
 func TestRepoService_Delete(t *testing.T) {
@@ -151,24 +122,18 @@ func TestRepoService_Delete(t *testing.T) {
 		Name: "Test Repo",
 	}
 
-	if err := db.Create(repo).Error; err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := db.Create(repo).Error
+	require.NoError(t, err, "create failed")
 
 	// Delete the repo
-	if err := svc.DeleteRepo(ctx, "test-repo"); err != nil {
-		t.Fatalf("delete failed: %v", err)
-	}
+	err = svc.DeleteRepo(ctx, "test-repo")
+	require.NoError(t, err, "delete failed")
 
 	// Try to get the deleted repo
 	got, err := svc.GetRepoByKey("test-repo")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err, "unexpected error")
 
-	if got != nil {
-		t.Error("expected nil when getting deleted repo")
-	}
+	assert.Nil(t, got, "expected nil when getting deleted repo")
 }
 
 func TestRepoService_GetRepo(t *testing.T) {
@@ -181,23 +146,15 @@ func TestRepoService_GetRepo(t *testing.T) {
 		Name: "Test Repo",
 	}
 
-	if err := db.Create(repo).Error; err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := db.Create(repo).Error
+	require.NoError(t, err, "create failed")
 
 	// Get repo
 	got, err := svc.GetRepo(ctx, "test-repo")
-	if err != nil {
-		t.Fatalf("get failed: %v", err)
-	}
+	require.NoError(t, err, "get failed")
 
-	if got.Key != "test-repo" {
-		t.Errorf("expected key 'test-repo', got '%s'", got.Key)
-	}
-
-	if got.Name != "Test Repo" {
-		t.Errorf("expected name 'Test Repo', got '%s'", got.Name)
-	}
+	assert.Equal(t, "test-repo", got.Key, "expected key 'test-repo'")
+	assert.Equal(t, "Test Repo", got.Name, "expected name 'Test Repo'")
 }
 
 func TestRepoService_ListReposWithFilter(t *testing.T) {
@@ -212,9 +169,8 @@ func TestRepoService_ListReposWithFilter(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := db.Create(repo).Error; err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := db.Create(repo).Error
+		require.NoError(t, err, "create failed")
 	}
 
 	// List with filter
@@ -223,15 +179,8 @@ func TestRepoService_ListReposWithFilter(t *testing.T) {
 	}
 
 	got, total, err := svc.ListReposWithFilter(ctx, 0, 50, filter)
-	if err != nil {
-		t.Fatalf("list with filter failed: %v", err)
-	}
+	require.NoError(t, err, "list with filter failed")
 
-	if total != 2 {
-		t.Fatalf("expected 2 repos, got %d", total)
-	}
-
-	if len(got) != 2 {
-		t.Fatalf("expected 2 repos, got %d", len(got))
-	}
+	require.Equal(t, int64(2), total, "expected 2 repos")
+	require.Len(t, got, 2, "expected 2 repos")
 }

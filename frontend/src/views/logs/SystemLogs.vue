@@ -120,7 +120,7 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'time'">
-          <span class="log-time">{{ formatTime(record.time) }}</span>
+          <span class="log-time">{{ formatDate(record.time) }}</span>
         </template>
 
         <template v-if="column.key === 'level'">
@@ -160,7 +160,7 @@
       <template v-if="currentLog">
         <a-descriptions :column="2" bordered size="small" class="detail-section">
           <a-descriptions-item label="时间" :span="2">
-            {{ formatTime(currentLog.time) }}
+            {{ formatDate(currentLog.time) }}
           </a-descriptions-item>
           <a-descriptions-item label="级别">
             <a-tag :color="levelColor(currentLog.level)">
@@ -214,6 +214,7 @@ import {
 import { logApi } from '@/api'
 import type { SystemLog, SystemLogParams } from '@/types/api'
 import dayjs, { type Dayjs } from 'dayjs'
+import { formatDate } from '@/utils'
 
 const loading = ref(false)
 const logs = ref<SystemLog[]>([])
@@ -319,10 +320,7 @@ function levelColor(level: string): string {
   return map[level] || 'default'
 }
 
-function formatTime(time: string): string {
-  if (!time) return '-'
-  return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
-}
+// formatTime 已移至 @/utils 统一管理,使用 formatDate 替代
 
 function handleDateChange(dates: [Dayjs, Dayjs] | null) {
   if (dates) {

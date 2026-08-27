@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
+	errors "github.com/cockroachdb/errors"
 	"github.com/robfig/cron/v3"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/internal/executor"
@@ -47,7 +47,7 @@ type Service struct {
 func NewService(cfg *Config) (*Service, error) {
 	db, err := model.InitDB(cfg.Database.Driver, cfg.Database.DSN)
 	if err != nil {
-		return nil, fmt.Errorf("init db failed: %w", err)
+		return nil, errors.Wrap(err, "init db failed")
 	}
 
 	sqlDB, err := db.DB()
@@ -60,12 +60,12 @@ func NewService(cfg *Config) (*Service, error) {
 	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Database.ConnMaxIdleSec) * time.Second)
 
 	if err := os.MkdirAll(cfg.Git.TempDir, 0o750); err != nil {
-		return nil, fmt.Errorf("create temp dir failed: %w", err)
+		return nil, errors.Wrap(err, "create temp dir failed")
 	}
 
 	repoDAO, err := dao.NewRepoDAO(db)
 	if err != nil {
-		return nil, fmt.Errorf("init repo DAO failed: %w", err)
+		return nil, errors.Wrap(err, "init repo DAO failed")
 	}
 
 	providerMgr := sdkprov.NewManager(30 * time.Minute)
@@ -76,7 +76,7 @@ func NewService(cfg *Config) (*Service, error) {
 	eventDAO := dao.NewWebhookEventDAO(db)
 	platformDAO, err := dao.NewPlatformDAO(db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create PlatformDAO: %w", err)
+		return nil, errors.Wrap(err, "failed to create PlatformDAO")
 	}
 	opLogDAO := dao.NewOperationLogDAO(db)
 
@@ -114,13 +114,13 @@ func NewService(cfg *Config) (*Service, error) {
 		ReadTimeoutSec:  cfg.Redis.ReadTimeoutSec,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("init concurrency guard failed: %w", err)
+		return nil, errors.Wrap(err, "init concurrency guard failed")
 	}
 	svc.guard = guard
 
 	exec, err := executor.NewExecutor(svc)
 	if err != nil {
-		return nil, fmt.Errorf("init executor failed: %w", err)
+		return nil, errors.Wrap(err, "init executor failed")
 	}
 	svc.executor = exec
 

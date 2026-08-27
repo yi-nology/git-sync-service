@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
@@ -18,22 +20,16 @@ func setupPlatformServiceTestDB(t *testing.T) (*gorm.DB, *PlatformService) {
 	t.Setenv("ENCRYPTION_KEY", key)
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-	if err := db.AutoMigrate(&model.Platform{}, &model.Repo{}); err != nil {
-		t.Fatalf("failed to migrate test db: %v", err)
-	}
+	require.NoError(t, err, "failed to open test db")
+
+	err = db.AutoMigrate(&model.Platform{}, &model.Repo{})
+	require.NoError(t, err, "failed to migrate test db")
 
 	platformDAO, err := dao.NewPlatformDAO(db)
-	if err != nil {
-		t.Fatalf("failed to create PlatformDAO: %v", err)
-	}
+	require.NoError(t, err, "failed to create PlatformDAO")
 
 	repoDAO, err := dao.NewRepoDAO(db)
-	if err != nil {
-		t.Fatalf("failed to create RepoDAO: %v", err)
-	}
+	require.NoError(t, err, "failed to create RepoDAO")
 
 	providerMgr := sdkprov.NewManager(0)
 	svc := NewPlatformService(platformDAO, repoDAO, providerMgr)
@@ -55,27 +51,17 @@ func TestPlatformService_CreateAndGet(t *testing.T) {
 		Status:      "active",
 	}
 
-	if err := svc.CreatePlatform(ctx, platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := svc.CreatePlatform(ctx, platform)
+	require.NoError(t, err, "create failed")
 
-	if platform.ID == 0 {
-		t.Error("expected platform ID to be set after create")
-	}
+	assert.NotZero(t, platform.ID, "expected platform ID to be set after create")
 
 	// Get by key
 	got, err := svc.GetPlatform(ctx, "github")
-	if err != nil {
-		t.Fatalf("get failed: %v", err)
-	}
+	require.NoError(t, err, "get failed")
 
-	if got.Key != "github" {
-		t.Errorf("expected key 'github', got '%s'", got.Key)
-	}
-
-	if got.Name != "GitHub" {
-		t.Errorf("expected name 'GitHub', got '%s'", got.Name)
-	}
+	assert.Equal(t, "github", got.Key, "expected key 'github'")
+	assert.Equal(t, "GitHub", got.Name, "expected name 'GitHub'")
 }
 
 func TestPlatformService_GetByID(t *testing.T) {
@@ -89,23 +75,15 @@ func TestPlatformService_GetByID(t *testing.T) {
 		Type: "gitlab",
 	}
 
-	if err := svc.CreatePlatform(ctx, platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := svc.CreatePlatform(ctx, platform)
+	require.NoError(t, err, "create failed")
 
 	// Get by ID
 	got, err := svc.GetPlatformByID(ctx, platform.ID)
-	if err != nil {
-		t.Fatalf("get by ID failed: %v", err)
-	}
+	require.NoError(t, err, "get by ID failed")
 
-	if got.Key != "gitlab" {
-		t.Errorf("expected key 'gitlab', got '%s'", got.Key)
-	}
-
-	if got.Name != "GitLab" {
-		t.Errorf("expected name 'GitLab', got '%s'", got.Name)
-	}
+	assert.Equal(t, "gitlab", got.Key, "expected key 'gitlab'")
+	assert.Equal(t, "GitLab", got.Name, "expected name 'GitLab'")
 }
 
 func TestPlatformService_List(t *testing.T) {
@@ -120,20 +98,15 @@ func TestPlatformService_List(t *testing.T) {
 	}
 
 	for _, p := range platforms {
-		if err := svc.CreatePlatform(ctx, p); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := svc.CreatePlatform(ctx, p)
+		require.NoError(t, err, "create failed")
 	}
 
 	// List all
 	got, err := svc.ListPlatforms(ctx)
-	if err != nil {
-		t.Fatalf("list failed: %v", err)
-	}
+	require.NoError(t, err, "list failed")
 
-	if len(got) != 3 {
-		t.Fatalf("expected 3 platforms, got %d", len(got))
-	}
+	require.Len(t, got, 3, "expected 3 platforms")
 }
 
 func TestPlatformService_Update(t *testing.T) {
@@ -148,31 +121,22 @@ func TestPlatformService_Update(t *testing.T) {
 		InstanceURL: "https://github.com",
 	}
 
-	if err := svc.CreatePlatform(ctx, platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := svc.CreatePlatform(ctx, platform)
+	require.NoError(t, err, "create failed")
 
 	// Update the platform
 	platform.Name = "GitHub Enterprise"
 	platform.InstanceURL = "https://github.example.com"
 
-	if err := svc.UpdatePlatform(ctx, platform); err != nil {
-		t.Fatalf("update failed: %v", err)
-	}
+	err = svc.UpdatePlatform(ctx, platform)
+	require.NoError(t, err, "update failed")
 
 	// Get the updated platform
 	got, err := svc.GetPlatform(ctx, "github")
-	if err != nil {
-		t.Fatalf("get failed: %v", err)
-	}
+	require.NoError(t, err, "get failed")
 
-	if got.Name != "GitHub Enterprise" {
-		t.Errorf("expected name 'GitHub Enterprise', got '%s'", got.Name)
-	}
-
-	if got.InstanceURL != "https://github.example.com" {
-		t.Errorf("expected instance URL 'https://github.example.com', got '%s'", got.InstanceURL)
-	}
+	assert.Equal(t, "GitHub Enterprise", got.Name, "expected name 'GitHub Enterprise'")
+	assert.Equal(t, "https://github.example.com", got.InstanceURL, "expected instance URL")
 }
 
 func TestPlatformService_Delete(t *testing.T) {
@@ -185,23 +149,17 @@ func TestPlatformService_Delete(t *testing.T) {
 		Name: "GitHub",
 	}
 
-	if err := svc.CreatePlatform(ctx, platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := svc.CreatePlatform(ctx, platform)
+	require.NoError(t, err, "create failed")
 
 	// Delete the platform
-	if err := svc.DeletePlatform(ctx, "github"); err != nil {
-		t.Fatalf("delete failed: %v", err)
-	}
+	err = svc.DeletePlatform(ctx, "github")
+	require.NoError(t, err, "delete failed")
 
 	// Try to get the deleted platform - should return (nil, nil)
 	p, err := svc.GetPlatform(ctx, "github")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if p != nil {
-		t.Error("expected nil platform for deleted key")
-	}
+	require.NoError(t, err, "unexpected error")
+	assert.Nil(t, p, "expected nil platform for deleted key")
 }
 
 func TestPlatformService_SetDefault(t *testing.T) {
@@ -221,38 +179,27 @@ func TestPlatformService_SetDefault(t *testing.T) {
 		IsDefault: false,
 	}
 
-	if err := svc.CreatePlatform(ctx, platform1); err != nil {
-		t.Fatalf("create platform1 failed: %v", err)
-	}
+	err := svc.CreatePlatform(ctx, platform1)
+	require.NoError(t, err, "create platform1 failed")
 
-	if err := svc.CreatePlatform(ctx, platform2); err != nil {
-		t.Fatalf("create platform2 failed: %v", err)
-	}
+	err = svc.CreatePlatform(ctx, platform2)
+	require.NoError(t, err, "create platform2 failed")
 
 	// Set platform2 as default
-	if err := svc.SetDefaultPlatform(ctx, "gitlab"); err != nil {
-		t.Fatalf("set default failed: %v", err)
-	}
+	err = svc.SetDefaultPlatform(ctx, "gitlab")
+	require.NoError(t, err, "set default failed")
 
 	// Verify platform2 is now default
 	got2, err := svc.GetPlatform(ctx, "gitlab")
-	if err != nil {
-		t.Fatalf("get failed: %v", err)
-	}
+	require.NoError(t, err, "get failed")
 
-	if !got2.IsDefault {
-		t.Error("expected platform2 to be default")
-	}
+	assert.True(t, got2.IsDefault, "expected platform2 to be default")
 
 	// Verify platform1 is no longer default
 	got1, err := svc.GetPlatform(ctx, "github")
-	if err != nil {
-		t.Fatalf("get failed: %v", err)
-	}
+	require.NoError(t, err, "get failed")
 
-	if got1.IsDefault {
-		t.Error("expected platform1 to not be default")
-	}
+	assert.False(t, got1.IsDefault, "expected platform1 to not be default")
 }
 
 func TestPlatformService_UpdateStatus(t *testing.T) {
@@ -266,28 +213,19 @@ func TestPlatformService_UpdateStatus(t *testing.T) {
 		Status: "active",
 	}
 
-	if err := svc.CreatePlatform(ctx, platform); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := svc.CreatePlatform(ctx, platform)
+	require.NoError(t, err, "create failed")
 
 	// Update status
-	if err := svc.UpdatePlatformStatus(ctx, "github", "inactive", "connection failed"); err != nil {
-		t.Fatalf("update status failed: %v", err)
-	}
+	err = svc.UpdatePlatformStatus(ctx, "github", "inactive", "connection failed")
+	require.NoError(t, err, "update status failed")
 
 	// Verify the status was updated
 	got, err := svc.GetPlatform(ctx, "github")
-	if err != nil {
-		t.Fatalf("get failed: %v", err)
-	}
+	require.NoError(t, err, "get failed")
 
-	if got.Status != "inactive" {
-		t.Errorf("expected status 'inactive', got '%s'", got.Status)
-	}
-
-	if got.LastTestResult != "connection failed" {
-		t.Errorf("expected last test result 'connection failed', got '%s'", got.LastTestResult)
-	}
+	assert.Equal(t, "inactive", got.Status, "expected status 'inactive'")
+	assert.Equal(t, "connection failed", got.LastTestResult, "expected last test result 'connection failed'")
 }
 
 func TestPlatformService_GetNotFound(t *testing.T) {
@@ -296,12 +234,8 @@ func TestPlatformService_GetNotFound(t *testing.T) {
 
 	// Try to get a non-existent platform - should return (nil, nil)
 	p, err := svc.GetPlatform(ctx, "nonexistent")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if p != nil {
-		t.Error("expected nil platform for non-existent key")
-	}
+	require.NoError(t, err, "unexpected error")
+	assert.Nil(t, p, "expected nil platform for non-existent key")
 }
 
 func TestPlatformService_GetByIDNotFound(t *testing.T) {
@@ -310,12 +244,8 @@ func TestPlatformService_GetByIDNotFound(t *testing.T) {
 
 	// Try to get a non-existent platform - should return (nil, nil)
 	p, err := svc.GetPlatformByID(ctx, 999)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if p != nil {
-		t.Error("expected nil platform for non-existent ID")
-	}
+	require.NoError(t, err, "unexpected error")
+	assert.Nil(t, p, "expected nil platform for non-existent ID")
 }
 
 func TestRewriteCloneHost(t *testing.T) {
@@ -334,9 +264,8 @@ func TestRewriteCloneHost(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			p := &model.Platform{InstanceURL: c.instance}
-			if got := rewriteCloneHost(c.rawURL, p); got != c.want {
-				t.Errorf("rewriteCloneHost(%q, %q) = %q, want %q", c.rawURL, c.instance, got, c.want)
-			}
+			got := rewriteCloneHost(c.rawURL, p)
+			assert.Equal(t, c.want, got, "rewriteCloneHost(%q, %q)", c.rawURL, c.instance)
 		})
 	}
 }

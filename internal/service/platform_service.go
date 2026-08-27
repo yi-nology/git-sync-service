@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/url"
 	"strings"
 
+	errors "github.com/cockroachdb/errors"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	sdkprov "github.com/yi-nology/git-platform-sdk/provider"
@@ -72,10 +72,10 @@ func (s *PlatformService) UpdatePlatformStatus(ctx context.Context, key, status,
 func (s *PlatformService) TestPlatformConnection(ctx context.Context, key string) (*sdkprov.TestConnectionResult, error) {
 	platform, err := s.platformDAO.FindByKey(key)
 	if err != nil {
-		return nil, fmt.Errorf("query platform failed: %w", err)
+		return nil, errors.Wrap(err, "query platform failed")
 	}
 	if platform == nil {
-		return nil, fmt.Errorf("platform not found: %s", key)
+		return nil, errors.Newf("platform not found: %s", key)
 	}
 
 	provider, err := platformProvider(s.providerMgr, platform)
@@ -86,7 +86,7 @@ func (s *PlatformService) TestPlatformConnection(ctx context.Context, key string
 	// 测试连接
 	result, err := provider.TestConnection(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("test connection failed: %w", err)
+		return nil, errors.Wrap(err, "test connection failed")
 	}
 
 	return result, nil
@@ -96,10 +96,10 @@ func (s *PlatformService) TestPlatformConnection(ctx context.Context, key string
 func (s *PlatformService) ListPlatformRepos(ctx context.Context, key, page, perPage string) ([]*sdkprov.PlatformRepo, error) {
 	platform, err := s.platformDAO.FindByKey(key)
 	if err != nil {
-		return nil, fmt.Errorf("query platform failed: %w", err)
+		return nil, errors.Wrap(err, "query platform failed")
 	}
 	if platform == nil {
-		return nil, fmt.Errorf("platform not found: %s", key)
+		return nil, errors.Newf("platform not found: %s", key)
 	}
 
 	provider, err := platformProvider(s.providerMgr, platform)
@@ -111,7 +111,7 @@ func (s *PlatformService) ListPlatformRepos(ctx context.Context, key, page, perP
 	p, pp := parsePageOpts(page, perPage)
 	repos, err := provider.ListRepos(ctx, sdkprov.ListRepoOptions{Page: p, PerPage: pp})
 	if err != nil {
-		return nil, fmt.Errorf("list repos failed: %w", err)
+		return nil, errors.Wrap(err, "list repos failed")
 	}
 
 	return repos, nil
@@ -121,10 +121,10 @@ func (s *PlatformService) ListPlatformRepos(ctx context.Context, key, page, perP
 func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (int, error) {
 	platform, err := s.platformDAO.FindByKey(key)
 	if err != nil {
-		return 0, fmt.Errorf("query platform failed: %w", err)
+		return 0, errors.Wrap(err, "query platform failed")
 	}
 	if platform == nil {
-		return 0, fmt.Errorf("platform not found: %s", key)
+		return 0, errors.Newf("platform not found: %s", key)
 	}
 
 	provider, err := platformProvider(s.providerMgr, platform)
@@ -135,7 +135,7 @@ func (s *PlatformService) SyncPlatformRepos(ctx context.Context, key string) (in
 	// 翻页拉取全部仓库,不能只取第一页,否则超过一页的仓库永远不会被同步
 	repos, err := fetchAllPlatformRepos(ctx, provider)
 	if err != nil {
-		return 0, fmt.Errorf("list repos failed: %w", err)
+		return 0, errors.Wrap(err, "list repos failed")
 	}
 
 	// 一次加载该平台所有已有仓库到内存,避免 N 次 DB 查询。
@@ -253,7 +253,7 @@ func (s *PlatformService) CountReposByPlatform(ctx context.Context, platformKey 
 		return 0, err
 	}
 	if platform == nil {
-		return 0, fmt.Errorf("platform not found: %s", platformKey)
+		return 0, errors.Newf("platform not found: %s", platformKey)
 	}
 	return s.repoDAO.CountByPlatformID(platform.ID)
 }

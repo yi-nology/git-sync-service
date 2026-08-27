@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/yi-nology/git-platform-sdk/pkg/credential"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
@@ -16,9 +18,7 @@ func TestCryptoManager_EncryptDecrypt_Roundtrip(t *testing.T) {
 	t.Setenv("ENCRYPTION_KEY", key)
 
 	cm, err := credential.NewCryptoManager()
-	if err != nil {
-		t.Fatalf("failed to create CryptoManager: %v", err)
-	}
+	require.NoError(t, err, "failed to create CryptoManager")
 
 	testCases := []struct {
 		name      string
@@ -33,22 +33,14 @@ func TestCryptoManager_EncryptDecrypt_Roundtrip(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			encrypted, err := cm.Encrypt(tc.plaintext)
-			if err != nil {
-				t.Fatalf("Encrypt failed: %v", err)
-			}
+			require.NoError(t, err, "Encrypt failed")
 
-			if encrypted == tc.plaintext {
-				t.Errorf("encrypted text should differ from plaintext")
-			}
+			assert.NotEqual(t, tc.plaintext, encrypted, "encrypted text should differ from plaintext")
 
 			decrypted, err := cm.Decrypt(encrypted)
-			if err != nil {
-				t.Fatalf("Decrypt failed: %v", err)
-			}
+			require.NoError(t, err, "Decrypt failed")
 
-			if decrypted != tc.plaintext {
-				t.Errorf("decrypt roundtrip failed: got %q, want %q", decrypted, tc.plaintext)
-			}
+			assert.Equal(t, tc.plaintext, decrypted, "decrypt roundtrip failed")
 		})
 	}
 }
@@ -58,25 +50,17 @@ func TestCryptoManager_EmptyString(t *testing.T) {
 	t.Setenv("ENCRYPTION_KEY", key)
 
 	cm, err := credential.NewCryptoManager()
-	if err != nil {
-		t.Fatalf("failed to create CryptoManager: %v", err)
-	}
+	require.NoError(t, err, "failed to create CryptoManager")
 
 	// Test encrypting empty string
 	encrypted, err := cm.Encrypt("")
-	if err != nil {
-		t.Fatalf("Encrypt empty string failed: %v", err)
-	}
+	require.NoError(t, err, "Encrypt empty string failed")
 
 	// Empty string should still produce some output (or handle gracefully)
 	decrypted, err := cm.Decrypt(encrypted)
-	if err != nil {
-		t.Fatalf("Decrypt empty string failed: %v", err)
-	}
+	require.NoError(t, err, "Decrypt empty string failed")
 
-	if decrypted != "" {
-		t.Errorf("expected empty string, got %q", decrypted)
-	}
+	assert.Equal(t, "", decrypted, "expected empty string")
 }
 
 func TestCryptoManager_WithoutKey(t *testing.T) {
@@ -84,9 +68,7 @@ func TestCryptoManager_WithoutKey(t *testing.T) {
 	_ = os.Unsetenv("ENCRYPTION_KEY")
 
 	_, err := credential.NewCryptoManager()
-	if err == nil {
-		t.Error("expected error when ENCRYPTION_KEY is not set, got nil")
-	}
+	assert.Error(t, err, "expected error when ENCRYPTION_KEY is not set")
 }
 
 func TestCryptoManager_NewCryptoManagerFromKey(t *testing.T) {
@@ -95,25 +77,19 @@ func TestCryptoManager_NewCryptoManagerFromKey(t *testing.T) {
 
 	plaintext := "test-token-value"
 	encrypted, err := cm.Encrypt(plaintext)
-	if err != nil {
-		t.Fatalf("Encrypt failed: %v", err)
-	}
+	require.NoError(t, err, "Encrypt failed")
 
 	decrypted, err := cm.Decrypt(encrypted)
-	if err != nil {
-		t.Fatalf("Decrypt failed: %v", err)
-	}
+	require.NoError(t, err, "Decrypt failed")
 
-	if decrypted != plaintext {
-		t.Errorf("decrypt roundtrip failed: got %q, want %q", decrypted, plaintext)
-	}
+	assert.Equal(t, plaintext, decrypted, "decrypt roundtrip failed")
 }
 
 func TestDefaultPagination(t *testing.T) {
 	tests := []struct {
-		name           string
-		offset, limit  int
-		wantOff, wantLim int
+		name                        string
+		offset, limit               int
+		wantOff, wantLim            int
 	}{
 		{"normal values", 10, 50, 10, 50},
 		{"zero limit defaults to 50", 0, 0, 0, 50},
@@ -125,12 +101,8 @@ func TestDefaultPagination(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			p := DefaultPagination(tc.offset, tc.limit)
-			if p.Offset != tc.wantOff {
-				t.Errorf("Offset = %d, want %d", p.Offset, tc.wantOff)
-			}
-			if p.Limit != tc.wantLim {
-				t.Errorf("Limit = %d, want %d", p.Limit, tc.wantLim)
-			}
+			assert.Equal(t, tc.wantOff, p.Offset, "Offset mismatch")
+			assert.Equal(t, tc.wantLim, p.Limit, "Limit mismatch")
 		})
 	}
 }
@@ -142,17 +114,13 @@ func setupRepoTestDB(t *testing.T) (*gorm.DB, *RepoDAO) {
 	t.Setenv("ENCRYPTION_KEY", key)
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-	if err := db.AutoMigrate(&model.Repo{}, &model.Platform{}); err != nil {
-		t.Fatalf("failed to migrate test db: %v", err)
-	}
+	require.NoError(t, err, "failed to open test db")
+
+	err = db.AutoMigrate(&model.Repo{}, &model.Platform{})
+	require.NoError(t, err, "failed to migrate test db")
 
 	d, err := NewRepoDAO(db)
-	if err != nil {
-		t.Fatalf("failed to create RepoDAO: %v", err)
-	}
+	require.NoError(t, err, "failed to create RepoDAO")
 
 	return db, d
 }
@@ -172,35 +140,19 @@ func TestRepoDAO_CreateAndFindByKey(t *testing.T) {
 		Status:        "active",
 	}
 
-	if err := d.Create(repo); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(repo)
+	require.NoError(t, err, "create failed")
 
-	if repo.ID == 0 {
-		t.Error("expected repo ID to be set after create")
-	}
+	assert.NotZero(t, repo.ID, "expected repo ID to be set after create")
 
 	// Find by key
 	got, err := d.FindByKey("test-repo")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.Key != "test-repo" {
-		t.Errorf("expected key 'test-repo', got '%s'", got.Key)
-	}
-
-	if got.Name != "Test Repo" {
-		t.Errorf("expected name 'Test Repo', got '%s'", got.Name)
-	}
-
-	if got.Platform != "github" {
-		t.Errorf("expected platform 'github', got '%s'", got.Platform)
-	}
-
-	if got.Status != "active" {
-		t.Errorf("expected status 'active', got '%s'", got.Status)
-	}
+	assert.Equal(t, "test-repo", got.Key, "expected key 'test-repo'")
+	assert.Equal(t, "Test Repo", got.Name, "expected name 'Test Repo'")
+	assert.Equal(t, "github", got.Platform, "expected platform 'github'")
+	assert.Equal(t, "active", got.Status, "expected status 'active'")
 }
 
 func TestRepoDAO_FindByCloneURL(t *testing.T) {
@@ -213,23 +165,15 @@ func TestRepoDAO_FindByCloneURL(t *testing.T) {
 		CloneURL: "https://github.com/testuser/test-repo.git",
 	}
 
-	if err := d.Create(repo); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(repo)
+	require.NoError(t, err, "create failed")
 
 	// Find by clone URL
 	got, err := d.FindByCloneURL("https://github.com/testuser/test-repo.git")
-	if err != nil {
-		t.Fatalf("find by clone URL failed: %v", err)
-	}
+	require.NoError(t, err, "find by clone URL failed")
 
-	if got.Key != "test-repo" {
-		t.Errorf("expected key 'test-repo', got '%s'", got.Key)
-	}
-
-	if got.Name != "Test Repo" {
-		t.Errorf("expected name 'Test Repo', got '%s'", got.Name)
-	}
+	assert.Equal(t, "test-repo", got.Key, "expected key 'test-repo'")
+	assert.Equal(t, "Test Repo", got.Name, "expected name 'Test Repo'")
 }
 
 func TestRepoDAO_FindAll(t *testing.T) {
@@ -243,24 +187,16 @@ func TestRepoDAO_FindAll(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := d.Create(repo); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(repo)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find all
 	got, total, err := d.FindAll(DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find all failed: %v", err)
-	}
+	require.NoError(t, err, "find all failed")
 
-	if total != 3 {
-		t.Fatalf("expected 3 repos, got %d", total)
-	}
-
-	if len(got) != 3 {
-		t.Fatalf("expected 3 repos, got %d", len(got))
-	}
+	require.Equal(t, int64(3), total, "expected 3 repos")
+	require.Len(t, got, 3, "expected 3 repos")
 }
 
 func TestRepoDAO_Update(t *testing.T) {
@@ -272,31 +208,22 @@ func TestRepoDAO_Update(t *testing.T) {
 		Name: "Test Repo",
 	}
 
-	if err := d.Create(repo); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(repo)
+	require.NoError(t, err, "create failed")
 
 	// Update the repo
 	repo.Name = "Updated Repo"
 	repo.Status = "inactive"
 
-	if err := d.Update(repo); err != nil {
-		t.Fatalf("update failed: %v", err)
-	}
+	err = d.Update(repo)
+	require.NoError(t, err, "update failed")
 
 	// Get the updated repo
 	got, err := d.FindByKey("test-repo")
-	if err != nil {
-		t.Fatalf("find by key failed: %v", err)
-	}
+	require.NoError(t, err, "find by key failed")
 
-	if got.Name != "Updated Repo" {
-		t.Errorf("expected name 'Updated Repo', got '%s'", got.Name)
-	}
-
-	if got.Status != "inactive" {
-		t.Errorf("expected status 'inactive', got '%s'", got.Status)
-	}
+	assert.Equal(t, "Updated Repo", got.Name, "expected name 'Updated Repo'")
+	assert.Equal(t, "inactive", got.Status, "expected status 'inactive'")
 }
 
 func TestRepoDAO_Delete(t *testing.T) {
@@ -308,24 +235,18 @@ func TestRepoDAO_Delete(t *testing.T) {
 		Name: "Test Repo",
 	}
 
-	if err := d.Create(repo); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(repo)
+	require.NoError(t, err, "create failed")
 
 	// Delete the repo
-	if err := d.Delete("test-repo"); err != nil {
-		t.Fatalf("delete failed: %v", err)
-	}
+	err = d.Delete("test-repo")
+	require.NoError(t, err, "delete failed")
 
 	// Try to get the deleted repo
 	got, err := d.FindByKey("test-repo")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err, "unexpected error")
 
-	if got != nil {
-		t.Error("expected nil when getting deleted repo")
-	}
+	assert.Nil(t, got, "expected nil when getting deleted repo")
 }
 
 func TestRepoDAO_FindByKey_NotFound(t *testing.T) {
@@ -333,13 +254,9 @@ func TestRepoDAO_FindByKey_NotFound(t *testing.T) {
 
 	// Try to get a non-existent repo
 	got, err := d.FindByKey("nonexistent")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err, "unexpected error")
 
-	if got != nil {
-		t.Error("expected nil when getting non-existent repo")
-	}
+	assert.Nil(t, got, "expected nil when getting non-existent repo")
 }
 
 func TestRepoDAO_FindByCloneURL_NotFound(t *testing.T) {
@@ -347,13 +264,9 @@ func TestRepoDAO_FindByCloneURL_NotFound(t *testing.T) {
 
 	// Try to get a non-existent repo
 	got, err := d.FindByCloneURL("https://github.com/nonexistent/repo.git")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err, "unexpected error")
 
-	if got != nil {
-		t.Error("expected nil when getting non-existent repo")
-	}
+	assert.Nil(t, got, "expected nil when getting non-existent repo")
 }
 
 func TestRepoDAO_Count(t *testing.T) {
@@ -366,20 +279,15 @@ func TestRepoDAO_Count(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := d.Create(repo); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(repo)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Count
 	count, err := d.Count()
-	if err != nil {
-		t.Fatalf("count failed: %v", err)
-	}
+	require.NoError(t, err, "count failed")
 
-	if count != 2 {
-		t.Errorf("expected count 2, got %d", count)
-	}
+	assert.Equal(t, int64(2), count, "expected count 2")
 }
 
 func TestRepoDAO_Fields(t *testing.T) {
@@ -396,45 +304,16 @@ func TestRepoDAO_Fields(t *testing.T) {
 		Status:        "active",
 	}
 
-	if repo.ID != 1 {
-		t.Errorf("expected ID 1, got %d", repo.ID)
-	}
-
-	if repo.Key != "test-repo" {
-		t.Errorf("expected key 'test-repo', got '%s'", repo.Key)
-	}
-
-	if repo.Name != "Test Repo" {
-		t.Errorf("expected name 'Test Repo', got '%s'", repo.Name)
-	}
-
-	if repo.Platform != "github" {
-		t.Errorf("expected platform 'github', got '%s'", repo.Platform)
-	}
-
-	if repo.PlatformOwner != "testuser" {
-		t.Errorf("expected platform owner 'testuser', got '%s'", repo.PlatformOwner)
-	}
-
-	if repo.PlatformRepo != "test-repo" {
-		t.Errorf("expected platform repo 'test-repo', got '%s'", repo.PlatformRepo)
-	}
-
-	if repo.CloneURL != "https://github.com/testuser/test-repo.git" {
-		t.Errorf("expected clone URL 'https://github.com/testuser/test-repo.git', got '%s'", repo.CloneURL)
-	}
-
-	if repo.SSHURL != "git@github.com:testuser/test-repo.git" {
-		t.Errorf("expected SSH URL 'git@github.com:testuser/test-repo.git', got '%s'", repo.SSHURL)
-	}
-
-	if repo.DefaultBranch != "main" {
-		t.Errorf("expected default branch 'main', got '%s'", repo.DefaultBranch)
-	}
-
-	if repo.Status != "active" {
-		t.Errorf("expected status 'active', got '%s'", repo.Status)
-	}
+	assert.Equal(t, uint(1), repo.ID, "expected ID 1")
+	assert.Equal(t, "test-repo", repo.Key, "expected key 'test-repo'")
+	assert.Equal(t, "Test Repo", repo.Name, "expected name 'Test Repo'")
+	assert.Equal(t, "github", repo.Platform, "expected platform 'github'")
+	assert.Equal(t, "testuser", repo.PlatformOwner, "expected platform owner 'testuser'")
+	assert.Equal(t, "test-repo", repo.PlatformRepo, "expected platform repo 'test-repo'")
+	assert.Equal(t, "https://github.com/testuser/test-repo.git", repo.CloneURL, "expected clone URL")
+	assert.Equal(t, "git@github.com:testuser/test-repo.git", repo.SSHURL, "expected SSH URL")
+	assert.Equal(t, "main", repo.DefaultBranch, "expected default branch 'main'")
+	assert.Equal(t, "active", repo.Status, "expected status 'active'")
 }
 
 func TestRepoDAO_FindByPlatformID(t *testing.T) {
@@ -445,9 +324,8 @@ func TestRepoDAO_FindByPlatformID(t *testing.T) {
 		Key:  "github",
 		Name: "GitHub",
 	}
-	if err := db.Create(platform).Error; err != nil {
-		t.Fatalf("create platform failed: %v", err)
-	}
+	err := db.Create(platform).Error
+	require.NoError(t, err, "create platform failed")
 
 	// Create repos with different platform IDs
 	repos := []*model.Repo{
@@ -457,20 +335,15 @@ func TestRepoDAO_FindByPlatformID(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := d.Create(repo); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(repo)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find by platform ID
 	got, err := d.FindByPlatformID(platform.ID)
-	if err != nil {
-		t.Fatalf("find by platform ID failed: %v", err)
-	}
+	require.NoError(t, err, "find by platform ID failed")
 
-	if len(got) != 2 {
-		t.Fatalf("expected 2 repos, got %d", len(got))
-	}
+	require.Len(t, got, 2, "expected 2 repos")
 }
 
 func TestRepoDAO_ListWithFilter(t *testing.T) {
@@ -484,9 +357,8 @@ func TestRepoDAO_ListWithFilter(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := d.Create(repo); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(repo)
+		require.NoError(t, err, "create failed")
 	}
 
 	// List with filter
@@ -495,17 +367,10 @@ func TestRepoDAO_ListWithFilter(t *testing.T) {
 	}
 
 	got, total, err := d.ListWithFilter(DefaultPagination(0, 50), filter)
-	if err != nil {
-		t.Fatalf("list with filter failed: %v", err)
-	}
+	require.NoError(t, err, "list with filter failed")
 
-	if total != 2 {
-		t.Fatalf("expected 2 repos, got %d", total)
-	}
-
-	if len(got) != 2 {
-		t.Fatalf("expected 2 repos, got %d", len(got))
-	}
+	require.Equal(t, int64(2), total, "expected 2 repos")
+	require.Len(t, got, 2, "expected 2 repos")
 }
 
 func TestRepoDAO_ListWithFilter_Status(t *testing.T) {
@@ -519,9 +384,8 @@ func TestRepoDAO_ListWithFilter_Status(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		if err := d.Create(repo); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(repo)
+		require.NoError(t, err, "create failed")
 	}
 
 	// List with status filter
@@ -530,15 +394,8 @@ func TestRepoDAO_ListWithFilter_Status(t *testing.T) {
 	}
 
 	got, total, err := d.ListWithFilter(DefaultPagination(0, 50), filter)
-	if err != nil {
-		t.Fatalf("list with filter failed: %v", err)
-	}
+	require.NoError(t, err, "list with filter failed")
 
-	if total != 2 {
-		t.Fatalf("expected 2 repos, got %d", total)
-	}
-
-	if len(got) != 2 {
-		t.Fatalf("expected 2 repos, got %d", len(got))
-	}
+	require.Equal(t, int64(2), total, "expected 2 repos")
+	require.Len(t, got, 2, "expected 2 repos")
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	errors "github.com/cockroachdb/errors"
 	"github.com/yi-nology/git-platform-sdk/gitbackend"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -55,7 +56,7 @@ func NewExecutor(svc Service) (*Executor, error) {
 	}
 	backend, err := gitbackend.NewGitBackend(gitbackend.Options{Type: backendType})
 	if err != nil {
-		return nil, fmt.Errorf("init git backend failed: %w", err)
+		return nil, errors.Wrap(err, "init git backend failed")
 	}
 	return &Executor{
 		service: svc,
@@ -96,18 +97,18 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	sourceRepo, err := e.service.GetRepoByKey(task.SourceRepoKey)
 	if err != nil {
-		return failRun(run, fmt.Errorf("query source repo failed: %w", err))
+		return failRun(run, errors.Wrap(err, "query source repo failed"))
 	}
 	if sourceRepo == nil {
-		return failRun(run, fmt.Errorf("source repo not found: %s", task.SourceRepoKey))
+		return failRun(run, errors.Newf("source repo not found: %s", task.SourceRepoKey))
 	}
 
 	targetRepo, err := e.service.GetRepoByKey(task.TargetRepoKey)
 	if err != nil {
-		return failRun(run, fmt.Errorf("query target repo failed: %w", err))
+		return failRun(run, errors.Wrap(err, "query target repo failed"))
 	}
 	if targetRepo == nil {
-		return failRun(run, fmt.Errorf("target repo not found: %s", task.TargetRepoKey))
+		return failRun(run, errors.Newf("target repo not found: %s", task.TargetRepoKey))
 	}
 
 	// 预取 source/target 的 platform 记录,避免后续每次 git 操作都查 DB。
@@ -115,7 +116,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 
 	workDir := e.service.GetTempDir(task.Key)
 	if err := os.MkdirAll(workDir, 0o750); err != nil {
-		return failRun(run, fmt.Errorf("create work dir failed: %w", err))
+		return failRun(run, errors.Wrap(err, "create work dir failed"))
 	}
 
 	defer func() {
@@ -152,14 +153,14 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 		if err := e.cloneRepo(execCtx, repoDir, sourceRepo, task, platforms[sourceRepo.PlatformID]); err != nil {
 			e.failStep(step1, err)
 			fmt.Fprintf(&details, "clone error: %v\n", err)
-			return failRun(run, fmt.Errorf("clone failed: %w", err))
+			return failRun(run, errors.Wrap(err, "clone failed"))
 		}
 	} else {
 		details.WriteString("Step 1: Fetch updates from source repo...\n")
 		if err := e.fetchRepo(execCtx, repoDir, task, sourceRepo, platforms[sourceRepo.PlatformID]); err != nil {
 			e.failStep(step1, err)
 			fmt.Fprintf(&details, "fetch error: %v\n", err)
-			return failRun(run, fmt.Errorf("fetch failed: %w", err))
+			return failRun(run, errors.Wrap(err, "fetch failed"))
 		}
 	}
 	e.completeStep(step1, "")
@@ -171,7 +172,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	if err := e.ensureRemote(execCtx, repoDir, targetRepo); err != nil {
 		e.failStep(step2, err)
 		fmt.Fprintf(&details, "add remote error: %v\n", err)
-		return failRun(run, fmt.Errorf("add remote failed: %w", err))
+		return failRun(run, errors.Wrap(err, "add remote failed"))
 	}
 	e.completeStep(step2, "")
 	details.WriteString("Step 2: completed\n")
@@ -220,7 +221,7 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 	if pushErr != nil {
 		e.failStep(step3, pushErr)
 		fmt.Fprintf(&details, "push error: %v\n", pushErr)
-		return failRun(run, fmt.Errorf("push failed after %d attempts: %w", maxRetries, pushErr))
+		return failRun(run, errors.Wrapf(pushErr, "push failed after %d attempts", maxRetries))
 	}
 	e.completeStep(step3, "")
 	details.WriteString("Step 3: completed\n")

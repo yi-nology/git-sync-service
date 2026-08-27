@@ -1,19 +1,25 @@
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
+
+/** 相对时间（如"3分钟前"） */
 export function formatTime(time: string | null | undefined): string {
   if (!time) return '-'
   try {
-    const date = new Date(time)
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const seconds = Math.floor(diff / 1000)
-    const minutes = Math.floor(seconds / 60)
-    const hours = Math.floor(minutes / 60)
-    const days = Math.floor(hours / 24)
+    return dayjs(time).fromNow()
+  } catch {
+    return time
+  }
+}
 
-    if (seconds < 60) return '刚刚'
-    if (minutes < 60) return `${minutes}分钟前`
-    if (hours < 24) return `${hours}小时前`
-    if (days < 30) return `${days}天前`
-    return date.toLocaleDateString('zh-CN')
+/** 绝对时间（如"2026-08-27 10:30:00"） */
+export function formatDate(time: string | null | undefined): string {
+  if (!time) return '-'
+  try {
+    return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
   } catch {
     return time
   }
@@ -33,17 +39,8 @@ export function statusText(status: string | undefined): string {
   return map[status || ''] || status || '-'
 }
 
-export function copyToClipboard(text: string): Promise<void> {
-  if (navigator.clipboard) {
-    return navigator.clipboard.writeText(text)
-  }
-  const textarea = document.createElement('textarea')
-  textarea.value = text
-  document.body.appendChild(textarea)
-  textarea.select()
-  document.execCommand('copy')
-  document.body.removeChild(textarea)
-  return Promise.resolve()
+export async function copyToClipboard(text: string): Promise<void> {
+  await navigator.clipboard.writeText(text)
 }
 
 export function truncate(str: string, maxLen: number): string {

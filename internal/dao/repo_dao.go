@@ -1,10 +1,9 @@
 package dao
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/yi-nology/git-platform-sdk/pkg/credential"
+
+	errors "github.com/cockroachdb/errors"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
@@ -35,7 +34,7 @@ type RepoDAO struct {
 func NewRepoDAO(db *gorm.DB) (*RepoDAO, error) {
 	cm, err := credential.NewCryptoManager()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create CryptoManager: %w", err)
+		return nil, errors.Wrap(err, "failed to create CryptoManager")
 	}
 	return &RepoDAO{db: db, cm: cm}, nil
 }

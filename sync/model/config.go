@@ -1,9 +1,11 @@
 package model
 
 import (
+	"context"
 	"fmt"
 	"os"
 
+	"github.com/sethvargo/go-envconfig"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,54 +20,55 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Host   string `yaml:"host"`
-	Port   int    `yaml:"port"`
-	Mode   string `yaml:"mode"`
-	APIKey string `yaml:"api_key"`
+	Host   string `yaml:"host" env:"GIT_SYNC_SERVER_HOST"`
+	Port   int    `yaml:"port" env:"GIT_SYNC_SERVER_PORT"`
+	Mode   string `yaml:"mode" env:"GIT_SYNC_SERVER_MODE"`
+	APIKey string `yaml:"api_key" env:"GIT_SYNC_SERVER_API_KEY"`
 }
 
 type DatabaseConfig struct {
-	Driver         string `yaml:"driver"`
-	DSN            string `yaml:"dsn"`
-	MaxIdleConns   int    `yaml:"max_idle_conns"`
-	MaxOpenConns   int    `yaml:"max_open_conns"`
-	ConnMaxLifeSec int    `yaml:"conn_max_life_sec"` // 连接最大存活秒数,0 用默认 5 分钟
-	ConnMaxIdleSec int    `yaml:"conn_max_idle_sec"` // 空闲连接最大存活秒数,0 用默认 2 分钟
+	Driver         string `yaml:"driver" env:"GIT_SYNC_DB_DRIVER"`
+	DSN            string `yaml:"dsn" env:"GIT_SYNC_DB_DSN"`
+	MaxIdleConns   int    `yaml:"max_idle_conns" env:"GIT_SYNC_DB_MAX_IDLE_CONNS"`
+	MaxOpenConns   int    `yaml:"max_open_conns" env:"GIT_SYNC_DB_MAX_OPEN_CONNS"`
+	ConnMaxLifeSec int    `yaml:"conn_max_life_sec" env:"GIT_SYNC_DB_CONN_MAX_LIFE_SEC"` // 连接最大存活秒数,0 用默认 5 分钟
+	ConnMaxIdleSec int    `yaml:"conn_max_idle_sec" env:"GIT_SYNC_DB_CONN_MAX_IDLE_SEC"` // 空闲连接最大存活秒数,0 用默认 2 分钟
 }
 
 type RedisConfig struct {
-	Addr           string `yaml:"addr"`
-	Password       string `yaml:"password"`
-	DB             int    `yaml:"db"`
-	PoolSize       int    `yaml:"pool_size"`        // 连接池大小,0 用 go-redis 默认(10*GOMAXPROCS)
-	MinIdleConns   int    `yaml:"min_idle_conns"`   // 最小空闲连接数,0 不预热
-	DialTimeoutSec int    `yaml:"dial_timeout_sec"` // 建连超时秒数,0 不设超时
-	ReadTimeoutSec int    `yaml:"read_timeout_sec"` // 读超时秒数,0 不设超时
+	Addr           string `yaml:"addr" env:"GIT_SYNC_REDIS_ADDR"`
+	Password       string `yaml:"password" env:"GIT_SYNC_REDIS_PASSWORD"`
+	DB             int    `yaml:"db" env:"GIT_SYNC_REDIS_DB"`
+	PoolSize       int    `yaml:"pool_size" env:"GIT_SYNC_REDIS_POOL_SIZE"`         // 连接池大小,0 用 go-redis 默认(10*GOMAXPROCS)
+	MinIdleConns   int    `yaml:"min_idle_conns" env:"GIT_SYNC_REDIS_MIN_IDLE_CONNS"` // 最小空闲连接数,0 不预热
+	DialTimeoutSec int    `yaml:"dial_timeout_sec" env:"GIT_SYNC_REDIS_DIAL_TIMEOUT_SEC"` // 建连超时秒数,0 不设超时
+	ReadTimeoutSec int    `yaml:"read_timeout_sec" env:"GIT_SYNC_REDIS_READ_TIMEOUT_SEC"` // 读超时秒数,0 不设超时
 }
 
 type GitConfig struct {
-	Backend string `yaml:"backend"`
-	TempDir string `yaml:"temp_dir"`
+	Backend string `yaml:"backend" env:"GIT_SYNC_GIT_BACKEND"`
+	TempDir string `yaml:"temp_dir" env:"GIT_SYNC_GIT_TEMP_DIR"`
 }
 
 type SyncConfig struct {
-	MaxConcurrent  int `yaml:"max_concurrent"`
-	DefaultTimeout int `yaml:"default_timeout"`
-	RetryCount     int `yaml:"retry_count"`
+	MaxConcurrent  int `yaml:"max_concurrent" env:"GIT_SYNC_MAX_CONCURRENT"`
+	DefaultTimeout int `yaml:"default_timeout" env:"GIT_SYNC_DEFAULT_TIMEOUT"`
+	RetryCount     int `yaml:"retry_count" env:"GIT_SYNC_RETRY_COUNT"`
 }
 
 type WebhookConfig struct {
-	RateLimit   int `yaml:"rate_limit"`
-	MaxBodySize int `yaml:"max_body_size"`
+	RateLimit   int `yaml:"rate_limit" env:"GIT_SYNC_WEBHOOK_RATE_LIMIT"`
+	MaxBodySize int `yaml:"max_body_size" env:"GIT_SYNC_WEBHOOK_MAX_BODY_SIZE"`
 }
 
 type LogConfig struct {
-	Level  string `yaml:"level"`
-	Format string `yaml:"format"`
+	Level  string `yaml:"level" env:"GIT_SYNC_LOG_LEVEL"`
+	Format string `yaml:"format" env:"GIT_SYNC_LOG_FORMAT"`
 }
 
 // LoadConfig 从指定路径加载配置文件。
 // path 参数由调用方控制（通常是启动参数或环境变量），不存在用户注入风险。
+// 环境变量会覆盖 YAML 文件中的同名配置（env 优先级更高）。
 func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // 配置文件路径由程序启动参数决定，非用户可控输入
 	if err != nil {
@@ -77,6 +80,17 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	// 环境变量覆盖 YAML 配置值（env 优先级高于 YAML）。
+	// 使用 ProcessWith 配合 DefaultOverwrite=true 确保已由 YAML 设定的字段也能被环境变量覆盖。
+	ctx := context.Background()
+	if err := envconfig.ProcessWith(ctx, &envconfig.Config{
+		Target:           &cfg,
+		Lookuper:         envconfig.OsLookuper(),
+		DefaultOverwrite: true,
+	}); err != nil {
+		return nil, fmt.Errorf("processing environment variables: %w", err)
+	}
+
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -84,6 +98,9 @@ func LoadConfig(path string) (*Config, error) {
 	return &cfg, nil
 }
 
+// Validate 校验配置并填充默认值。
+// 注意：环境变量覆盖发生在 Validate 之前，因此此处的默认值逻辑仅在
+// YAML 和环境变量均未提供对应字段时才生效。
 func (c *Config) Validate() error {
 	if c.Server.Host == "" {
 		c.Server.Host = DefaultHost

@@ -4,14 +4,13 @@ package git_sync
 
 import (
 	"context"
-	crypto_rand "crypto/rand"
 	"crypto/subtle"
-	"encoding/hex"
 	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/hertz-contrib/requestid"
 	handler "github.com/yi-nology/git-sync-service/biz/handler/git_sync"
 )
 
@@ -37,19 +36,17 @@ func AuthMiddleware() app.HandlerFunc {
 	}
 }
 
-// RequestLogMiddleware 为每个请求生成唯一 request_id 并记录日志。
+// RequestLogMiddleware 记录 API 请求日志。
+// 从 hertz-contrib/requestid 中间件注入的 X-Request-ID 读取请求 ID。
 // 常规请求用 Debug 级别;慢请求(>1s)或服务端错误(>=500)升级为 Warn。
 func RequestLogMiddleware() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
-		requestID := generateRequestID()
-		c.Set("request_id", requestID)
-		c.Response.Header.Set("X-Request-ID", requestID)
-
 		start := time.Now()
 		c.Next(ctx)
 
 		latency := time.Since(start)
 		status := c.Response.StatusCode()
+		requestID := string(c.Response.Header.Get("X-Request-ID"))
 		logAttrs := []any{
 			"method", string(c.Method()),
 			"path", string(c.Path()),
@@ -66,19 +63,13 @@ func RequestLogMiddleware() app.HandlerFunc {
 	}
 }
 
-func generateRequestID() string {
-	b := make([]byte, 8)
-	_, _ = crypto_rand.Read(b)
-	return hex.EncodeToString(b)
-}
-
 func rootMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
 
 func _apiMw() []app.HandlerFunc {
-	return []app.HandlerFunc{RequestLogMiddleware(), AuthMiddleware()}
+	return []app.HandlerFunc{requestid.New(), RequestLogMiddleware(), AuthMiddleware()}
 }
 
 func _v1Mw() []app.HandlerFunc {

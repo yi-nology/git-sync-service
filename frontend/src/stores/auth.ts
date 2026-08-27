@@ -1,21 +1,19 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-
-const STORAGE_KEY = 'git-sync-api-key'
+import { computed } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 
 export const useAuthStore = defineStore('auth', () => {
-  const apiKey = ref<string>(localStorage.getItem(STORAGE_KEY) || '')
+  // useLocalStorage 自动同步 localStorage、响应式、跨 tab 同步
+  const apiKey = useLocalStorage<string>('git-sync-api-key', '')
 
   const isAuthenticated = computed(() => !!apiKey.value)
 
   function setApiKey(key: string) {
     apiKey.value = key
-    localStorage.setItem(STORAGE_KEY, key)
   }
 
   function clearApiKey() {
     apiKey.value = ''
-    localStorage.removeItem(STORAGE_KEY)
   }
 
   function getApiKey() {

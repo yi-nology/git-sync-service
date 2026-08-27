@@ -118,8 +118,8 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'time'">
           <div class="time-cell">
-            <div>{{ formatTime(record.start_time) }}</div>
-            <div v-if="record.end_time" class="time-end">→ {{ formatTime(record.end_time) }}</div>
+            <div>{{ formatDate(record.start_time) }}</div>
+            <div v-if="record.end_time" class="time-end">→ {{ formatDate(record.end_time) }}</div>
           </div>
         </template>
 
@@ -224,10 +224,10 @@
             <StatusBadge :status="currentRecord.status" />
           </a-descriptions-item>
           <a-descriptions-item label="开始时间">
-            {{ formatTime(currentRecord.start_time) }}
+            {{ formatDate(currentRecord.start_time) }}
           </a-descriptions-item>
           <a-descriptions-item label="结束时间">
-            {{ formatTime(currentRecord.end_time) }}
+            {{ formatDate(currentRecord.end_time) }}
           </a-descriptions-item>
           <a-descriptions-item label="执行耗时" :span="2">
             {{ formatDuration(currentRecord.duration_ms) }}
@@ -324,6 +324,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import { triggerColor, triggerLabel } from '@/utils/dictionaries'
 import { notifyError, notifySuccess } from '@/utils/notify'
 import dayjs, { type Dayjs } from 'dayjs'
+import { formatDate } from '@/utils'
 
 const simpleImage = Empty.PRESENTED_IMAGE_SIMPLE
 
@@ -393,10 +394,6 @@ function repoShort(full: string) {
   return parts[parts.length - 1] || full
 }
 
-function formatTime(time: string): string {
-  if (!time) return '-'
-  return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
-}
 
 function formatDuration(ms?: number) {
   if (!ms || ms <= 0) return '-'

@@ -1,10 +1,9 @@
 package dao
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/yi-nology/git-platform-sdk/pkg/credential"
+
+	errors "github.com/cockroachdb/errors"
 	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
@@ -21,7 +20,7 @@ type PlatformDAO struct {
 func NewPlatformDAO(db *gorm.DB) (*PlatformDAO, error) {
 	cm, err := credential.NewCryptoManager()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create CryptoManager: %w", err)
+		return nil, errors.Wrap(err, "failed to create CryptoManager")
 	}
 	return &PlatformDAO{db: db, cm: cm}, nil
 }
@@ -49,7 +48,7 @@ func (d *PlatformDAO) encrypt(p *model.Platform) error {
 	}
 	encrypted, err := d.cm.Encrypt(p.AccessToken)
 	if err != nil {
-		return fmt.Errorf("failed to encrypt access token: %w", err)
+		return errors.Wrap(err, "failed to encrypt access token")
 	}
 	p.AccessToken = encrypted
 	return nil

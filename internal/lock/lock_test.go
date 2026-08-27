@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLocalLock_TryLock(t *testing.T) {
@@ -15,20 +17,12 @@ func TestLocalLock_TryLock(t *testing.T) {
 	ctx := context.Background()
 
 	ok, err := lock.TryLock(ctx, "test-key")
-	if err != nil {
-		t.Fatalf("TryLock failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("Expected to acquire lock")
-	}
+	require.NoError(t, err, "TryLock failed")
+	require.True(t, ok, "Expected to acquire lock")
 
 	ok, err = lock.TryLock(ctx, "test-key")
-	if err != nil {
-		t.Fatalf("TryLock failed: %v", err)
-	}
-	if ok {
-		t.Fatal("Expected lock to be already held")
-	}
+	require.NoError(t, err, "TryLock failed")
+	require.False(t, ok, "Expected lock to be already held")
 }
 
 func TestLocalLock_TryLockWithTTL(t *testing.T) {
@@ -36,30 +30,18 @@ func TestLocalLock_TryLockWithTTL(t *testing.T) {
 	ctx := context.Background()
 
 	ok, err := lock.TryLockWithTTL(ctx, "test-key", 100*time.Millisecond)
-	if err != nil {
-		t.Fatalf("TryLockWithTTL failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("Expected to acquire lock")
-	}
+	require.NoError(t, err, "TryLockWithTTL failed")
+	require.True(t, ok, "Expected to acquire lock")
 
 	ok, err = lock.TryLockWithTTL(ctx, "test-key", 100*time.Millisecond)
-	if err != nil {
-		t.Fatalf("TryLockWithTTL failed: %v", err)
-	}
-	if ok {
-		t.Fatal("Expected lock to be already held")
-	}
+	require.NoError(t, err, "TryLockWithTTL failed")
+	require.False(t, ok, "Expected lock to be already held")
 
 	time.Sleep(150 * time.Millisecond)
 
 	ok, err = lock.TryLockWithTTL(ctx, "test-key", 100*time.Millisecond)
-	if err != nil {
-		t.Fatalf("TryLockWithTTL failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("Expected to acquire lock after TTL expired")
-	}
+	require.NoError(t, err, "TryLockWithTTL failed")
+	require.True(t, ok, "Expected to acquire lock after TTL expired")
 }
 
 func TestLocalLock_Unlock(t *testing.T) {
@@ -67,25 +49,15 @@ func TestLocalLock_Unlock(t *testing.T) {
 	ctx := context.Background()
 
 	ok, err := lock.TryLock(ctx, "test-key")
-	if err != nil {
-		t.Fatalf("TryLock failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("Expected to acquire lock")
-	}
+	require.NoError(t, err, "TryLock failed")
+	require.True(t, ok, "Expected to acquire lock")
 
 	err = lock.Unlock(ctx, "test-key")
-	if err != nil {
-		t.Fatalf("Unlock failed: %v", err)
-	}
+	require.NoError(t, err, "Unlock failed")
 
 	ok, err = lock.TryLock(ctx, "test-key")
-	if err != nil {
-		t.Fatalf("TryLock failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("Expected to acquire lock after unlock")
-	}
+	require.NoError(t, err, "TryLock failed")
+	require.True(t, ok, "Expected to acquire lock after unlock")
 }
 
 func TestLocalLock_Concurrent(t *testing.T) {
@@ -114,9 +86,7 @@ func TestLocalLock_Concurrent(t *testing.T) {
 		results[i] = <-acquired
 	}
 
-	if !results[0] && !results[1] {
-		t.Fatal("At least one goroutine should have acquired the lock")
-	}
+	require.True(t, results[0] || results[1], "At least one goroutine should have acquired the lock")
 }
 
 // Helper function to create a test Redis client
@@ -135,9 +105,8 @@ func getTestRedisClient(t *testing.T) *redis.Client {
 
 func closeClient(t *testing.T, client *redis.Client) {
 	t.Helper()
-	if err := client.Close(); err != nil {
-		t.Errorf("Failed to close client: %v", err)
-	}
+	err := client.Close()
+	assert.NoError(t, err, "Failed to close client")
 }
 
 func TestSemaphore_Acquire(t *testing.T) {
@@ -151,29 +120,17 @@ func TestSemaphore_Acquire(t *testing.T) {
 
 	// Should acquire first two slots
 	ok1, err := sem.Acquire(ctx, "worker-1")
-	if err != nil {
-		t.Fatalf("Acquire worker-1 failed: %v", err)
-	}
-	if !ok1 {
-		t.Fatal("Expected worker-1 to acquire semaphore")
-	}
+	require.NoError(t, err, "Acquire worker-1 failed")
+	require.True(t, ok1, "Expected worker-1 to acquire semaphore")
 
 	ok2, err := sem.Acquire(ctx, "worker-2")
-	if err != nil {
-		t.Fatalf("Acquire worker-2 failed: %v", err)
-	}
-	if !ok2 {
-		t.Fatal("Expected worker-2 to acquire semaphore")
-	}
+	require.NoError(t, err, "Acquire worker-2 failed")
+	require.True(t, ok2, "Expected worker-2 to acquire semaphore")
 
 	// Third acquire should fail (max is 2)
 	ok3, err := sem.Acquire(ctx, "worker-3")
-	if err != nil {
-		t.Fatalf("Acquire worker-3 failed: %v", err)
-	}
-	if ok3 {
-		t.Fatal("Expected worker-3 to fail acquiring semaphore")
-	}
+	require.NoError(t, err, "Acquire worker-3 failed")
+	require.False(t, ok3, "Expected worker-3 to fail acquiring semaphore")
 }
 
 func TestSemaphore_Release(t *testing.T) {
@@ -187,27 +144,17 @@ func TestSemaphore_Release(t *testing.T) {
 
 	// Acquire the single slot
 	ok, err := sem.Acquire(ctx, "worker-1")
-	if err != nil {
-		t.Fatalf("Acquire failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("Expected to acquire semaphore")
-	}
+	require.NoError(t, err, "Acquire failed")
+	require.True(t, ok, "Expected to acquire semaphore")
 
 	// Release the slot
 	err = sem.Release(ctx, "worker-1")
-	if err != nil {
-		t.Fatalf("Release failed: %v", err)
-	}
+	require.NoError(t, err, "Release failed")
 
 	// Should be able to acquire again
 	ok, err = sem.Acquire(ctx, "worker-2")
-	if err != nil {
-		t.Fatalf("Acquire after release failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("Expected to acquire semaphore after release")
-	}
+	require.NoError(t, err, "Acquire after release failed")
+	require.True(t, ok, "Expected to acquire semaphore after release")
 }
 
 func TestSemaphore_Concurrent(t *testing.T) {
@@ -242,18 +189,14 @@ func TestSemaphore_Concurrent(t *testing.T) {
 	// Count successful acquisitions
 	acquired := 0
 	for i := 0; i < numWorkers; i++ {
-		if errors[i] != nil {
-			t.Errorf("Worker %d got error: %v", i, errors[i])
-		}
+		assert.NoError(t, errors[i], "Worker %d got error", i)
 		if results[i] {
 			acquired++
 		}
 	}
 
 	// Exactly maxSlots should have acquired
-	if acquired != maxSlots {
-		t.Errorf("Expected %d workers to acquire, got %d", maxSlots, acquired)
-	}
+	assert.Equal(t, maxSlots, acquired, "Expected %d workers to acquire, got %d", maxSlots, acquired)
 }
 
 func TestSemaphore_Cleanup(t *testing.T) {
@@ -274,45 +217,33 @@ func TestSemaphore_Cleanup(t *testing.T) {
 		"live":     now.Add(10 * time.Second),
 	}
 	for member, expireAt := range seed {
-		if err := client.ZAdd(ctx, sem.key, redis.Z{
+		err := client.ZAdd(ctx, sem.key, redis.Z{
 			Score:  float64(expireAt.UnixMilli()),
 			Member: member,
-		}).Err(); err != nil {
-			t.Fatalf("seed %s failed: %v", member, err)
-		}
+		}).Err()
+		require.NoError(t, err, "seed %s failed", member)
 	}
 
 	// Cleanup(90min): 清理"过期超过 90 分钟"的条目 → 只清 stale-2h
-	if err := sem.Cleanup(ctx, 90*time.Minute); err != nil {
-		t.Fatalf("Cleanup failed: %v", err)
-	}
+	err := sem.Cleanup(ctx, 90*time.Minute)
+	require.NoError(t, err, "Cleanup failed")
+
 	card, err := client.ZCard(ctx, sem.key).Result()
-	if err != nil {
-		t.Fatalf("ZCard failed: %v", err)
-	}
-	if card != 2 {
-		t.Fatalf("Expected 2 members after Cleanup(90min), got %d", card)
-	}
+	require.NoError(t, err, "ZCard failed")
+	require.Equal(t, int64(2), card, "Expected 2 members after Cleanup(90min)")
 
 	// Cleanup(0): 清理所有已过期条目 → 只剩 live
-	if err := sem.Cleanup(ctx, 0); err != nil {
-		t.Fatalf("Cleanup with 0 duration failed: %v", err)
-	}
+	err = sem.Cleanup(ctx, 0)
+	require.NoError(t, err, "Cleanup with 0 duration failed")
+
 	members, _, err := client.ZScan(ctx, sem.key, 0, "", 0).Result()
-	if err != nil {
-		t.Fatalf("ZScan failed: %v", err)
-	}
+	require.NoError(t, err, "ZScan failed")
 	// ZScan 返回 [member, score] 交错列表
-	if len(members) != 2 || members[0] != "live" {
-		t.Fatalf("Expected only live member after Cleanup(0), got %v", members)
-	}
+	require.Len(t, members, 2, "Expected only live member after Cleanup(0)")
+	require.Equal(t, "live", members[0], "Expected only live member after Cleanup(0)")
 
 	// live 的 score 不应被改动(仍为未来的过期时间)
 	score, err := client.ZScore(ctx, sem.key, "live").Result()
-	if err != nil {
-		t.Fatalf("ZScore failed: %v", err)
-	}
-	if int64(score) <= now.UnixMilli() {
-		t.Fatalf("live score should stay in the future, got %d", int64(score))
-	}
+	require.NoError(t, err, "ZScore failed")
+	require.Greater(t, int64(score), now.UnixMilli(), "live score should stay in the future")
 }

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/yi-nology/git-platform-sdk/gitbackend"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -129,18 +131,10 @@ func newMockService() *mockService {
 func TestNewExecutor(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
-	if exec == nil {
-		t.Fatal("expected non-nil executor")
-	}
-	if exec.service != svc {
-		t.Error("expected service to be set")
-	}
-	if exec.backend == nil {
-		t.Error("expected backend to be set")
-	}
+	require.NoError(t, err, "NewExecutor failed")
+	require.NotNil(t, exec, "expected non-nil executor")
+	assert.Equal(t, svc, exec.service, "expected service to be set")
+	assert.NotNil(t, exec.backend, "expected backend to be set")
 }
 
 func TestExecute_SourceRepoNotFound(t *testing.T) {
@@ -148,9 +142,7 @@ func TestExecute_SourceRepoNotFound(t *testing.T) {
 	svc.repos = map[string]*model.Repo{} // Empty repos
 
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -163,15 +155,9 @@ func TestExecute_SourceRepoNotFound(t *testing.T) {
 
 	ctx := context.Background()
 	run, err := exec.Execute(ctx, task, "manual", nil)
-	if err == nil {
-		t.Fatal("expected error for missing source repo")
-	}
-	if run == nil {
-		t.Fatal("expected non-nil run even on error")
-	}
-	if run.Status != "failed" {
-		t.Errorf("expected status 'failed', got %q", run.Status)
-	}
+	require.Error(t, err, "expected error for missing source repo")
+	require.NotNil(t, run, "expected non-nil run even on error")
+	assert.Equal(t, "failed", run.Status, "expected status 'failed'")
 }
 
 func TestExecute_TargetRepoNotFound(t *testing.T) {
@@ -184,9 +170,7 @@ func TestExecute_TargetRepoNotFound(t *testing.T) {
 	}
 
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -199,23 +183,15 @@ func TestExecute_TargetRepoNotFound(t *testing.T) {
 
 	ctx := context.Background()
 	run, err := exec.Execute(ctx, task, "manual", nil)
-	if err == nil {
-		t.Fatal("expected error for missing target repo")
-	}
-	if run == nil {
-		t.Fatal("expected non-nil run even on error")
-	}
-	if run.Status != "failed" {
-		t.Errorf("expected status 'failed', got %q", run.Status)
-	}
+	require.Error(t, err, "expected error for missing target repo")
+	require.NotNil(t, run, "expected non-nil run even on error")
+	assert.Equal(t, "failed", run.Status, "expected status 'failed'")
 }
 
 func TestExecute_RunCreated(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -230,20 +206,12 @@ func TestExecute_RunCreated(t *testing.T) {
 	_, _ = exec.Execute(ctx, task, "manual", nil)
 
 	// Verify run was created
-	if len(svc.runs) == 0 {
-		t.Fatal("expected run to be created")
-	}
+	require.NotEmpty(t, svc.runs, "expected run to be created")
 
 	run := svc.runs[0]
-	if run.TaskKey != "test-task" {
-		t.Errorf("expected task key 'test-task', got %q", run.TaskKey)
-	}
-	if run.TriggerSource != "manual" {
-		t.Errorf("expected trigger 'manual', got %q", run.TriggerSource)
-	}
-	if run.StartTime.IsZero() {
-		t.Error("expected start time to be set")
-	}
+	assert.Equal(t, "test-task", run.TaskKey, "expected task key 'test-task'")
+	assert.Equal(t, "manual", run.TriggerSource, "expected trigger 'manual'")
+	assert.False(t, run.StartTime.IsZero(), "expected start time to be set")
 }
 
 func TestExecute_CreateRunError(t *testing.T) {
@@ -251,9 +219,7 @@ func TestExecute_CreateRunError(t *testing.T) {
 	svc.createErr = fmt.Errorf("database error")
 
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -266,58 +232,40 @@ func TestExecute_CreateRunError(t *testing.T) {
 
 	ctx := context.Background()
 	_, err = exec.Execute(ctx, task, "manual", nil)
-	if err == nil {
-		t.Fatal("expected error when run creation fails")
-	}
+	require.Error(t, err, "expected error when run creation fails")
 }
 
 func TestAuthConfig_WithToken(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	repo := &model.Repo{
 		AccessToken: "test-token",
 	}
 
 	config := exec.authConfig(repo, nil)
-	if config.Type != gitbackend.AuthHTTPBasic {
-		t.Errorf("expected HTTP Basic auth, got %q", config.Type)
-	}
-	if config.Password != "test-token" {
-		t.Errorf("expected password 'test-token', got %q", config.Password)
-	}
-	if config.Username == "" {
-		t.Error("expected non-empty placeholder username for HTTP Basic")
-	}
+	assert.Equal(t, gitbackend.AuthHTTPBasic, config.Type, "expected HTTP Basic auth")
+	assert.Equal(t, "test-token", config.Password, "expected password 'test-token'")
+	assert.NotEmpty(t, config.Username, "expected non-empty placeholder username for HTTP Basic")
 }
 
 func TestAuthConfig_WithoutToken(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	repo := &model.Repo{}
 
 	config := exec.authConfig(repo, nil)
-	if config.Type != gitbackend.AuthNone {
-		t.Errorf("expected auth type none, got %q", config.Type)
-	}
+	assert.Equal(t, gitbackend.AuthNone, config.Type, "expected auth type none")
 }
 
 func TestTimePtr(t *testing.T) {
 	now := time.Now()
 	ptr := timePtr(now)
-	if ptr == nil {
-		t.Fatal("expected non-nil time pointer")
-	}
-	if *ptr != now {
-		t.Errorf("expected %v, got %v", now, *ptr)
-	}
+	require.NotNil(t, ptr, "expected non-nil time pointer")
+	assert.Equal(t, now, *ptr, "expected time pointer value")
 }
 
 func TestClassifyError(t *testing.T) {
@@ -356,9 +304,7 @@ func TestClassifyError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ClassifyError(tt.err)
-			if result != tt.expected {
-				t.Errorf("ClassifyError(%v) = %q, want %q", tt.err, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result, "ClassifyError(%v)", tt.err)
 		})
 	}
 }
@@ -366,9 +312,7 @@ func TestClassifyError(t *testing.T) {
 func TestExecute_WithContext(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -384,20 +328,14 @@ func TestExecute_WithContext(t *testing.T) {
 	cancel()
 
 	run, err := exec.Execute(ctx, task, "manual", nil)
-	if err == nil {
-		t.Fatal("expected error for cancelled context")
-	}
-	if run == nil {
-		t.Fatal("expected non-nil run even on error")
-	}
+	require.Error(t, err, "expected error for cancelled context")
+	require.NotNil(t, run, "expected non-nil run even on error")
 }
 
 func TestExecute_WithWebhookEventID(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -413,26 +351,18 @@ func TestExecute_WithWebhookEventID(t *testing.T) {
 	_, _ = exec.Execute(ctx, task, "webhook", &webhookEventID)
 
 	// Verify run was created with webhook event ID
-	if len(svc.runs) == 0 {
-		t.Fatal("expected run to be created")
-	}
+	require.NotEmpty(t, svc.runs, "expected run to be created")
 
 	run := svc.runs[0]
-	if run.WebhookEventID == nil {
-		t.Fatal("expected webhook event ID to be set")
-	}
+	require.NotNil(t, run.WebhookEventID, "expected webhook event ID to be set")
 
-	if *run.WebhookEventID != 123 {
-		t.Errorf("expected webhook event ID 123, got %d", *run.WebhookEventID)
-	}
+	assert.Equal(t, uint(123), *run.WebhookEventID, "expected webhook event ID 123")
 }
 
 func TestBeginStep(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	// Create a run
 	task := &model.SyncTask{
@@ -443,35 +373,21 @@ func TestBeginStep(t *testing.T) {
 	}
 
 	run, err := svc.CreateRun(task, "manual", nil)
-	if err != nil {
-		t.Fatalf("CreateRun failed: %v", err)
-	}
+	require.NoError(t, err, "CreateRun failed")
 
 	// Begin a step
 	step := exec.beginStep(run.ID, "fetch")
-	if step == nil {
-		t.Fatal("expected non-nil step")
-	}
+	require.NotNil(t, step, "expected non-nil step")
 
-	if step.RunID != run.ID {
-		t.Errorf("expected run ID %d, got %d", run.ID, step.RunID)
-	}
-
-	if step.StepName != "fetch" {
-		t.Errorf("expected step name 'fetch', got '%s'", step.StepName)
-	}
-
-	if step.Status != "running" {
-		t.Errorf("expected status 'running', got '%s'", step.Status)
-	}
+	assert.Equal(t, run.ID, step.RunID, "expected run ID %d", run.ID)
+	assert.Equal(t, "fetch", step.StepName, "expected step name 'fetch'")
+	assert.Equal(t, "running", step.Status, "expected status 'running'")
 }
 
 func TestFailStep(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	// Create a run
 	task := &model.SyncTask{
@@ -482,34 +398,23 @@ func TestFailStep(t *testing.T) {
 	}
 
 	run, err := svc.CreateRun(task, "manual", nil)
-	if err != nil {
-		t.Fatalf("CreateRun failed: %v", err)
-	}
+	require.NoError(t, err, "CreateRun failed")
 
 	// Begin a step
 	step := exec.beginStep(run.ID, "fetch")
-	if step == nil {
-		t.Fatal("expected non-nil step")
-	}
+	require.NotNil(t, step, "expected non-nil step")
 
 	// Fail the step
 	exec.failStep(step, fmt.Errorf("fetch failed"))
 
-	if step.Status != "failed" {
-		t.Errorf("expected status 'failed', got '%s'", step.Status)
-	}
-
-	if step.ErrorMsg != "fetch failed" {
-		t.Errorf("expected error message 'fetch failed', got '%s'", step.ErrorMsg)
-	}
+	assert.Equal(t, "failed", step.Status, "expected status 'failed'")
+	assert.Equal(t, "fetch failed", step.ErrorMsg, "expected error message 'fetch failed'")
 }
 
 func TestCompleteStep(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	// Create a run
 	task := &model.SyncTask{
@@ -520,30 +425,22 @@ func TestCompleteStep(t *testing.T) {
 	}
 
 	run, err := svc.CreateRun(task, "manual", nil)
-	if err != nil {
-		t.Fatalf("CreateRun failed: %v", err)
-	}
+	require.NoError(t, err, "CreateRun failed")
 
 	// Begin a step
 	step := exec.beginStep(run.ID, "fetch")
-	if step == nil {
-		t.Fatal("expected non-nil step")
-	}
+	require.NotNil(t, step, "expected non-nil step")
 
 	// Complete the step
 	exec.completeStep(step, "details")
 
-	if step.Status != "success" {
-		t.Errorf("expected status 'success', got '%s'", step.Status)
-	}
+	assert.Equal(t, "success", step.Status, "expected status 'success'")
 }
 
 func TestAuthConfig_WithPlatform(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	repo := &model.Repo{
 		AccessToken: "",
@@ -552,17 +449,13 @@ func TestAuthConfig_WithPlatform(t *testing.T) {
 
 	config := exec.authConfig(repo, nil)
 	// mockService returns a platform with AccessToken="test-token"
-	if config.Password != "test-token" {
-		t.Errorf("expected platform token as password, got %q", config.Password)
-	}
+	assert.Equal(t, "test-token", config.Password, "expected platform token as password")
 }
 
 func TestAuthConfig_RepoTokenOverridesPlatform(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	repo := &model.Repo{
 		AccessToken: "repo-specific-token",
@@ -571,17 +464,13 @@ func TestAuthConfig_RepoTokenOverridesPlatform(t *testing.T) {
 
 	config := exec.authConfig(repo, nil)
 	// Repo token should take precedence
-	if config.Password != "repo-specific-token" {
-		t.Errorf("expected repo token as password, got %q", config.Password)
-	}
+	assert.Equal(t, "repo-specific-token", config.Password, "expected repo token as password")
 }
 
 func TestAuthConfig_NoPlatformID(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	repo := &model.Repo{
 		AccessToken: "",
@@ -589,17 +478,13 @@ func TestAuthConfig_NoPlatformID(t *testing.T) {
 	}
 
 	config := exec.authConfig(repo, nil)
-	if config.Type != "none" {
-		t.Errorf("expected auth type 'none', got '%q'", config.Type)
-	}
+	assert.Equal(t, "none", string(config.Type), "expected auth type 'none'")
 }
 
 func TestCloneRepo_WithForceFlag(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		SourceBranch: "main",
@@ -618,9 +503,7 @@ func TestCloneRepo_WithForceFlag(t *testing.T) {
 func TestCloneRepo_ShallowClone(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		SourceBranch: "main",
@@ -642,12 +525,8 @@ func TestNewExecutor_WithBackendConfig(t *testing.T) {
 		backendType: "gogit",
 	}
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
-	if exec == nil {
-		t.Fatal("expected non-nil executor")
-	}
+	require.NoError(t, err, "NewExecutor failed")
+	require.NotNil(t, exec, "expected non-nil executor")
 }
 
 func TestNewExecutor_InvalidBackend(t *testing.T) {
@@ -656,9 +535,7 @@ func TestNewExecutor_InvalidBackend(t *testing.T) {
 		backendType: "invalid-backend-type",
 	}
 	_, err := NewExecutor(svc)
-	if err == nil {
-		t.Fatal("expected error for invalid backend type")
-	}
+	require.Error(t, err, "expected error for invalid backend type")
 }
 
 // mockServiceWithConfig wraps mockService to return a specific config
@@ -683,9 +560,7 @@ func TestExecute_CompleteRunError(t *testing.T) {
 	svc := newMockService()
 	svc.completeErr = fmt.Errorf("db write failed")
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -697,21 +572,15 @@ func TestExecute_CompleteRunError(t *testing.T) {
 	ctx := context.Background()
 	run, err := exec.Execute(ctx, task, "manual", nil)
 	// Should still return the run even with complete error
-	if run == nil {
-		t.Fatal("expected non-nil run")
-	}
-	if err == nil {
-		t.Fatal("expected error for missing source repo")
-	}
+	require.NotNil(t, run, "expected non-nil run")
+	require.Error(t, err, "expected error for missing source repo")
 }
 
 func TestExecute_UpdateTaskLastRunError(t *testing.T) {
 	svc := newMockService()
 	svc.updateErr = fmt.Errorf("db update failed")
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -722,18 +591,14 @@ func TestExecute_UpdateTaskLastRunError(t *testing.T) {
 
 	ctx := context.Background()
 	run, _ := exec.Execute(ctx, task, "manual", nil)
-	if run == nil {
-		t.Fatal("expected non-nil run")
-	}
+	require.NotNil(t, run, "expected non-nil run")
 }
 
 func TestExecute_SourceRepoQueryError(t *testing.T) {
 	svc := newMockService()
 	svc.repoErr = fmt.Errorf("database connection lost")
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -746,18 +611,10 @@ func TestExecute_SourceRepoQueryError(t *testing.T) {
 
 	ctx := context.Background()
 	run, err := exec.Execute(ctx, task, "manual", nil)
-	if err == nil {
-		t.Fatal("expected error when repo query fails")
-	}
-	if run == nil {
-		t.Fatal("expected non-nil run")
-	}
-	if run.Status != model.StatusFailed {
-		t.Errorf("expected status 'failed', got '%q'", run.Status)
-	}
-	if run.ErrorType != model.ErrorUnknown {
-		t.Errorf("expected error type '%s', got '%q'", model.ErrorUnknown, run.ErrorType)
-	}
+	require.Error(t, err, "expected error when repo query fails")
+	require.NotNil(t, run, "expected non-nil run")
+	assert.Equal(t, model.StatusFailed, run.Status, "expected status 'failed'")
+	assert.Equal(t, model.ErrorUnknown, run.ErrorType, "expected error type '%s'", model.ErrorUnknown)
 }
 
 func TestFailRun(t *testing.T) {
@@ -769,26 +626,16 @@ func TestFailRun(t *testing.T) {
 	err := fmt.Errorf("401 authentication failed")
 	resultRun, resultErr := failRun(run, err)
 
-	if resultRun.Status != model.StatusFailed {
-		t.Errorf("expected status 'failed', got '%q'", resultRun.Status)
-	}
-	if resultRun.ErrorMessage != "401 authentication failed" {
-		t.Errorf("expected error message '401 authentication failed', got '%q'", resultRun.ErrorMessage)
-	}
-	if resultRun.ErrorType != model.ErrorAuth {
-		t.Errorf("expected error type '%s', got '%q'", model.ErrorAuth, resultRun.ErrorType)
-	}
-	if resultErr == nil {
-		t.Fatal("expected non-nil error")
-	}
+	assert.Equal(t, model.StatusFailed, resultRun.Status, "expected status 'failed'")
+	assert.Equal(t, "401 authentication failed", resultRun.ErrorMessage, "expected error message")
+	assert.Equal(t, model.ErrorAuth, resultRun.ErrorType, "expected error type")
+	require.NotNil(t, resultErr, "expected non-nil error")
 }
 
 func TestFetchRepo(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		SourceBranch: "main",
@@ -808,9 +655,7 @@ func TestFetchRepo(t *testing.T) {
 func TestEnsureRemote(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	repo := &model.Repo{
 		CloneURL: "https://github.com/test/target.git",
@@ -824,9 +669,7 @@ func TestEnsureRemote(t *testing.T) {
 func TestPush(t *testing.T) {
 	svc := newMockService()
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		SourceBranch: "main",
@@ -855,9 +698,7 @@ func TestExecute_WithDefaultTimeout(t *testing.T) {
 		},
 	}
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -868,9 +709,7 @@ func TestExecute_WithDefaultTimeout(t *testing.T) {
 
 	ctx := context.Background()
 	run, _ := exec.Execute(ctx, task, "manual", nil)
-	if run == nil {
-		t.Fatal("expected non-nil run")
-	}
+	require.NotNil(t, run, "expected non-nil run")
 }
 
 func TestExecute_WithZeroRetryCount(t *testing.T) {
@@ -885,9 +724,7 @@ func TestExecute_WithZeroRetryCount(t *testing.T) {
 		},
 	}
 	exec, err := NewExecutor(svc)
-	if err != nil {
-		t.Fatalf("NewExecutor failed: %v", err)
-	}
+	require.NoError(t, err, "NewExecutor failed")
 
 	task := &model.SyncTask{
 		Key:           "test-task",
@@ -898,7 +735,5 @@ func TestExecute_WithZeroRetryCount(t *testing.T) {
 
 	ctx := context.Background()
 	run, _ := exec.Execute(ctx, task, "manual", nil)
-	if run == nil {
-		t.Fatal("expected non-nil run")
-	}
+	require.NotNil(t, run, "expected non-nil run")
 }

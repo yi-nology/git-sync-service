@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/yi-nology/git-sync-service/internal/lock"
 	"github.com/yi-nology/git-sync-service/sync/model"
 )
@@ -23,9 +25,7 @@ func TestServiceGetTempDir(t *testing.T) {
 
 	result := svc.GetTempDir("my-task")
 	expected := "/tmp/test/my-task"
-	if result != expected {
-		t.Errorf("Expected %s, got %s", expected, result)
-	}
+	assert.Equal(t, expected, result, "Expected %s, got %s", expected, result)
 }
 
 func TestServiceGetConfig(t *testing.T) {
@@ -40,9 +40,7 @@ func TestServiceGetConfig(t *testing.T) {
 	}
 
 	result := svc.GetConfig()
-	if result != cfg {
-		t.Error("Expected same config pointer")
-	}
+	assert.Same(t, cfg, result, "Expected same config pointer")
 }
 
 func TestServiceGetAPIKey(t *testing.T) {
@@ -57,9 +55,7 @@ func TestServiceGetAPIKey(t *testing.T) {
 	}
 
 	result := svc.GetAPIKey()
-	if result != "test-api-key" {
-		t.Errorf("Expected 'test-api-key', got '%s'", result)
-	}
+	assert.Equal(t, "test-api-key", result, "Expected 'test-api-key'")
 }
 
 func TestServiceHealthCheckNoRedis(t *testing.T) {
@@ -80,36 +76,26 @@ func TestConcurrencyGuardLocal(t *testing.T) {
 
 	// First acquire should succeed
 	release1, err := guard.Acquire(ctx, "task1")
-	if err != nil {
-		t.Fatalf("First acquire failed: %v", err)
-	}
+	require.NoError(t, err, "First acquire failed")
 
 	// Second acquire of same task should fail
 	_, err = guard.Acquire(ctx, "task1")
-	if err != ErrTaskRunning {
-		t.Errorf("Expected ErrTaskRunning, got %v", err)
-	}
+	assert.Equal(t, ErrTaskRunning, err, "Expected ErrTaskRunning")
 
 	// Acquire different task should succeed
 	release2, err := guard.Acquire(ctx, "task2")
-	if err != nil {
-		t.Fatalf("Second task acquire failed: %v", err)
-	}
+	require.NoError(t, err, "Second task acquire failed")
 
 	// Third acquire should fail (max concurrent reached)
 	_, err = guard.Acquire(ctx, "task3")
-	if err != ErrTooManyConcurrent {
-		t.Errorf("Expected ErrTooManyConcurrent, got %v", err)
-	}
+	assert.Equal(t, ErrTooManyConcurrent, err, "Expected ErrTooManyConcurrent")
 
 	// Release first task
 	release1()
 
 	// Now we should be able to acquire task3
 	release3, err := guard.Acquire(ctx, "task3")
-	if err != nil {
-		t.Fatalf("Third task acquire failed: %v", err)
-	}
+	require.NoError(t, err, "Third task acquire failed")
 
 	// Cleanup
 	release2()
@@ -127,17 +113,13 @@ func TestConcurrencyGuardLocalDefaultMax(t *testing.T) {
 	releases := make([]func(), 5)
 	for i := 0; i < 5; i++ {
 		release, err := guard.Acquire(ctx, "task"+string(rune('a'+i)))
-		if err != nil {
-			t.Fatalf("Failed to acquire task %d: %v", i, err)
-		}
+		require.NoError(t, err, "Failed to acquire task %d", i)
 		releases[i] = release
 	}
 
 	// 6th should fail
 	_, err := guard.Acquire(ctx, "task6")
-	if err != ErrTooManyConcurrent {
-		t.Errorf("Expected ErrTooManyConcurrent, got %v", err)
-	}
+	assert.Equal(t, ErrTooManyConcurrent, err, "Expected ErrTooManyConcurrent")
 
 	// Cleanup
 	for _, release := range releases {
@@ -147,16 +129,12 @@ func TestConcurrencyGuardLocalDefaultMax(t *testing.T) {
 
 func TestNewGuardLocal(t *testing.T) {
 	guard, err := newGuard("", "", 0, 5, lock.RedisPoolOptions{})
-	if err != nil {
-		t.Fatalf("Failed to create local guard: %v", err)
-	}
+	require.NoError(t, err, "Failed to create local guard")
 	defer func() { _ = guard.Close() }()
 
 	// Should be a localGuard
 	_, ok := guard.(*localGuard)
-	if !ok {
-		t.Error("Expected localGuard type")
-	}
+	assert.True(t, ok, "Expected localGuard type")
 }
 
 func TestNewGuardRedis(t *testing.T) {
@@ -165,37 +143,19 @@ func TestNewGuardRedis(t *testing.T) {
 	defer mr.Close()
 
 	guard, err := newGuard(mr.Addr(), "", 0, 5, lock.RedisPoolOptions{})
-	if err != nil {
-		t.Fatalf("Failed to create Redis guard: %v", err)
-	}
+	require.NoError(t, err, "Failed to create Redis guard")
 	defer func() { _ = guard.Close() }()
 
 	// Should be a redisGuard
 	_, ok := guard.(*redisGuard)
-	if !ok {
-		t.Error("Expected redisGuard type")
-	}
+	assert.True(t, ok, "Expected redisGuard type")
 }
 
 func TestConstants(t *testing.T) {
 	// Test that constants have expected values
-	if taskLockTTL != 30*time.Second {
-		t.Errorf("Expected taskLockTTL to be 30s, got %v", taskLockTTL)
-	}
-
-	if taskLockKeyPfx != "task:" {
-		t.Errorf("Expected taskLockKeyPfx to be 'task:', got '%s'", taskLockKeyPfx)
-	}
-
-	if semSlotKey != "sync-tasks" {
-		t.Errorf("Expected semSlotKey to be 'sync-tasks', got '%s'", semSlotKey)
-	}
-
-	if semSlotTTL != 30*time.Second {
-		t.Errorf("Expected semSlotTTL to be 30s, got %v", semSlotTTL)
-	}
-
-	if renewInterval != 10*time.Second {
-		t.Errorf("Expected renewInterval to be 10s, got %v", renewInterval)
-	}
+	assert.Equal(t, 30*time.Second, taskLockTTL, "Expected taskLockTTL to be 30s")
+	assert.Equal(t, "task:", taskLockKeyPfx, "Expected taskLockKeyPfx to be 'task:'")
+	assert.Equal(t, "sync-tasks", semSlotKey, "Expected semSlotKey to be 'sync-tasks'")
+	assert.Equal(t, 30*time.Second, semSlotTTL, "Expected semSlotTTL to be 30s")
+	assert.Equal(t, 10*time.Second, renewInterval, "Expected renewInterval to be 10s")
 }

@@ -4,20 +4,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yi-nology/git-sync-service/sync/model"
 	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/yi-nology/git-sync-service/sync/model"
 	"gorm.io/gorm"
 )
 
 func setupSyncRunTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-	if err := db.AutoMigrate(&model.SyncRun{}, &model.SyncRunStep{}); err != nil {
-		t.Fatalf("failed to migrate test db: %v", err)
-	}
+	require.NoError(t, err, "failed to open test db")
+
+	err = db.AutoMigrate(&model.SyncRun{}, &model.SyncRunStep{})
+	require.NoError(t, err, "failed to migrate test db")
+
 	return db
 }
 
@@ -33,39 +34,21 @@ func TestSyncRunDAO_CreateAndFindByTaskKey(t *testing.T) {
 		StartTime:     time.Now(),
 	}
 
-	if err := d.Create(run); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(run)
+	require.NoError(t, err, "create failed")
 
-	if run.ID == 0 {
-		t.Error("expected run ID to be set after create")
-	}
+	assert.NotZero(t, run.ID, "expected run ID to be set after create")
 
 	// Find by task key
 	got, total, err := d.FindByTaskKey("test-task", DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find by task key failed: %v", err)
-	}
+	require.NoError(t, err, "find by task key failed")
 
-	if total != 1 {
-		t.Fatalf("expected 1 run, got %d", total)
-	}
+	require.Equal(t, int64(1), total, "expected 1 run")
+	require.Len(t, got, 1, "expected 1 run")
 
-	if len(got) != 1 {
-		t.Fatalf("expected 1 run, got %d", len(got))
-	}
-
-	if got[0].TaskKey != "test-task" {
-		t.Errorf("expected task key 'test-task', got '%s'", got[0].TaskKey)
-	}
-
-	if got[0].TriggerSource != "manual" {
-		t.Errorf("expected trigger source 'manual', got '%s'", got[0].TriggerSource)
-	}
-
-	if got[0].Status != "running" {
-		t.Errorf("expected status 'running', got '%s'", got[0].Status)
-	}
+	assert.Equal(t, "test-task", got[0].TaskKey, "expected task key 'test-task'")
+	assert.Equal(t, "manual", got[0].TriggerSource, "expected trigger source 'manual'")
+	assert.Equal(t, "running", got[0].Status, "expected status 'running'")
 }
 
 func TestSyncRunDAO_FindRecent(t *testing.T) {
@@ -80,20 +63,15 @@ func TestSyncRunDAO_FindRecent(t *testing.T) {
 	}
 
 	for _, run := range runs {
-		if err := d.Create(run); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(run)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Find recent
 	got, err := d.FindRecent(DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find recent failed: %v", err)
-	}
+	require.NoError(t, err, "find recent failed")
 
-	if len(got) != 3 {
-		t.Fatalf("expected 3 runs, got %d", len(got))
-	}
+	require.Len(t, got, 3, "expected 3 runs")
 }
 
 func TestSyncRunDAO_Update(t *testing.T) {
@@ -108,9 +86,8 @@ func TestSyncRunDAO_Update(t *testing.T) {
 		StartTime:     time.Now(),
 	}
 
-	if err := d.Create(run); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(run)
+	require.NoError(t, err, "create failed")
 
 	// Update the run
 	now := time.Now()
@@ -119,31 +96,18 @@ func TestSyncRunDAO_Update(t *testing.T) {
 	run.Details = "Sync completed"
 	run.DurationMs = 1000
 
-	if err := d.Update(run); err != nil {
-		t.Fatalf("update failed: %v", err)
-	}
+	err = d.Update(run)
+	require.NoError(t, err, "update failed")
 
 	// Find by task key to verify update
 	got, total, err := d.FindByTaskKey("test-task", DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find by task key failed: %v", err)
-	}
+	require.NoError(t, err, "find by task key failed")
 
-	if total != 1 {
-		t.Fatalf("expected 1 run, got %d", total)
-	}
+	require.Equal(t, int64(1), total, "expected 1 run")
 
-	if got[0].Status != "success" {
-		t.Errorf("expected status 'success', got '%s'", got[0].Status)
-	}
-
-	if got[0].Details != "Sync completed" {
-		t.Errorf("expected details 'Sync completed', got '%s'", got[0].Details)
-	}
-
-	if got[0].DurationMs != 1000 {
-		t.Errorf("expected duration ms 1000, got %d", got[0].DurationMs)
-	}
+	assert.Equal(t, "success", got[0].Status, "expected status 'success'")
+	assert.Equal(t, "Sync completed", got[0].Details, "expected details 'Sync completed'")
+	assert.Equal(t, int64(1000), got[0].DurationMs, "expected duration ms 1000")
 }
 
 func TestSyncRunDAO_Delete(t *testing.T) {
@@ -157,28 +121,19 @@ func TestSyncRunDAO_Delete(t *testing.T) {
 		Status:        "running",
 	}
 
-	if err := d.Create(run); err != nil {
-		t.Fatalf("create failed: %v", err)
-	}
+	err := d.Create(run)
+	require.NoError(t, err, "create failed")
 
 	// Delete the run
-	if err := d.Delete(run.ID); err != nil {
-		t.Fatalf("delete failed: %v", err)
-	}
+	err = d.Delete(run.ID)
+	require.NoError(t, err, "delete failed")
 
 	// Find by task key should return empty
 	got, total, err := d.FindByTaskKey("test-task", DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find by task key failed: %v", err)
-	}
+	require.NoError(t, err, "find by task key failed")
 
-	if total != 0 {
-		t.Fatalf("expected 0 runs, got %d", total)
-	}
-
-	if len(got) != 0 {
-		t.Fatalf("expected 0 runs, got %d", len(got))
-	}
+	require.Equal(t, int64(0), total, "expected 0 runs")
+	require.Len(t, got, 0, "expected 0 runs")
 }
 
 func TestSyncRunDAO_CountByTaskKey(t *testing.T) {
@@ -193,20 +148,15 @@ func TestSyncRunDAO_CountByTaskKey(t *testing.T) {
 	}
 
 	for _, run := range runs {
-		if err := d.Create(run); err != nil {
-			t.Fatalf("create failed: %v", err)
-		}
+		err := d.Create(run)
+		require.NoError(t, err, "create failed")
 	}
 
 	// Count by task key
 	count, err := d.CountByTaskKey("task1")
-	if err != nil {
-		t.Fatalf("count by task key failed: %v", err)
-	}
+	require.NoError(t, err, "count by task key failed")
 
-	if count != 2 {
-		t.Errorf("expected count 2, got %d", count)
-	}
+	assert.Equal(t, int64(2), count, "expected count 2")
 }
 
 func TestSyncRunDAO_CleanupOlderThan(t *testing.T) {
@@ -226,37 +176,25 @@ func TestSyncRunDAO_CleanupOlderThan(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	if err := db.Create(oldRun).Error; err != nil {
-		t.Fatalf("create old run failed: %v", err)
-	}
+	err := db.Create(oldRun).Error
+	require.NoError(t, err, "create old run failed")
 
-	if err := db.Create(newRun).Error; err != nil {
-		t.Fatalf("create new run failed: %v", err)
-	}
+	err = db.Create(newRun).Error
+	require.NoError(t, err, "create new run failed")
 
 	// Cleanup older than 24 hours
 	count, err := d.CleanupOlderThan(24 * time.Hour)
-	if err != nil {
-		t.Fatalf("cleanup failed: %v", err)
-	}
+	require.NoError(t, err, "cleanup failed")
 
-	if count != 1 {
-		t.Errorf("expected count 1, got %d", count)
-	}
+	assert.Equal(t, int64(1), count, "expected count 1")
 
 	// Verify only new run remains
 	got, err := d.FindRecent(DefaultPagination(0, 50))
-	if err != nil {
-		t.Fatalf("find recent failed: %v", err)
-	}
+	require.NoError(t, err, "find recent failed")
 
-	if len(got) != 1 {
-		t.Fatalf("expected 1 run, got %d", len(got))
-	}
+	require.Len(t, got, 1, "expected 1 run")
 
-	if got[0].TaskKey != "task2" {
-		t.Errorf("expected task key 'task2', got '%s'", got[0].TaskKey)
-	}
+	assert.Equal(t, "task2", got[0].TaskKey, "expected task key 'task2'")
 }
 
 func TestSyncRunDAO_Fields(t *testing.T) {
@@ -278,47 +216,15 @@ func TestSyncRunDAO_Fields(t *testing.T) {
 		CreatedAt:      now,
 	}
 
-	if run.ID != 1 {
-		t.Errorf("expected ID 1, got %d", run.ID)
-	}
-
-	if run.TaskKey != "test-task" {
-		t.Errorf("expected task key 'test-task', got '%s'", run.TaskKey)
-	}
-
-	if run.TriggerSource != "manual" {
-		t.Errorf("expected trigger source 'manual', got '%s'", run.TriggerSource)
-	}
-
-	if run.Status != "success" {
-		t.Errorf("expected status 'success', got '%s'", run.Status)
-	}
-
-	if run.CommitRange != "abc123..def456" {
-		t.Errorf("expected commit range 'abc123..def456', got '%s'", run.CommitRange)
-	}
-
-	if run.Details != "Sync completed" {
-		t.Errorf("expected details 'Sync completed', got '%s'", run.Details)
-	}
-
-	if run.ErrorMessage != "" {
-		t.Errorf("expected empty error message, got '%s'", run.ErrorMessage)
-	}
-
-	if run.ErrorType != "" {
-		t.Errorf("expected empty error type, got '%s'", run.ErrorType)
-	}
-
-	if run.DurationMs != 1000 {
-		t.Errorf("expected duration ms 1000, got %d", run.DurationMs)
-	}
-
-	if run.RetryTotal != 0 {
-		t.Errorf("expected retry total 0, got %d", run.RetryTotal)
-	}
-
-	if run.WebhookEventID != nil {
-		t.Error("expected webhook event ID to be nil")
-	}
+	assert.Equal(t, uint(1), run.ID, "expected ID 1")
+	assert.Equal(t, "test-task", run.TaskKey, "expected task key 'test-task'")
+	assert.Equal(t, "manual", run.TriggerSource, "expected trigger source 'manual'")
+	assert.Equal(t, "success", run.Status, "expected status 'success'")
+	assert.Equal(t, "abc123..def456", run.CommitRange, "expected commit range 'abc123..def456'")
+	assert.Equal(t, "Sync completed", run.Details, "expected details 'Sync completed'")
+	assert.Equal(t, "", run.ErrorMessage, "expected empty error message")
+	assert.Equal(t, "", run.ErrorType, "expected empty error type")
+	assert.Equal(t, int64(1000), run.DurationMs, "expected duration ms 1000")
+	assert.Equal(t, 0, run.RetryTotal, "expected retry total 0")
+	assert.Nil(t, run.WebhookEventID, "expected webhook event ID to be nil")
 }

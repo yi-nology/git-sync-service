@@ -325,6 +325,7 @@ import {
 import PageHeader from '@/components/common/PageHeader.vue'
 import { platformApi, type Platform } from '@/api/platform'
 import { PLATFORM_COLOR } from '@/utils/platform'
+import { formatTime } from '@/utils'
 
 const platforms = ref<Platform[]>([])
 const loading = ref(false)
@@ -488,22 +489,6 @@ function getLastTestAt(p: any): string {
   return p.last_test_at || ''
 }
 
-// 格式化时间
-function formatTime(time: string): string {
-  if (!time) return ''
-  const date = new Date(time)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-
-  if (minutes < 1) return '刚刚'
-  if (minutes < 60) return `${minutes} 分钟前`
-  if (hours < 24) return `${hours} 小时前`
-  if (days < 7) return `${days} 天前`
-  return date.toLocaleDateString('zh-CN')
-}
 
 // 平台类型变化
 function handleTypeChange(type: string) {

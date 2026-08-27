@@ -2,10 +2,9 @@ package service
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strings"
 
+	errors "github.com/cockroachdb/errors"
 	"github.com/google/uuid"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
@@ -57,9 +56,9 @@ func (rs *RepoService) CreateRepo(ctx context.Context, req *model.CreateRepoRequ
 	if err != nil && req.PlatformID == 0 {
 		// If detection fails and no platform_id provided, return error
 		if errors.Is(err, sdkprov.ErrPlatformNotSupported) {
-			return nil, fmt.Errorf("unsupported platform for URL %s: %w", req.RemoteURL, err)
+			return nil, errors.Wrapf(err, "unsupported platform for URL %s", req.RemoteURL)
 		}
-		return nil, fmt.Errorf("invalid remote URL: %w", err)
+		return nil, errors.Wrap(err, "invalid remote URL")
 	}
 
 	// If platform_id is provided, use the platform's type

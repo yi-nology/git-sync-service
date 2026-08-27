@@ -102,7 +102,7 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'time'">
-          <span class="log-time">{{ formatTime(record.time) }}</span>
+          <span class="log-time">{{ formatDate(record.time) }}</span>
         </template>
 
         <template v-if="column.key === 'user'">
@@ -146,6 +146,7 @@ import { logApi } from '@/api'
 import type { OperationLog, OperationLogParams } from '@/types/api'
 import { notifyError, notifySuccess } from '@/utils/notify'
 import dayjs, { type Dayjs } from 'dayjs'
+import { formatDate } from '@/utils'
 
 const loading = ref(false)
 const logs = ref<OperationLog[]>([])
@@ -203,10 +204,6 @@ function actionLabel(action: string): string {
   return actionLabels[action] || action
 }
 
-function formatTime(time: string): string {
-  if (!time) return '-'
-  return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
-}
 
 function handleDateChange(dates: [Dayjs, Dayjs] | null) {
   if (dates) {
@@ -268,7 +265,7 @@ async function fetchLogs() {
 function handleExport() {
   const headers = ['时间', '用户', '操作类型', '操作内容', 'IP']
   const rows = logs.value.map((log) => [
-    formatTime(log.time),
+    formatDate(log.time),
     log.user,
     actionLabel(log.action),
     log.resource,
