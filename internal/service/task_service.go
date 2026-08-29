@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/yi-nology/git-sync-service/internal/dao"
 	"github.com/yi-nology/git-sync-service/sync/model"
+	"gorm.io/gorm"
 )
 
 // TaskService handles sync task-related operations.
@@ -206,4 +207,16 @@ func (ts *TaskService) UpdateTaskLastRun(task *model.SyncTask, run *model.SyncRu
 	task.LastRunAt = run.EndTime
 	task.LastStatus = run.Status
 	return ts.taskDAO.Update(task)
+}
+
+// CompleteRunWithTaskUpdate 在同一事务中完成 run 更新 + task 状态更新,保证原子性。
+func (ts *TaskService) CompleteRunWithTaskUpdate(run *model.SyncRun, task *model.SyncTask) error {
+	return ts.runDAO.DB().Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(run).Error; err != nil {
+			return err
+		}
+		task.LastRunAt = run.EndTime
+		task.LastStatus = run.Status
+		return tx.Save(task).Error
+	})
 }

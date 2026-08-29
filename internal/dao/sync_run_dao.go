@@ -15,6 +15,11 @@ func NewSyncRunDAO(db *gorm.DB) *SyncRunDAO {
 	return &SyncRunDAO{db: db}
 }
 
+// DB 返回底层 gorm.DB,供跨 DAO 事务使用。
+func (d *SyncRunDAO) DB() *gorm.DB {
+	return d.db
+}
+
 // FindByTaskKey 列表查询,不加载 Steps(列表页不需要步骤详情,避免 N+1)。
 func (d *SyncRunDAO) FindByTaskKey(taskKey string, page Pagination) ([]*model.SyncRun, int64, error) {
 	var runs []*model.SyncRun

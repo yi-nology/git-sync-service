@@ -152,6 +152,8 @@ func (ws *WebhookService) ApplyRules(ctx context.Context, repoKey string, event 
 		return
 	}
 
+	// 缓存已编译的 branch filter,避免同一 pattern 重复编译
+	filterCache := make(map[string]*branchfilter.BranchFilter)
 	for _, rule := range rules {
 		if !rule.Enabled {
 			continue
@@ -161,7 +163,12 @@ func (ws *WebhookService) ApplyRules(ctx context.Context, repoKey string, event 
 			continue
 		}
 
-		if !branchfilter.New(rule.BranchPattern).Match(event.Branch) {
+		compiled, ok := filterCache[rule.BranchPattern]
+		if !ok {
+			compiled = branchfilter.New(rule.BranchPattern)
+			filterCache[rule.BranchPattern] = compiled
+		}
+		if !compiled.Match(event.Branch) {
 			continue
 		}
 

@@ -192,7 +192,8 @@ func TaskHistory(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	response.Success(c, &sync_task.ListHistoryResp{Runs: converter.ToSyncRunInfoList(runs)})
+	// 列表视图用轻量转换器,省略 Details/Steps 减少 90%+ 响应体积
+	response.Success(c, &sync_task.ListHistoryResp{Runs: converter.ToSyncRunInfoListLight(runs)})
 }
 
 // DeleteHistory 删除单条同步执行历史(失败记录清理用)。

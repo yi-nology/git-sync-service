@@ -11,6 +11,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app/middlewares/server/recovery"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/hertz-contrib/gzip"
 	"github.com/oklog/run"
 	"github.com/yi-nology/git-sync-service/biz/handler/git_sync"
 	"github.com/yi-nology/git-sync-service/sync"
@@ -77,6 +78,8 @@ func main() {
 
 	// Recovery 中间件:handler panic 时返回 500 而非崩进程(内置实现带栈追踪)
 	h.Use(recovery.Recovery())
+	// gzip 压缩:JSON 响应体积减 60-80%
+	h.Use(gzip.Gzip(gzip.DefaultCompression))
 
 	register(h)
 

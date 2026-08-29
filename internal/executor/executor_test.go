@@ -71,6 +71,13 @@ func (m *mockService) UpdateTaskLastRun(task *model.SyncTask, run *model.SyncRun
 	return nil
 }
 
+func (m *mockService) CompleteRunWithTaskUpdate(run *model.SyncRun, task *model.SyncTask) error {
+	if err := m.CompleteRun(run); err != nil {
+		return err
+	}
+	return m.UpdateTaskLastRun(task, run)
+}
+
 func (m *mockService) GetRepoByKey(key string) (*model.Repo, error) {
 	if m.repoErr != nil {
 		return nil, m.repoErr

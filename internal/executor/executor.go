@@ -21,6 +21,7 @@ type RunManager interface {
 	UpdateRunStep(step *model.SyncRunStep) error
 	CompleteRun(run *model.SyncRun) error
 	UpdateTaskLastRun(task *model.SyncTask, run *model.SyncRun) error
+	CompleteRunWithTaskUpdate(run *model.SyncRun, task *model.SyncTask) error
 }
 
 // RepoProvider provides repository lookup by key.
@@ -87,11 +88,9 @@ func (e *Executor) Execute(ctx context.Context, task *model.SyncTask, trigger st
 			detailStr = detailStr[:maxDetailsSize] + "\n... (truncated)"
 		}
 		run.Details = detailStr
-		if err := e.service.CompleteRun(run); err != nil {
-			slog.Error("failed to complete sync run", "error", err)
-		}
-		if err := e.service.UpdateTaskLastRun(task, run); err != nil {
-			slog.Error("failed to update task status", "error", err)
+		// 事务化:run 完成 + task 状态更新在同一事务中,避免中间崩溃导致不一致
+		if err := e.service.CompleteRunWithTaskUpdate(run, task); err != nil {
+			slog.Error("failed to complete sync run and update task", "error", err)
 		}
 	}()
 
@@ -358,7 +357,12 @@ func (e *Executor) fetchRepo(ctx context.Context, dir string, task *model.SyncTa
 		return err
 	}
 
-	return e.backend.Checkout(ctx, dir, task.SourceBranch)
+	// 增量同步时分支已在正确位置,仅当分支不同时才 checkout
+	cur, _ := e.backend.GetCurrentBranch(ctx, dir)
+	if cur != task.SourceBranch {
+		return e.backend.Checkout(ctx, dir, task.SourceBranch)
+	}
+	return nil
 }
 
 func (e *Executor) ensureRemote(ctx context.Context, dir string, repo *model.Repo) error {

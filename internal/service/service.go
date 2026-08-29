@@ -68,7 +68,7 @@ func NewService(cfg *Config) (*Service, error) {
 		return nil, errors.Wrap(err, "init repo DAO failed")
 	}
 
-	providerMgr := sdkprov.NewManager(30 * time.Minute)
+	providerMgr := sdkprov.NewManager(30*time.Minute, sdkprov.WithMaxSize(64))
 	taskDAO := dao.NewSyncTaskDAO(db)
 	runDAO := dao.NewSyncRunDAO(db)
 	runStepDAO := dao.NewSyncRunStepDAO(db)
@@ -87,6 +87,9 @@ func NewService(cfg *Config) (*Service, error) {
 	opLogService := NewOperationLogService(opLogDAO)
 
 	bgCtx, bgCancel := context.WithCancel(context.Background())
+
+	// 启动 provider 缓存清理 janitor,定期淘汰过期条目
+	providerMgr.StartJanitor(bgCtx, 10*time.Minute)
 
 	svc := &Service{
 		config:       cfg,
@@ -199,6 +202,11 @@ func (s *Service) CompleteRun(run *model.SyncRun) error {
 // UpdateTaskLastRun updates the task's last run status. Satisfies executor.RunManager.
 func (s *Service) UpdateTaskLastRun(task *model.SyncTask, run *model.SyncRun) error {
 	return s.tasks.UpdateTaskLastRun(task, run)
+}
+
+// CompleteRunWithTaskUpdate 在同一事务中完成 run + task 更新. Satisfies executor.RunManager.
+func (s *Service) CompleteRunWithTaskUpdate(run *model.SyncRun, task *model.SyncTask) error {
+	return s.tasks.CompleteRunWithTaskUpdate(run, task)
 }
 
 // GetRepoByKey returns a repository by key. Satisfies executor.RepoProvider.

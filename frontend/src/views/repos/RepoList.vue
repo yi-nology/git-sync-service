@@ -61,6 +61,7 @@
       <div
         v-for="repo in repoStore.repos"
         :key="repo.key"
+        v-memo="[repo.status, repo.name, repo.platform, testingKeys[repo.key]]"
         class="repo-card"
         :class="{ 'repo-card--error': repo.status === 'error' }"
       >
@@ -302,7 +303,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'RepoList' })
 
-import { onMounted, ref, reactive, computed, markRaw } from 'vue'
+import { onMounted, ref, shallowRef, reactive, computed, markRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   PlusOutlined,
@@ -353,7 +354,7 @@ const editingKey = ref('')
 const selectedPlatform = ref('github')
 const selectedPlatformConfig = ref<PlatformConfig | null>(null)
 const submitting = ref(false)
-const testingKeys = ref<Record<string, boolean>>({})
+const testingKeys = shallowRef<Record<string, boolean>>({})
 const faqExpanded = ref<string[]>([])
 
 // Pagination state
@@ -561,14 +562,21 @@ async function handleSyncPlatform() {
       return
     }
     notifyInfo(`正在同步 ${platforms.length} 个平台的仓库...`)
+    // 并行同步所有平台,而非逐个串行等待
+    const results = await Promise.allSettled(
+      platforms.map(async (p: any) => {
+        const result = await platformApi.syncRepos(p.key)
+        return { name: p.name, count: result.synced_count || 0 }
+      }),
+    )
     let total = 0
     const failed: string[] = []
-    for (const p of platforms) {
-      try {
-        const result = await platformApi.syncRepos(p.key)
-        total += result.synced_count || 0
-      } catch {
-        failed.push(p.name)
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        total += r.value.count
+      } else {
+        const idx = results.indexOf(r)
+        failed.push(platforms[idx]?.name || '未知')
       }
     }
     await loadRepos()
@@ -660,7 +668,7 @@ async function handleDelete(key: string) {
 }
 
 async function testConn(key: string) {
-  testingKeys.value[key] = true
+  testingKeys.value = { ...testingKeys.value, [key]: true }
   try {
     const result = await repoStore.testConnection(key)
     if (result.success) notifySuccess(result.message)
@@ -668,7 +676,7 @@ async function testConn(key: string) {
   } catch (e) {
     notifyError(e, '测试连接失败')
   } finally {
-    testingKeys.value[key] = false
+    testingKeys.value = { ...testingKeys.value, [key]: false }
   }
 }
 </script>

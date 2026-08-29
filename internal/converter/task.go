@@ -70,6 +70,25 @@ func ToSyncRunInfoList(runs []*model.SyncRun) []*taskmodel.SyncRunInfo {
 	return result
 }
 
+// ToSyncRunInfoListLight 列表视图专用:省略 Details 和 Steps,减少 90%+ 响应体积。
+func ToSyncRunInfoListLight(runs []*model.SyncRun) []*taskmodel.SyncRunInfo {
+	result := make([]*taskmodel.SyncRunInfo, 0, len(runs))
+	for _, r := range runs {
+		endTime := ""
+		if r.EndTime != nil {
+			endTime = r.EndTime.Format("2006-01-02 15:04:05")
+		}
+		result = append(result, &taskmodel.SyncRunInfo{
+			ID: SafeUintToInt64(r.ID), TaskKey: r.TaskKey, TriggerSource: r.TriggerSource,
+			Status: r.Status, StartTime: r.StartTime.Format("2006-01-02 15:04:05"),
+			EndTime: endTime, CommitRange: r.CommitRange,
+			ErrorMessage: r.ErrorMessage, CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
+			DurationMs: r.DurationMs, ErrorType: r.ErrorType, RetryTotal: SafeIntToInt32(r.RetryTotal),
+		})
+	}
+	return result
+}
+
 func ToSyncRunStepInfo(s *model.SyncRunStep) *taskmodel.SyncRunStepInfo {
 	if s == nil {
 		return nil
