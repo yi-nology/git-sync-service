@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/yi-nology/git-sync-service)](https://goreportcard.com/report/github.com/yi-nology/git-sync-service)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/yi-nology/git-sync-service)](https://go.dev/)
 [![License](https://img.shields.io/github/license/yi-nology/git-sync-service)](LICENSE)
-[![Latest Release](https://img.shields.io/github/v/release/yi-nology/git-sync-service)](https://github.com/yi-nology/git-sync-service/releases/tag/v1.9.0)
+[![Latest Release](https://img.shields.io/github/v/release/yi-nology/git-sync-service)](https://github.com/yi-nology/git-sync-service/releases/tag/v1.10.0)
 
 A service for synchronizing Git repositories across different platforms.
 
