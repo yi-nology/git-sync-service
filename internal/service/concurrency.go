@@ -20,6 +20,9 @@ type concurrencyGuard interface {
 	// Acquire 尝试获取 taskKey 的执行权 + 一个全局并发槽。
 	// 成功返回 release;taskKey 已在跑返回 ErrTaskRunning;全局满返回 ErrTooManyConcurrent。
 	Acquire(ctx context.Context, taskKey string) (releaseFunc, error)
+	// TryCronLock 尝试获取 cron 分布式锁(短 TTL),防止多实例重复触发。
+	// 本地模式始终返回 true;Redis 模式用 SetNX 实现。
+	TryCronLock(ctx context.Context, taskKey string, ttl time.Duration) (bool, error)
 	// Ping 检查后端连通性(本地实现始终返回 nil)。
 	Ping() error
 	Close() error
@@ -67,6 +70,9 @@ func (g *localGuard) Acquire(_ context.Context, taskKey string) (releaseFunc, er
 
 func (g *localGuard) Ping() error  { return nil }
 func (g *localGuard) Close() error { return nil }
+func (g *localGuard) TryCronLock(_ context.Context, _ string, _ time.Duration) (bool, error) {
+	return true, nil // 本地模式始终成功
+}
 
 // ---------------- 分布式(redis)实现 ----------------
 
@@ -155,6 +161,11 @@ func (g *redisGuard) watchdog(lockKey, value, semID string, stop <-chan struct{}
 
 func (g *redisGuard) Ping() error {
 	return g.rlock.Ping(context.Background())
+}
+
+// TryCronLock 用 Redis SetNX 获取短 TTL 的 cron 锁,防止多实例重复触发。
+func (g *redisGuard) TryCronLock(ctx context.Context, taskKey string, ttl time.Duration) (bool, error) {
+	return g.rlock.TryLockWithTTL(ctx, "cron:"+taskKey, ttl)
 }
 
 func (g *redisGuard) Close() error {
