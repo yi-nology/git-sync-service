@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -228,7 +229,7 @@ func (s *Service) HealthCheck() map[string]string {
 		"service":  "ok",
 	}
 
-	// Check database connectivity — 只暴露 unhealthy 状态,不泄露连接字符串等内部细节
+	// Check database connectivity + 连接池 stats
 	sqlDB, err := s.db.DB()
 	if err != nil {
 		slog.Error("healthcheck: db error", "error", err)
@@ -236,6 +237,12 @@ func (s *Service) HealthCheck() map[string]string {
 	} else if err := sqlDB.Ping(); err != nil {
 		slog.Error("healthcheck: db ping failed", "error", err)
 		status["database"] = "unhealthy"
+	} else {
+		stats := sqlDB.Stats()
+		status["db_open_conns"] = fmt.Sprintf("%d", stats.OpenConnections)
+		status["db_in_use"] = fmt.Sprintf("%d", stats.InUse)
+		status["db_idle"] = fmt.Sprintf("%d", stats.Idle)
+		status["db_wait_count"] = fmt.Sprintf("%d", stats.WaitCount)
 	}
 
 	// Check Redis connectivity (if configured)

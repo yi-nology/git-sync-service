@@ -32,7 +32,14 @@ const routes: RouteRecordRaw[] = [
   },
 ]
 
-const router = createRouter({ history: createWebHistory(), routes })
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+  scrollBehavior: (_to, _from, savedPosition) => {
+    if (savedPosition) return savedPosition
+    return { top: 0 }
+  },
+})
 
 // 鉴权守卫
 router.beforeEach((to) => {

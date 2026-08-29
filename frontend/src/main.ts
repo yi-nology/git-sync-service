@@ -21,4 +21,15 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 app.use(VueQueryPlugin, { queryClient })
+
+// 全局错误处理:渲染错误不静默吞掉,方便定位生产问题
+app.config.errorHandler = (err, instance, info) => {
+  console.error('[Vue Error]', info, err)
+}
+
+// 未捕获的 Promise rejection
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[Unhandled Rejection]', event.reason)
+})
+
 app.mount('#app')

@@ -1,8 +1,9 @@
 /** 状态字典 —— StatusBadge 组件与 statusText 工具函数的统一来源 */
 
 export type StatusKind = 'success' | 'running' | 'failed' | 'warning' | 'idle'
+export type StatusValue = 'success' | 'running' | 'failed' | 'received' | 'processed' | 'active' | 'idle' | 'stopped' | 'pending' | 'error' | 'warning' | 'disabled'
 
-export const STATUS_LABEL: Record<string, string> = {
+export const STATUS_LABEL: Record<StatusValue, string> = {
   success: '成功',
   running: '运行中',
   failed: '失败',
@@ -18,7 +19,7 @@ export const STATUS_LABEL: Record<string, string> = {
 }
 
 /** 把业务状态映射到展示样式分类 */
-export const STATUS_KIND: Record<string, StatusKind> = {
+export const STATUS_KIND: Record<StatusValue, StatusKind> = {
   success: 'success',
   running: 'running',
   failed: 'failed',

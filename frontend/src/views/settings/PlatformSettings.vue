@@ -442,7 +442,7 @@ async function loadPlatforms() {
     const result = await platformApi.list()
     platforms.value = result.platforms || []
   } catch (e) {
-    console.error('Failed to load platforms:', e)
+    message.error('加载平台列表失败')
     platforms.value = []
   } finally {
     loading.value = false

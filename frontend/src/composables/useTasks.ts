@@ -69,7 +69,12 @@ export function useBatchDeleteTasksMutation() {
 
 /** 运行任务 mutation */
 export function useRunTaskMutation() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: (key: string) => syncTaskApi.run(key),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [TASK_QUERY_KEY] })
+      qc.invalidateQueries({ queryKey: [HISTORY_QUERY_KEY] })
+    },
   })
 }

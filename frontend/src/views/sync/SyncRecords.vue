@@ -533,7 +533,7 @@ async function fetchRecords() {
     )
     allRecords.value = allRuns
   } catch (e) {
-    console.error('Failed to fetch records:', e)
+    notifyError(e, '加载执行记录失败')
     allRecords.value = []
   } finally {
     loading.value = false

@@ -32,11 +32,7 @@ http.interceptors.request.use((config) => {
 })
 
 /**
- * 响应拦截器:统一解包后端 `{ code, message, data, timestamp }` 包装。
- * - 204 / 空体(delete 等)→ 返回 `{ success: true }`
- * - 标准包装且 2xx → 返回内层 data
- * - 401 → 清除凭证并跳转登录
- * - 其它错误 → 抛出 ApiError
+ * 响应拦截器:统一解包 + 5xx 自动重试(最多 2 次,指数退避)。
  */
 http.interceptors.response.use(
   (response) => {
@@ -56,9 +52,20 @@ http.interceptors.response.use(
     // 非标准包装,原样返回
     return body
   },
-  (error) => {
+  async (error) => {
+    const config = error.config
     const status = error.response?.status
-    const body = error.response?.data
+
+    // 5xx 自动重试(最多 2 次,指数退避)
+    if (status >= 500 && status < 600) {
+      const retryCount = config.__retryCount || 0
+      if (retryCount < 2) {
+        config.__retryCount = retryCount + 1
+        await new Promise((r) => setTimeout(r, 1000 * config.__retryCount))
+        return http(config)
+      }
+    }
+
     if (status === 401) {
       const authStore = useAuthStore()
       authStore.clearApiKey()
@@ -66,8 +73,9 @@ http.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         import('@/router').then((m) => m.default.push('/login'))
       }
-      return Promise.reject(new ApiError(body?.error || '未授权,请重新登录', 401))
+      return Promise.reject(new ApiError(error.response?.data?.error || '未授权,请重新登录', 401))
     }
+    const body = error.response?.data
     const msg = body?.error || body?.message || error.message || '网络错误,请稍后重试'
     return Promise.reject(new ApiError(msg, status || 0))
   },
