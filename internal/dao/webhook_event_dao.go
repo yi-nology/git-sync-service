@@ -40,6 +40,12 @@ func (d *WebhookEventDAO) Update(event *model.WebhookEvent) error {
 	return d.db.Save(event).Error
 }
 
+// UpdateStatus 仅更新 status 和 processed_at 字段,避免全字段回写(payload 可能很大)。
+func (d *WebhookEventDAO) UpdateStatus(id uint, status string, processedAt *time.Time) error {
+	return d.db.Model(&model.WebhookEvent{}).Where("id = ?", id).
+		Updates(map[string]interface{}{"status": status, "processed_at": processedAt}).Error
+}
+
 func (d *WebhookEventDAO) FindByID(id uint) (*model.WebhookEvent, error) {
 	return FindByID[model.WebhookEvent](d.db, id)
 }

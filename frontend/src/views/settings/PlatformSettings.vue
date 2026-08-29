@@ -470,23 +470,23 @@ function getPlatformIcon(type: string) {
 }
 
 // Helper functions to handle both camelCase and snake_case
-function getInstanceUrl(p: any): string {
+function getInstanceUrl(p: Platform): string {
   return p.instanceUrl || p.instance_url || ''
 }
-function getApiUrl(p: any): string {
+function getApiUrl(p: Platform): string {
   return p.apiUrl || p.api_url || ''
 }
-function getSkipTls(p: any): boolean {
-  return p.skip_tls_verify || false
+function getSkipTls(p: Platform): boolean {
+  return p.skip_tls_verify || p.skipTlsVerify || false
 }
-function getIsDefault(p: any): boolean {
-  return p.is_default || false
+function getIsDefault(p: Platform): boolean {
+  return p.is_default || p.isDefault || false
 }
-function getRepoCount(p: any): number {
-  return p.repo_count || 0
+function getRepoCount(p: Platform): number {
+  return p.repo_count || p.repoCount || 0
 }
-function getLastTestAt(p: any): string {
-  return p.last_test_at || ''
+function getLastTestAt(p: Platform): string {
+  return p.last_test_at || p.lastTestAt || ''
 }
 
 
@@ -613,7 +613,7 @@ async function handleSubmit() {
     return
   }
 
-  const platformData: any = {
+  const platformData: Record<string, unknown> = {
     type: formData.type,
     name: formData.name,
     instance_url: formData.instance_url,

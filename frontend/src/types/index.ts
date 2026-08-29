@@ -74,40 +74,6 @@ export interface WebhookEvent {
   created_at: string
 }
 
-export interface ListReposResp {
-  repos: Repo[]
-  total: number
-}
-
-export interface ListTasksResp {
-  tasks: SyncTask[]
-  total: number
-}
-
-export interface ListHistoryResp {
-  runs: SyncRun[]
-}
-
-export interface ListRulesResp {
-  rules: WebhookRule[]
-}
-
-export interface ListEventsResp {
-  events: WebhookEvent[]
-}
-
-export interface TestConnectionResp {
-  success: boolean
-  message: string
-}
-
-export interface PreviewSyncResp {
-  can_sync: boolean
-  source_exists: boolean
-  target_exists: boolean
-  message: string
-}
-
 export interface CreateRepoRequest {
   name: string
   remote_url: string
@@ -168,11 +134,6 @@ export interface UpdateRuleRequest {
   min_interval?: number
   enabled?: boolean
   description?: string
-}
-
-export interface Pagination {
-  page: number
-  page_size: number
 }
 
 // 平台侧 Webhook 注册(v1.6.0+)

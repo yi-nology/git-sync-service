@@ -123,11 +123,12 @@ func (ws *WebhookService) MarkEventProcessing(ctx context.Context, eventID uint)
 }
 
 // MarkEventProcessed 标记事件为 processed(处理完成后调用)。
+// 用 targeted UPDATE 仅写 status+processed_at,避免全字段回写大 payload。
 func (ws *WebhookService) MarkEventProcessed(event *model.WebhookEvent) error {
 	now := time.Now()
 	event.ProcessedAt = &now
 	event.Status = model.StatusProcessed
-	if err := ws.eventDAO.Update(event); err != nil {
+	if err := ws.eventDAO.UpdateStatus(event.ID, model.StatusProcessed, &now); err != nil {
 		slog.Error("failed to update event status to processed", "eventID", event.ID, "error", err)
 		return err
 	}
